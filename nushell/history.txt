@@ -1,0 +1,3436 @@
+quit
+exit
+quit
+exit
+ls
+cd ~
+grep -h
+grep --help
+exit
+fish
+nvim
+ls
+grep fish
+grep -h
+grep --help
+ls
+exit
+ls
+nvim
+chsh -s /usr/bin/fish
+chsh -s /usr/bin/nu
+nvim
+neovide --log
+neovide
+fish run_test.fish
+ip -t
+ip -ta
+ss -ltn
+ss -ltp
+kill 17535
+kill 17500
+fish run_test.fish
+gitpush
+git add .
+git commit "update"
+git add .
+git commit "update"
+git commit 'update'
+git commit ""
+git 
+git commit "update"
+git commit -m "update"
+git push
+nvim
+nvim
+exit
+nvim
+exit
+nvim .
+exit
+nvim .wezterm.lua
+exit
+nivm .wezterm.lua
+nvim
+nvim .
+nvim
+eixt
+exit
+nvim
+exit
+gitpush
+git add .
+git commit -m "update"
+git push
+cd /home/sqfzy/.config/nushell
+echo "# nushell_config" >> README.md<\n>git init<\n>git add README.md<\n>git commit -m "first commit"<\n>git branch -M main<\n>git remote add origin git@github.com:sqfzy/nushell_config.git
+git init
+git commit -m "first commit"<\n>git branch -M main<\n>git remote add origin git@github.com:sqfzy/nushell_config.git
+git add .
+git branch -M main
+git remote add origin git@github.com:sqfzy/nushell_config.git
+git push -u origin main
+git commit -m "first commit"
+git push -u origin main
+cd functions/
+nu pandocgpt.nu
+nvim
+cd /home/sqfzy/.config/nushell/functions
+nu pandocgpt.nu
+cd /home/sqfzy/.config/nushell/functions
+nu pandocgpt.nu
+cd /home/sqfzy/.config/nushell/functions
+exit
+pandocgpt 
+exit
+pandocgpt 
+exit
+pandocgpt 
+exit
+pandocgpt 
+exit
+pandocgpt 
+exit
+pandocgpt 
+exit
+pandocgpt 
+exit
+pandocgpt 
+exit
+gitpush
+exit
+gitpush
+exit
+gitpush
+exit
+gitpush
+exit
+gitpush
+nvim
+cd ../
+gitpush
+exit
+gitpush
+exit
+gitpush
+exit
+gitpush
+nvim
+pandocgpt 
+nvim
+gitpush
+git clear
+git clean
+git remote add origin git@github.com:sqfzy/run_factor.git
+git init
+git add .
+git commit -m "first commit"
+git branch -M main
+git remote add origin git@github.com:sqfzy/run_factor.git
+git push -u origin main
+git push
+git push -u origin main
+git remote -v
+git push -u origin main
+ping www.baidu.com
+nvim
+fish
+nivm
+j run_facttor
+j run_factor
+nvim
+fish
+git push -u origin main
+cd /home/sqfzy/work_space/work_code/rust/run_factor/rust_run_factor/src
+cd ../
+cargo nextest run --no-capture
+exit
+fish 
+exxit
+exit
+cargo nextest run --no-capture
+nvim
+cargo nextest run --no-capture
+cargo clean
+cargo nextest run --no-capture
+cargo run
+cd /home/sqfzy/work_space/work_code/rust
+cd /home/sqfzy/work_space/work_code/rust/run_factor2/run_factor/src
+cd ../
+cargo build
+nvim
+nvim
+cd sigust/
+tauri dev
+deno 
+nvim
+nvim
+deno tauri
+deno tauri dev
+deno run dev
+cd rust_run_factor/
+cargo nextest run --no-capture
+cargo build
+cd ../
+cd /home/sqfzy/work_space/work_code/rust/run_factor2/run_factor/src
+cd ../
+cargo build
+cargo clean
+gitpush
+cargo build
+cargo nextest run --no-capture
+cargo clean
+nvim
+cd sigust/
+deno task dev
+deno task tauri dev
+cd ../
+cd /home/sqfzy/work_space/school_work/cryptography_project
+cd ../
+cd cd /home/sqfzy/work_space/school_work/cryptography_project
+cd /home/sqfzy/work_space/school_work/cryptography_project
+git clone https://github.com/sqfzy/sigust.git
+cd sigust/
+deno task tauri dev
+exit
+deno task tauri dev
+deno task build
+deno run tauri build
+deno run tauri dev
+deno run build
+cd src-tauri/
+cargo build
+deno task tauri dev
+deno dev
+deno build
+deno task build
+deno task tauri dev
+deno task
+deno task tauri
+deno add -D npm:@tauri-apps/cli@latest
+deno task tauri init
+deno task tauri dev
+deno task tauri build
+deno task tauri dev
+WEBKIT_DISABLE_COMPOSITING_MODE=1 deno task tauri dev
+nvim
+deno task tauri dev
+deno task dev --help
+deno task tauri dev
+deno task tauri dev --no-watch
+cd /home/sqfzy/work_space/school_work/cryptography_project/sigust/src/lib/components
+exit
+deno task tauri dev --no-watch
+git add .
+gitpush
+git clone https://github.com/denoland/deno.git
+nvim
+cargo nextest run --no-capture
+gitpush
+cargo nextest run --no-capture
+cargo nextest run --no-capture --feature debug
+cargo nextest run --no-capture --features debug
+cargo nextest run --no-capture --help
+cargo nextest run --no-capture -F debug
+cargo build -- -F debug
+cargo build -F debug
+cargo nextest run --no-capture -F debug
+cargo build -F debug
+cargo nextest run --no-capture -F debug
+cargo fix --allow-dirty
+source python_run_factor/.venv/bin/activate
+source python_run_factor/.venv/bin/activate.nu
+cargo nextest run --no-capture -F debug
+cargo nextest run --no-capture 
+cargo nextest run --no-capture -F debug
+source python_run_factor/.venv/bin/activate.nu
+cargo nextest run --no-capture -F debug
+exit
+echo $env.VIRTUAL_ENV
+cargo nextest run --no-capture -F debug
+exit
+nvim
+j rust_run
+cd work_space/work_code/rust/run_factor/
+cd rust_run_factor/
+github
+cd python_run_factor/
+uv --help
+which autojump
+exit
+j
+exit
+j
+autojump 
+echo $env.PATH
+which autojump
+/usr/sbin/autojump
+/usr/sbin/autojump --help
+j
+yay -S carapace
+carapace
+carapace _carapace nushell
+carapace _carapace nushell | source-env
+git clone https://github.com/sqfzy/run_factor.git
+cd /home/sqfzy/work_space/work_code/rust/run_factor3/rust_run_factor/src
+cd ../
+cargo build
+exit
+cargo build
+cargo nextest run --no-capture -F debug
+cargo nextest run --no-capture
+cargo clean
+cargo build
+nvim
+nvim
+vim
+exit
+cargo nextest run --no-capture
+exit
+cargo nextest run --no-capture
+cd python_run_factor/
+python fac
+python factor.py
+cargo nextest run --no-capture foo
+python factor.py
+cargo nextest run --no-capture 
+python factor.py
+cargo nextest run --no-capture kury
+cargo nextest run --no-capture kurt
+python factor.py
+cargo nextest run --no-capture foo
+cargo nextest run --no-capture
+3
+cargo nextest run --no-capture
+cargo nextest run --no-capture foo
+python factor.py
+cargo nextest run --no-capture
+cargo nextest run --no-capture foo
+cargo nextest run --no-capture
+cargo nextest run --no-capture foo
+cargo nextest run --no-capture
+nvim
+exit
+cargo nextest run --no-capture
+cargo nextest run --no-capture foo
+cargo nextest run --no-capture
+cd python_run_factor/
+python factor.py
+cargo nextest run --no-capture foo
+python factor.py
+cargo nextest run --no-capture foo
+cargo nextest run --no-capture
+cargo nextest run --no-capture test_factor
+cargo nextest run --no-capture factor_test
+cargo nextest run --no-capture test_factor
+cargo nextest run --no-capture factor_test
+cargo nextest run --no-capture test_factor
+cargo nextest run --no-capture factor_test
+autojump 
+cargo nextest run --no-capture factor_test
+cargo run
+cd ../
+cargo run
+autojump 
+cargo run
+cargo run -- -F debug
+cargo run -- -F test
+cargo run -F test
+cargo run
+cargo run -F test
+RUSTFLAGS="-A warnings" cargo run
+cargo run
+cd python_run_factor/
+python factor.py
+uv pip install --upgrade setuptools
+cargo run -F test
+uv
+fish
+nvim
+fish
+cd python_run_factor/
+source python_run_factor/.venv/bin/activate.nu
+cd ../
+source python_run_factor/.venv/bin/activate.nu
+python factor.py
+cargo run -F test
+eixt
+exit
+cargo run -F test
+source python_run_factor/.venv/bin/activate.nu
+cargo run -F test
+cd ../
+fish
+exit
+c dpy
+cd python_run_factor/
+uv init
+fish
+exit
+cargo run
+cd arch
+cargo run
+cargo run -F test
+cargo run
+cargo run -F test
+bash
+nvim
+cargo run
+autojump factor
+j 
+cd rust_run_factor/
+cd run_factor3/
+cd arch
+cd rust_run_factor/
+cd arch/
+cargo run
+exit
+cargo run
+exit
+cargo run
+j
+carapace _carapace nushell
+exit
+mkdir ~/.cache/carapace<\n>carapace _carapace nushell | save --force ~/.cache/carapace/init.nu
+source ~/.cache/carapace/init.nu
+exit
+j
+eixt
+exit
+j
+j rust
+exit
+j
+j rust
+cd /home/sqfzy/.config/nushell
+gitpush
+nvim
+cd ../
+nu run_factor3/submit.nu 
+./run_factor3/submit.nu
+cd rust_run_factor/
+cd run_factor3/
+nu submit.nu 
+pwd
+nu submit.nu 
+cd ../
+nu run_factor3/submit.nu 
+7z
+nu run_factor3/submit.nu 
+cargo nextest run --no-capture factor_test
+cd rust_run_factor/
+cargo nextest run --no-capture factor_test
+cargo run
+cd python_run_factor/
+cd ../
+cd rust_run_factor/
+cd run_factor3/
+cd python_run_factor/
+python main.py 
+exit
+cd python_run_factor/
+python main.py 
+python run.py 
+cargo run
+python run.py 
+python test_factor.py 
+cd /home/sqfzy/work_space/work_code/rust/run_factor3/rust_run_factor/output_test
+j
+exit
+cd python_run_factor/
+python test_factor.py 
+cargo run
+python main.py 
+python run.py 
+python test_factor.py 
+cargo flamegraph 
+nu ../test_factor.nu 
+exit
+nu test_factor.nu 
+cd rust_run_factor/
+cargo flamegraph 
+cargo flamegraph -F 300
+cd ../
+cargo new test_factor
+cd test_factor/
+cargo add pyo3-polars
+cd test_factor/
+cargo add csv
+cargo build
+cargo run
+nvim
+cd test_factor/
+cargo run
+exit
+cargo run
+cd test_factor/
+cargo run
+cd ../
+nu test_factor.nu 
+cd test_factor/
+cargo run
+cd ../
+cd test_factor/
+cargo run
+cd ../
+nu test_factor.nu 
+cd test_factor/
+cargo run
+nu test_factor.nu 
+cd ../
+nu test_factor.nu 
+cd test_factor/
+cargo run
+cd ../
+nu test_factor.nu 
+cargo run
+nu test_factor.nu 
+python factor.py
+nu test_factor.nu 
+python factor.py
+nu test_factor.nu 
+cargo run --release
+cd rust_run_factor/
+j rust_run_factor
+cargo run
+cd rust_run_factor/
+cargo run --quiet 
+RUSTFLAGS="-A warnings" cargo run
+cargo rustc -- -Awarnings
+cargo run -- -Awarnings
+nvim
+nu test_factor.nu 
+nu test_factor.nu
+nu test_factor.nu --release
+nu test_factor.nu
+exit
+nu test_factor.nu --release
+nu test_factor.nu
+nu test_factor.nu --release
+cd test_factor/
+cargo run
+cd ../
+nu test_factor.nu --release
+cargo nextest run --release --no-capture runtime
+cd test_factor/
+cargo nextest run --release --no-capture runtime
+cargo nextest run --release --no-capture test_runtime
+cd ../
+cd rust_run_factor/
+cargo nextest run --release --no-capture runtime
+cd test_factor/
+cd ../test_factor/
+cargo add criterion
+cargo add criterion -F html_reports
+cargo add polars
+cargo add anyhow
+cargo bench 
+cd python_run_factor/
+python factor.py
+cd python_run_factor/
+cargo bench 
+cd ../
+nu test_factor.nu --release
+nu test_factor.nu 
+cd test_factor/
+cargo run
+cd ../
+nu test_factor.nu 
+gitpush
+cd rust_run_factor/
+gitpush
+nu test_factor.nu 
+cd ../
+nu test_factor.nu 
+cd rust_run_factor/
+cargo nextest run --release --no-capture foo
+cd ../
+nu test_factor.nu 
+cd test_factor/
+cargo run
+exti
+exit
+nu test_factor.nu 
+cargo run
+nu test_factor.nu 
+cargo run
+nvim
+cd test_factor/
+cargo run
+exit
+cd test_factor/
+cargo run
+nu test_factor.nu 
+exit
+nu test_factor.nu 
+cargo run
+nu test_factor.nu 
+cd python_run_factor/
+py 
+python factor.py
+nvim
+cd test_factor/
+cargo nextest run --release --no-capture
+cd test_factor/
+cargo bench
+autojump factor
+cargo bench
+nvim
+noxe new "event-driven architecture.md"
+exit
+noxe new "event-driven architecture.md"
+gitpush
+bash start_distributed_cluster.sh 
+git restore .
+git reset --hard
+git clean -f
+git clean -fd
+cargo new aaka_distributed_rc_app
+nvim
+git reset --hard
+git clean -fd
+cargo new simple_distributed_db<\n>cd simple_distributed_db<\n><\n>mkdir -p proto # 存放 .proto 文件<\n><\n># 创建所需文件<\n>touch build.rs<\n>touch src/server.rs<\n>touch src/client.rs<\n>touch config.json
+cargo new simple_distributed_db<\n>cd simple_distributed_db<\n><\n>mkdir proto # 存放 .proto 文件<\n><\n># 创建所需文件<\n>touch build.rs<\n>touch src/server.rs<\n>touch src/client.rs<\n>touch config.json
+nvim
+cargo build
+sudo pacman -S protobuf
+cargo build
+j simple
+./target/debug/server http://127.0.0.1:50051
+./target/debug/client --node http://127.0.0.1:50051 set mykey "hello world"
+./target/debug/client --node http://127.0.0.1:50052 get mykey
+# 向节点3设置一个新key<\n>./target/debug/client --node http://127.0.0.1:50053 set anotherkey "rust is awesome"<\n><\n># 从节点1获取这个新key<\n>./target/debug/client --node http://127.0.0.1:50051 get anotherkey
+./target/debug/server http://127.0.0.1:50052
+./target/debug/server http://127.0.0.1:50053
+exit
+cargo build
+echo $env.OUT_DIR
+cargo build
+cargo run --bin server
+j test1
+cargo run --bin client
+ls
+ls
+nvim
+nvim
+cargo add tokio_stream
+cargo add tokio_strea
+cargo build
+noxe new "http.md"
+nvim
+uv add pillow
+uv
+exit
+uv 
+uv add pillow
+where uv
+fish
+exit
+uv
+$env.PATH
+exitg
+exi
+exit
+uv
+uv add pillow
+python main.py 
+rm -rf .venv
+uv venv
+source .venv/bin/activate.nu
+uv sync pyproject.toml
+uv sync
+python main.py 
+# 1. 如果你正处于一个激活的环境中，先退出<\n>deactivate<\n><\n># 2. 删除旧的虚拟环境文件夹<\n>rm -rf .venv<\n><\n># 3. 清除 uv 的全局缓存 (这是新加的关键步骤！)<\n>uv cache clean<\n><\n># 4. (可选) 如果你电脑里还有pip，也清理一下它的缓存<\n>pip cache purge
+deactivate
+rm -rf .venv
+uv cache clean
+uv venv
+source .venv/bin/activate.nu
+# 直接用 uv pip install 命令安装<\n>uv pip install "matplotlib>=3.8.0" "numpy>=2.0.0" "qiskit>=1.0.0" "qiskit-aer>=0.13.0" "qiskit-algorithms>=0.2.0" "qiskit-machine-learning>=0.8.0" "scikit-learn>=1.4.0" "Pillow>=10.0.0"
+uv pip list | grep qiskit
+python main.py 
+./.venv/bin/python main.py
+which python
+cd `../qumtum crypto3/`
+exit
+uv init
+uv venv
+uv sync
+python main.py 
+kj
+python main.py 
+uv sync
+sudo pacman -S pyenv 
+pyenv install --list | rg 3.12
+exit
+pyenv install --list | rg 3.12
+path exists /usr/bin/pyenv
+sudo pacman -S pyenv 
+yay -S pyenv
+sudo pacman -S pyenv 
+sudo pacman -Syu pyenv
+pyenv install --list | rg 3.12
+pyenv install 3.12.3
+exit
+fish
+exit
+pyenv local 3.12.3
+python main.py 
+exit
+uv vevn
+uv vevnv
+uv venv
+source .venv/bin/activate.nu
+python main.py 
+uv sync
+python main.py 
+python deepfake_detection.py 
+python main.py 
+python foo.py 
+uv sync
+python main.py 
+uv sync
+python main.py 
+j qumtum
+python main.py 
+source .venv/bin/activate.nu
+python main.py 
+nu test_factor.nu 
+nu test_factor.nu --release
+exit
+nu test_factor.nu --release
+cd test_factor/
+cargo run
+uv add pandas
+cd ../python_run_factor/
+uv add pandas
+cd ../test_factor/
+cargo run
+python test_factor.py 
+nu test_factor.nu
+python
+cargo run
+nvim
+cd ../test_factor/
+cd test_factor/
+cargo run
+PYO3_PYTHON=../python_run_factor/.vevn/bin/python cargo build
+pyenv -h
+pyenv uninstall 3.12.3 
+exit
+cd test_factor/
+cargo run
+exit
+nu test_factor.nu --release
+cp -h
+nu arch.nu 
+cargo run
+cd test_factor/
+cargo add rayon
+cargo bench
+noxe new "rayon.md"
+nvim
+cd aaka_rc_app/
+cargo add blahaj
+cargo add reqwest
+cargo add reqwest -F client
+cargo add serde_json
+nvim
+bytemuck
+cargo add bytesmuck
+cd aaka_rc_app/
+cd ../ibc_aaka_scheme/
+cargo add bytesmuck
+cargo add bytemuck
+cargo add blahaj
+cargo add reqwest -F json
+cd ../aaka_rc_app/
+cargo build
+cargo add axum -F macros
+cd aaka_rc_app/
+open ./config.json | get nodes
+open ./config.json | get nodes | nodes.1
+open ./config.json | get nodes | nodes[0]
+open ./config.json | get nodes.0
+httpie 
+cargo build | complete
+cd ./
+cd ../
+nu run_test.nu 
+cd aaka_rc_app/
+open "config.json" | get nodes.0
+open "config.json" | get nodes
+cd ../
+nu run_test.nu 
+job list
+job list | get id
+job list | get id | each { |job_id|<\n>  job kill $job_id<\n>}
+nu run_test.nu 
+cd aaka_user_app/
+cargo run
+cd ../
+nu run_test.nu 
+cargo add tracing
+nu init_rc_ms.nu 
+cd ../aaka_user_app/
+cargo add tracing
+cargo add tracing_subscriber
+nu run_test.nu 
+nu init_rc_ms.nu 
+nu run_test.nu 
+httpie -h
+httpie
+http POST
+http "POST"
+httpie POST
+nu run_test.nu 
+cd aaka_rc_app/
+cargo run
+ss -ltp
+kill 173661
+kill 160293
+j ibc
+cd aaka_rc_app/
+http POST "http://127.0.0.1:5000"
+http "POST" "http://127.0.0.1:5000"
+http POST "http://127.0.0.1:5000"
+httpie POST "http://127.0.0.1:5000"
+http POST http://127.0.0.1:5000
+http POST
+http post "http://127.0.0.1:5000/setup"
+http post http://127.0.0.1:5000/setup
+http post "http://127.0.0.1:5000/setup"
+with-env { RC_ADDR: "127.0.0.1:5000", LOG_LEVEL: "debug" } {cargo run}
+with-env { RC_ADDR: "127.0.0.1:5001", LOG_LEVEL: "debug" } {cargo run}
+http "http://127.0.0.1:5000/setup"
+http get "http://127.0.0.1:5000/setup"
+j ibc
+cd aaka_ms_server/
+cargo run
+cd ../ibc_aaka_scheme/
+cargo nextest run --release --no-capture test_shares
+cd ../
+nu run_test.nu 
+http get "http://127.0.0.1:5000/setup"
+cargo run
+with-env { RC_ADDR: "127.0.0.1:5000", LOG_LEVEL: "debug" } {cargo run}
+with-env { RC_ADDR: "127.0.0.1:5001", LOG_LEVEL: "debug" } {cargo run}
+http get "http://127.0.0.1:5000/setup"
+j ibc
+cd aaka_user_app/
+cargo run
+cargo run
+cd ../
+nu run_test.nu 
+with-env { RC_ADDR: "127.0.0.1:5001", LOG_LEVEL: "debug" } {cargo run}
+cd aaka_rc_app/
+with-env { RC_ADDR: "127.0.0.1:5001", LOG_LEVEL: "debug" } {cargo run}
+ss -ltp
+kill 204080
+with-env { RC_ADDR: "127.0.0.1:5001", LOG_LEVEL: "debug" } {cargo run}
+with-env { RC_ADDR: "127.0.0.1:5000", LOG_LEVEL: "debug" } {cargo run}
+with-env { RC_ADDR: "127.0.0.1:5001", LOG_LEVEL: "debug" } {cargo run}
+ss -ltp
+kill 202081
+cd ../
+nu run_test.nu 
+ss -ltp
+kill 204983
+with-env { RC_ADDR: "127.0.0.1:5000", LOG_LEVEL: "debug" } {cargo run}
+cd aaka_rc_app/
+http get "http://127.0.0.1:5000/setup"
+cd aaka_ms_server/
+cargo nextest run --release --no-capture test_inner
+cd ../aaka_user_app/
+cargo nextest run --release --no-capture foo
+with-env { RC_ADDR: "127.0.0.1:5000", LOG_LEVEL: "debug" } {cargo run}
+cargo run
+cd ..
+cd ../
+nu run_test.nu 
+cd ibc
+nu run_test.nu 
+cd aaka_rc_app/
+with-env { RC_ADDR: "127.0.0.1:5000", LOG_LEVEL: "debug" } {cargo run}
+ss -ltp
+kill 221358
+http get "http://127.0.0.1:5000/setup"
+cargo run
+with-env { RC_ADDR: "127.0.0.1:5000", LOG_LEVEL: "debug" } {cargo run}
+with-env { RC_ADDR: "127.0.0.1:5001", LOG_LEVEL: "debug" } {cargo run}
+cargo run
+nu run_test.nu 
+cd ../
+nu run_test.nu 
+cd aaka_rc_app/
+with-env { RC_ADDR: "127.0.0.1:5000", LOG_LEVEL: "debug" } {cargo run}
+ss -ltp
+kill 223339
+http get "http://127.0.0.1:5000/setup"
+with-env { RC_ADDR: "127.0.0.1:5000", LOG_LEVEL: "debug" } {cargo run}
+cargo run
+cd ../
+nu run_test.nu 
+ss -ltp
+kill 225194
+nu run_test.nu 
+ss -ltp
+kil 225538
+kill 225538
+with-env { RC_ADDR: "127.0.0.1:5000", LOG_LEVEL: "debug" } {cargo run}
+cd aaka_rc_app/
+with-env { RC_ADDR: "127.0.0.1:5000", LOG_LEVEL: "debug" } {cargo run}
+with-env { RC_ADDR: "127.0.0.1:5001", LOG_LEVEL: "debug" } {cargo run}
+ss -ltp
+nu run_test.nu 
+cd ../
+nu run_test.nu 
+cd aaka_rc_app/
+with-env { RC_ADDR: "127.0.0.1:5000", LOG_LEVEL: "debug" } {cargo run}
+ss -ltp
+kill 226436
+http get "http://127.0.0.1:5000/setup"
+with-env { RC_ADDR: "127.0.0.1:5001", LOG_LEVEL: "debug" } {cargo run}
+with-env { RC_ADDR: "127.0.0.1:5000", LOG_LEVEL: "debug" } {cargo run}
+cargo run
+nu run_test.nu 
+cd ../
+nu run_test.nu 
+cd ..
+cd ../
+gitpush
+cd ibc
+gitpush
+cd aaka_rc_app/
+ss -ltp
+with-env { RC_ADDR: "127.0.0.1:5001", LOG_LEVEL: "debug" } {cargo run}
+with-env { RC_ADDR: "127.0.0.1:5000", LOG_LEVEL: "debug" } {cargo run}
+nu run_test.nu 
+cd ../
+nu run_test.nu 
+cd aaka_rc_app/
+http get "http://127.0.0.1:5000/setup"
+cargo run
+with-env { RC_ADDR: "127.0.0.1:5000", LOG_LEVEL: "debug" } {cargo run}
+cargo run
+noxe new "finite field.md"
+     python main.py 
+exit
+python main.py 
+uv add matplotlib
+pyenv -h
+pyenv --local
+pyenv local
+pyenv install 3.12.3
+pyenv local 3.12.3
+python main.py 
+uv sync
+python main.py 
+exit
+python main.py 
+uv add matplotlib
+source .venv/bin/activate.nu
+py
+python main.py 
+uv add qiskit_machine_learning
+python main.py 
+uv add qiskit_machine_learning
+python main.py 
+uv venv
+source .venv/bin/activate.nu
+uv sync
+exit
+pyenv local 3.12.3
+uv venv
+source .venv/bin/activate.nu
+uv sync
+python main.py 
+uv add qiskit_algorithms
+python main.py 
+cd rust_run_factor/
+cargo add rayon
+nu arch.nu 
+cd ../
+nu arch.nu 
+nu test_factor.nu --release
+exit
+nu test_factor.nu --release
+cd python_run_factor/
+cargo run
+cd ../
+cd test_factor/
+cargo run
+cd python_run_factor/
+python test_factor.py 
+cargo run
+PYO3_PYTHON=../python_run_factor/.vevn/bin/python cargo run
+PYO3_PYTHON=/home/sqfzy/work_space/work_code/rust/run_factor3/python_run_factor/.venv/bin/python cargo run
+cargo run
+pyenv uninstall 3.12.3 
+cd ../
+nu test_factor.nu --release
+nu arch.nu 
+nvim
+cd aaka_rc_app/
+cargo add config
+cargo remove
+cargo remove config
+cargo add figment
+cargo add figment -F json
+cargo add figment -F env
+nvim
+noxe new "rand.md"
+nvim
+noxe new "axum templete.md"
+nvim
+cd aaka_rc_app/
+cargo add tracing_subscriber -F json
+cargo add tracing-error
+cargo add tower-http
+cargo add tracing-appender
+noxe new "secret sharing.md"
+cargo nextest run --release --no-capture foo
+nvim
+cd aaka_rc_app/
+cargo nextest run --release --no-capture foo
+nvim
+cargo add tracing-error
+exit
+cd aaka_rc_app/
+cargo add tracing-error
+cargo nextest run --release --no-capture foo
+cargo nextest run --release --no-capture bar
+cargo add eyre
+cargo nextest run --release --no-capture bar
+cargo add color-eyre
+cargo nextest run --release --no-capture bar
+nu arch.nu 
+nu test_factor.nu --release
+exit
+nu test_factor.nu --release
+cd test_factor/
+cargo run
+nvim
+cargo add tonic
+cd aaka_rc_app/
+cargo add tower-http
+cargo add tower-http -F trace
+cargo reqwest -F server
+cargo add reqwest -F server
+cargo run
+cd test_factor/
+cargo run
+exit
+cargo run
+cd test_factor/
+cargo run
+nvim
+cd test_factor/
+exit
+cd test_factor/
+cargo run
+nu run.sh 
+bash run.sh
+cargo run
+cargo build
+git branch -M main
+git remote add origin git@github.com:sqfzy/quantitative.git
+git add .
+git commit -m "first commit"
+git push -u origin main
+cd ../
+cd combined/
+cargo build
+cd msig_fdev_zl/
+cargo build
+cargo run
+file data/factors_update_binance_swap_apt_usdt.0 
+jupyter
+sudo pacman -S jupyterlab python-ipykernel
+sudo pacman -Syu
+sudo pacman-key --help
+sudo pacman-key --refresh-keys
+sudo pacman -Syu
+sudo pacman-key --recv-key F4872044BE23232C
+sudo pacman-key --refresh-keys 
+sudo pacman-key --refresh-keys --help
+sudo pacman-key --list-keys
+sudo pacman-key --recv-key 2D4C887EB08424F157151C493DD50AA7E055D853
+cd combined/
+sudo pacman -Syu
+sudo pacman -S jupyterlab python-ipykernel
+cd msig_fdev_zl/
+jupyter diff.ipynb
+exit
+cd combined/msig_fdev_zl/
+jupyter diff.ipynb
+jupyter lab
+cd ../
+jupyter lab
+uv add jupyterlab
+cd python_run_factor/
+uv add jupyterlab
+sudo pacman --help
+sudo pacman -R --help
+sudo pacman -Ru jupyterlab 
+sudo pacman -Rs jupyter
+pacman -Qs jupyter
+let packages_to_remove = (pacman -Qs jupyter | lines | each { |line| $line | split row " " | get 0 })<\n><\n># 2. 打印将要删除的包，进行确认<\n>print $"即将删除以下包:"<\n>print $packages_to_remove
+a# 1. 查找所有 jupyter 相关的包名<\n>let packages_to_remove = (pacman -Qs jupyter | lines | each { |line| $line | split row " " | get 0 })<\n><\n># 2. 打印将要删除的包，进行确认<\n>print $"即将删除以下包:"<\n>print $packages_to_remove<\n><\n># 3. 如果确认无误，执行删除 (请先取消下面的注释)<\n>sudo pacman -Rns ...$packages_to_remove
+a# 1. 查找所有 jupyter 相关的包名<\n>let packages_to_remove = (pacman -Qs jupyter | lines | each { |line| $line | split row " " | get 0 })<\n><\n># 2. 打印将要删除的包，进行确认<\n>print $"即将删除以下包:"<\n>print $packages_to_remove<\n><\n># 3. 如果确认无误，执行删除 (请先取
+# 1. 查找所有 jupyter 相关的包名<\n>let packages_to_remove = (pacman -Qs jupyter | lines | each { |line| $line | split row " " | get 0 })<\n><\n># 2. 打印将要删除的包，进行确认<\n>print $"即将删除以下包:"<\n>print $packages_to_remove<\n><\n># 3. 如果确认无误，执行删除 (请先取消下面的注释)<\n># sudo pacman -Rns ...$packages_to_remove
+# 1. 查找所有 jupyter 相关的包名<\n>let packages_to_remove = (pacman -Qs jupyter | lines | each { |line| $line | split row " " | get 0 })<\n><\n># 2. 打印将要删除的包，进行确认<\n>print $"即将删除以下包:"<\n>print $packages_to_remove<\n><\n># 3. 如果确认无误，执行删除 (请先取消下面的注释)<\n>sudo pacman -Rns ...$packages_to_remove
+# 1. 查找所有 jupyter 相关的包名<\n>let packages_to_remove = (pacman -Qs jupyter | lines | each { |line| $line | split row " " | get 0 | split row "/" | get 0 })<\n><\n># 2. 打印将要删除的包，进行确认<\n>print $"即将删除以下包:"<\n>print $packages_to_remove<\n><\n># 3. 如果确认无误，执行删除 (请先取消下面的注释)<\n># sudo pacman -Rns ...$packages_to_remove
+# 1. 查找所有 jupyter 相关的包名<\n>let packages_to_remove = (pacman -Qs jupyter | lines | each { |line| $line | split row " " | get 0 | split row "/" | get 1 })<\n><\n># 2. 打印将要删除的包，进行确认<\n>print $"即将删除以下包:"<\n>print $packages_to_remove<\n><\n># 3. 如果确认无误，执行删除 (请先取消下面的注释)<\n># sudo pacman -Rns ...$packages_to_remove
+# 1. 查找所有 jupyter 相关的包名<\n>let packages_to_remove = (pacman -Qs jupyter | lines | each { |line| $line | split row " " | get 0 | split row "/" })<\n><\n># 2. 打印将要删除的包，进行确认<\n>print $"即将删除以下包:"<\n>print $packages_to_remove<\n><\n># 3. 如果确认无误，执行删除 (请先取消下面的注释)<\n># sudo pacman -Rns ...$packages_to_remove
+# 1. 查找所有 jupyter 相关的包名<\n>let packages_to_remove = (pacman -Qs jupyter | lines | each { |line| $line | split row " " | get 0 })<\n><\n># 2. 打印将要删除的包，进行确认<\n>print $"即将删除以下包:"<\n>print $packages_to_remove<\n><\n># 3. 如果确认无误，执行删除 (请先取消下面的注释)<\n># sudo pacman -Rns ...$packages_to_remove
+sudo pacman -Rns jupyter-nbclient jupyter-nbconvert jupyter-nbformat jupyter-notebook-shim jupyter-server jupyterlab jupyterlab-pygments python-comm python-ipykernel python-jupyter-client python-jupyter-core python-jupyter-events python-jupyterlab-server python-matplotlib-inline
+cd ../
+cargo build
+cargo nextest run --release --no-capture
+cargo nextest run--no-capture
+cargo nextest run --no-capture
+jupyter lab
+exit
+cd .temp/
+python test_factor.py 
+python final_factor_pool.py 
+python test_factor.py 
+uv add colorama
+cd ../
+cd python_run_factor/
+uv add colorama
+exit
+cd .temp
+python test_factor.py 
+nvim
+cd .temp
+python test_factor.py 
+python final_factor_pool.py 
+python test_factor.py 
+cargo nextest run --no-capture
+python final_factor_pool.py 
+python test_factor.py 
+cargo nextest run --no-capture
+python final_factor_pool.py 
+python test_factor.py 
+cargo nextest run --no-capture
+nu test.nu
+cargo run
+git add .
+git commit -m "update"
+cargo run
+git branch -M main
+git remote add origin git@github.com:sqfzy/quantitative.git
+git push -u origin main --force
+cd ../
+git add .
+cd msig_fdev_zl/
+cargo run
+gitpush
+cargo run
+jupyter lab
+cd .temp
+python diff.py 
+nvim
+cd .temp
+python diff.py 
+cd .temp
+python diff.py 
+cd ./
+cd ../
+cargo run
+python diff.py 
+cd msig_fdev_zl/
+cargo run
+python diff.py 
+cd .temp
+python diff.py 
+exit
+cd .temp
+python diff.py 
+cargo run
+python diff.py 
+nu test.nu
+pyenv install 3.12.3
+pyenv local 3.12.3
+python main.py 
+uv sync
+python main.py 
+uv add numpy
+python main.py 
+exit
+nvim
+uv sync
+python main.py 
+source .venv/bin/activate.nu
+python main.py 
+j qumtum3
+source .venv/bin/activate.nu
+python main.py 
+nu test.nu
+nvim
+exit
+cd .temp
+nu test.nu
+cd .temp
+nu test.nu
+cd .temp
+nu test.nu
+cd ../
+exit
+noxe new "eBPF.md"
+noxe new "MapReduce.md"
+exit
+noxe new 
+noxe new "ferrers diagram.md"
+nvim
+cargo new ebpf
+sudo pacman -S llvm 
+cargo install bpf-linker
+cargo install cargo-generate
+sudo pacman -S bpftool
+cargo generate https://github.com/aya-rs/aya-template
+cd ebpf_filter/
+cargo build
+cargo run
+cd .temp
+nu test.nu
+exit
+cd .temp
+nu test.nu
+cd .temp
+nu test.nu
+cd ../
+cargo build
+nvim
+cargo run
+asudo pacman -S bpftool
+sudo pacman -S bpftool
+cd ~
+noxe new "caffeine.md"
+cargo run --config 'target."cfg(all())".runner="sudo -E"'
+http get "www.google.com"
+http GET "www.google.com"
+http
+http get
+http get "www.google.com"
+http get "http://www.google.com"
+RUST_LOG=info cargo run --config 'target."cfg(all())".runner="sudo -E"'
+ip
+ip addr
+ping 172.21.82.119
+ls
+http get "http://www.google.com"
+RUST_LOG=info cargo run --config 'target."cfg(all())".runner="sudo -E"' -- --iface eth1
+nvim
+cargo run
+nu test.nu
+cd ../
+cd msig_fdev_zl/
+cd .temp
+nu test.nu
+exit
+cd .temp
+exit
+cd .temp
+nu test.nu
+cd .temp
+nu test.nu
+cargo run
+cd ../
+cargo run
+cd .temp
+python diff.py 
+cargo run
+cargo run
+python diff.py 
+kill 226436
+python diff.py 
+asudo pacman -S bpftool
+python diff.py 
+cargo run
+python diff.py 
+cargo run
+python final_factor_pool.py 
+python diff.py 
+cargo run
+python diff.py 
+asudo pacman -S bpftool
+python diff.py 
+asudo pacman -S bpftool
+python diff.py 
+python diff.py k
+python diff.py
+cd ../
+nu arch.nu 
+cd ../
+cd .temp
+python diff.py
+nvim
+sudo pacman -Syu
+cd /home/sqfzy/work_space/work_code/rust/ebpf_filter/ebpf_filter-ebpf/src
+cd ./
+cd ../
+cargo add network-types
+cd ../
+cargo build
+nvim
+cargo clean
+cargo build
+nvim
+cargo build
+cargo clean --help
+cargo clean
+cargo cache --help
+cargo build
+nvim
+cd ebpf_filter/
+cargo add tokio -F time
+cargo run
+nvim
+cd .temp
+cargo run
+python diff.py
+exit
+cd .temp
+exit
+cd .temp
+python diff.py
+cargo run
+3
+cargo run
+python diff.py
+cargo run
+python diff.py
+cargo run
+python diff.py
+cargo run
+python diff.py
+cargo run
+python diff.py
+cargo run
+python diff.py
+nu test.nu 
+python diff.py
+j combin
+cd msig_fdev_zl/
+cd .temp
+python diff.py
+cd ../
+python diff.py
+cd .temp
+python diff.py
+cargo run
+python diff.py
+cargo nextest run --no-capture
+cargo nextest run --no-capture factor_test
+cargo nextest run --no-capture book
+nu test.nu 
+kill 226436
+nu test.nu 
+python final_factor_pool.py 
+nu test.nu 
+/usr/sbin/autojump --help
+nu test.nu 
+nu test.nu
+asudo pacman -S bpftool
+nu test.nu
+python diff.py
+cargo run
+python diff.py
+kill 226436
+python diff.py
+nu test.nu
+cargo run
+python diff.py
+cargo run
+python diff.py
+cargo run
+python diff.py
+cargo run
+python diff.py
+cargo run
+python diff.py
+cargo run
+python diff.py
+cargo run
+nu test.nu
+cargo run
+python diff.py
+cargo run
+python diff.py
+nu test.nu
+asudo pacman -S bpftool
+nu test.nu
+python
+cargo run
+jupyter lab
+uv add jupyterlab
+cd ../
+jupyter lab
+uv add jupyterlab
+cd python_run_factor/
+jupyter lab
+uv add jupyterlab
+jupyter lab
+jupyter
+cd ../
+jupyter
+jupyter lab
+cd ../
+exit
+cargo run
+exit
+cd .temp
+python diff.py
+cargo run
+python diff.py
+cd ../
+nu arch.nu 
+cargo run
+cd msig_fdev_zl/
+cargo run
+jupyter lab
+cd .temp
+nu test.nu
+nvim
+cargo new test_factor
+cargo tree
+cargo build
+nvim
+cargo run
+pyenv uninstall 3.12.3 
+exit
+cd /home/sqfzy/work_space/work_code/rust/run_factor3/combined/test_factor/src
+cd ../
+cargo run
+cd ../
+cd python_run_factor/
+source .venv/bin/activate.nu
+cd /home/sqfzy/work_space/work_code/rust/run_factor3/combined/test_factor/src
+cd ../
+cargo run
+exit
+cd /home/sqfzy/work_space/work_code/rust/run_factor3/combined/test_factor/src
+cd ../
+cargo run
+exi
+exit
+cd ../
+cargo run
+cargo run1
+cargo run
+cargo add either
+cargo run
+cd ../
+nu arch.nu 
+cargo run
+cd test_factor/
+cargo run
+cd ../
+exit
+cd /home/sqfzy/work_space/work_code/rust/run_factor3/combined/msig_fdev_zl
+cd combined/
+cd msig_fdev_zl/
+cargo run
+exit
+cd combined/msig_fdev_zl/
+cargo run
+RUST_BACKTRACE=1 cargo run
+coredumpctl list
+jupyter lab
+cargo run
+nvim
+cargo run
+nvim
+cargo run
+cd cd /home/sqfzy/work_space/work_code/rust/run_factor3/combined/test_factor/src
+cargo run
+exit
+cd /home/sqfzy/work_space/work_code/rust/run_factor3/combined/test_factor/src
+cd ../
+cargo run
+cargo new macros --lib 
+cargo run
+cargo add inventory
+cargo run
+cargo add clap -F derive
+cargo run -w TD_PR_006
+cargo run -- -w TD_PR_006
+cargo run
+cargo add tracing tracing-subscriber
+cargo add tracing-subscriber -F env-filter
+cargo run -- -w TD_PR_006
+cargo run -- -w obs_TD_PR_006
+RUST_LOG=info cargo run -- -w TD_PR_006
+RUST_LOG=info cargo run -- -w obs_TD_PR_006
+cargo run -- -w obs_TD_PR_006
+cargo run -- -w TD_PR_006
+cargo run -- -w TD_PR_007
+cargo run -- -w TD_PR_010
+cargo run
+cargo run -- -w factor_052
+cargo run
+cargo run -- -w factor_046
+cargo run
+cargo add tracing-subscriber -F json
+cargo build
+cargo run
+cargo add csv
+cd msig_fdev_zl/
+exit
+jupyter lab
+cd ../
+nu arch.nu 
+cd ../
+cd combined/test_factor/
+cargo run
+nvim
+nvim 
+cargo build
+cd ../
+nu run_test.nu 
+noxe preview aide
+noxe new "aide.md"
+cd aaka_user_app/
+cargo add axum aide -F axum
+cargo add axum
+cargo add aide -F axum
+cargo run
+cargo run -- -w factor_027
+cargo run
+eixt
+cargo run
+cd ../
+source python_run_factor/.venv/bin/activate.nu
+cd combined/
+cd test_factor/
+cargo run
+exit
+cargo run
+cargo run -- -w factor_027
+RUST_LOG=debug cargo run -- -w factor_027
+jupyter lab
+nvim
+cd ../
+cd msig_fdev_zl/
+cd ../msig_fdev_zl/
+cargo run
+eixt
+exit
+cd combined/msig_fdev_zl/
+exit
+cargo run
+j combin
+cd ../
+source python_run_factor/.venv/bin/activate.nu
+cd combined/msig_fdev_zl/
+jupyter lab
+cd combined/msig_fdev_zl/
+exit
+cargo run
+cargo run -- -w factor_027
+cargo add aes-gcm
+cd aaka_user_app/
+cargo add aes-gcm
+cargo build
+cd ../ibc_aaka_scheme/
+cargo add aes-gcm
+cd ../aaka_user_app/
+cargo add axum -F macros
+http post 
+http post --help
+nu run_test.nu 
+cd ../
+nu run_test.nu 
+ss -ltp
+kill 57070
+kill 57069 57071
+ss -ltp
+kill 57674
+nu run_test.nu 
+ss -ltp
+kill 59372 59371 59379 59535 59583
+ss -ltp
+http get "http://www.google.com"
+nu run_test.nu 
+nvim
+nvim
+nvim
+j ibc
+nu run_test.nu 
+j ibc
+nu run_test.nu 
+nuvim
+nvim
+nu run_test.nu 
+ss -ltp
+kill 349 353 348
+nu run_test.nu 
+http post "http://127.0.0.1:4002" { msg: "Hi Bob" } 
+http post "http://127.0.0.1:4002" { msg: 'Hi Bob' } 
+http post "http://127.0.0.1:4002" { 'msg': 'Hi Bob' } 
+http post --help
+http post "http://127.0.0.1:4002" { msg: HiBob } 
+http post "http://127.0.0.1:4002" { msg: 'Hi Bob' } 
+http post "http://127.0.0.1:4002" {msg: 'Hi Bob'} 
+http post "http://127.0.0.1:4002" ({ msg: 'Hi Bob' } | to json)
+nu run_test.nu 
+http post "http://127.0.0.1:4002/send_message" ({ msg: 'Hi Bob' } | to json)
+cd aaka_rc_app/
+cd aaka_ms_server/
+cargo run
+http get $"http://127.0.0.1:5000/setup"
+cd aaka_user_app/
+cargo run
+http post "http://127.0.0.1:4002/send_message" ({ msg: 'Hi Bob' } | to json)
+{ msg: 'Hi Bob' } | to json
+cargo run
+http post "http://127.0.0.1:4002/send_message" ({ msg: 'Hi Bob' } | to json)
+http post "http://127.0.0.1:4002/send_message" 'Hi bob'
+cargo run
+cargo run
+cargo run
+cargo run
+cargo run
+nu run_test.nu 
+http post "http://127.0.0.1:4002/send_message" 'Hi bob'
+ss -ltp
+kill 14840 14839 14841 15003 15333
+nu run_test.nu 
+cd aaka_rc_app/
+$env.RC_ADDR="127.0.0.1:6123"
+$env.RC_ADDR = "127.0.0.1:6123"
+cargo run
+gitpush
+nvim run_test.nu 
+pandoc foo.md foo.docx
+pandoc foo.md -o foo.docx
+noxe preview eBPF
+noxe preview ebpf
+noxe preview ebpf -t md
+pandoc foo.md -o foo.docx
+pandoc foo.md -o foo.pdf
+pandoc foo.md -o foo.docx
+ls
+git clone https://github.com/sqfzy/sigust.git
+cargo run -- -w factor_027
+cargo run
+exit
+cargo run
+cargo run -- -w baseline_189
+cargo run 
+cargo run -- -w baseline_079
+cargo run 
+cargo run -- -w baseline_079
+cargo run -- -w baseline_135
+cargo run
+cargo run -- -w obs_TD_TI_026
+cargo run -- -w TD_CI_003
+cargo run -- -w TD_CI_004
+cargo run -- -w 004
+cargo run 039
+cargo run -- -w 039
+RUST_LOG=debug cargo run -- -w 039
+cargo nextest run --no-capture foo
+nvim
+cargo run -- -w 039
+exit
+RUST_LOG=debug cargo run -- -w 039
+cargo run -- -w 039
+cargo run -- -w TD_TI_039
+cargo run
+cargo run -- -w 076
+cargo run -- -w 052
+RUST_LOG=debug cargo run -- -w 052
+cargo run
+cd msig_fdev_zl/
+cargo run
+jupyter lab
+cd ../
+source python_run_factor/.venv/bin/activate.nu
+cd rust_run_factor/
+cd run_factor3/
+source python_run_factor/.venv/bin/activate.nu
+cd combined/
+cd msig_fdev_zl/
+jupyter lab
+exit
+jupyter lab
+cd ../
+nu arch.nu 
+nvim
+nvim
+j combin
+ls
+tar -xzvf arch.tar.gz 
+ls
+nu arch.nu 
+gitpush
+cd aaka_rc_app/
+cargo nextest run --no-capture foo
+cargo add clap -F derive
+nvim
+cargo run
+cd ../
+nu arch.nu 
+nvim
+nvim
+cd test_factor/
+cargo run
+exit
+cargo run
+nu arch.nu 
+nvim
+noxe new "linkme&inventor.md"
+noxe new "proc_macro2.md"
+noxe new "synstructure.md"
+noxe new "rig.md"
+noxe new "burn.md"
+nvim
+sudo pacman -Syu carapace
+sudo pacman -Syu
+carapace _carapace nushell
+carapace --help
+exit
+cargo new quasar
+cd quasar/
+cargo add burn polars serde
+cargo run
+cd ../AI/
+noxe new "vulkano.md"
+cargo run
+nvim
+sudo pacman -Syu
+cargo run\
+cargo run
+nvim
+gitpush
+cargo build
+nvim
+noxe new "rich text format.md"
+cd ../
+gitpush
+anvim
+nvim
+noxe new "degrees of freedom.md"
+git add .
+cd test_factor/
+git add .
+git commit -m "update"
+git branch -M main<\n>git remote add origin git@github.com:sqfzy/test_factor.git<\n>git push -u origin main
+ls
+cd ../
+cd combined/test_factor/
+git branch -M main<\n>git remote add origin git@github.com:sqfzy/test_factor.git<\n>git push -u origin main
+git add .
+git commit -m "update"
+git branch -M main<\n>git remote add origin git@github.com:sqfzy/test_factor.git<\n>git push -u origin main
+git push -u origin main --force
+nvim
+cargo build
+cd ../
+ccd /home/sqfzy/work_space/work_code/rust/run_factor3/combined/msig_fdev_zl2
+cd /home/sqfzy/work_space/work_code/rust/run_factor3/combined/msig_fdev_zl2
+cargo build
+cd ../
+cd msig_fdev_zl/
+cargo build
+cd ../
+nu arch.nu 
+cargo build
+cd test_factor/
+cargo run
+exit
+cargo run
+cargo run -- -w 052
+cargo run
+cargo run -- -w 128
+cargo run
+cargo run -- -w baseline_120
+cd test_factor/
+cargo run -- -w baseline_120
+cargo run -- -w baseline_116
+cargo run -- -w macd 
+cargo run -- -w baseline_007
+cargo run -- -w TD_TI_036
+cargo run -- -w TD_TI_015
+cargo run -- -w obs_baseline_016
+anvim
+cargo run -- -w obs_baseline_016
+cargo run -- -w obs_TD_PT_004
+cargo run -- -w obs_baseline_018
+cargo run -- -w obs_TD_TI_036
+cargo run -- -w TD_TI_039
+cargo build
+cd ../
+nu arch.nu 
+cargo build
+cd msig_fdev_zl/
+cargo build
+cd ../
+nu arch.nu 
+nvim
+sudo pacman -Syu
+cargo add rand
+cargo build
+nvim
+cargo new "machine leanring"
+noxe new "machine leanring"
+cd `machine leanring/`
+pandocgpt
+cargo run -- -w obs_TD_PR_016
+exit
+cargo run -- -w obs_TD_PR_016
+jupyter lab
+cargo run
+jupyter lab
+exit
+jupyter lab
+exit
+cargo run -- -w obs_TD_TI_023
+cargo run
+cargo run -- -w obs_TD_VI_011
+cargo run
+cargo run -- -w obs_TD_VI_011
+cargo run
+cargo run
+cargo run -- -wobs_TP_VPI_001
+cargo run -- -w obs_TP_VPI_001
+RUST_LOG=debug cargo run -- -w obs_TP_VPI_005
+cargo run -- -w obs_TP_VPI_001
+RUST_LOG=debug cargo run -- -w obs_TP_VPI_005
+cargo run -- -w obs_TP_VPI_001
+cargo run
+jupyter lab
+cd ../
+nu arch.nu 
+RUST_LOG=debug cargo run -- -w obs_TP_VPI_004
+cca
+cargo run -- -w obs_TP_VPI_004
+cargo run
+cd test_factor/
+cargo run
+cargo run
+cargo run -- -w baseline_129
+carg run
+cargo run
+cargo run -- -w obs_baseline_098
+cargo run -- -w obs_baseline_139
+cargo run -- -w TD_PT_004
+RUST_LOG=debug cargo run -- -w obs_TP_VPI_004
+cargo run -- -w TD_PT_004
+RUST_LOG=debug cargo run -- -w obs_TP_VPI_004
+cargo run -- -w TD_PT_004
+RUST_LOG=debug cargo run -- -w obs_TP_VPI_004
+cargo run -- -w TD_PT_004
+RUST_LOG=debug cargo run -- -w TD_PT_004
+cargo run -- -w TD_PT_004
+RUST_LOG=debug cargo run -- -w TD_PT_004
+nvim
+cargo run -- -w TD_PT_004
+exit
+cargo run -- -w TD_PT_004
+exit
+cargo run -- -w TD_PT_004
+RUST_LOG=debug cargo run -- -w TD_PT_004
+cargo run
+cargo run -- -w obs_factor_001
+cd ../
+cd msig_fdev_zl/
+cargo run
+gitpush
+cd ../
+nu arch.nu 
+nvim
+exit
+cargo run
+cargo run -- -w obs_sell_avg_price
+cargo run
+cargo run -- -w factor_170
+cargo run -- -w factor_trades_035
+jupyter lab
+exit
+cargo run -- -w obs_sell_avg_price
+cargo run
+grep --help
+grep obs_sell_avg_price ./data/factors_update_binance_swap_apt_usdt.0
+grep obs_factor_trades_049 ./data/factors_update_binance_swap_apt_usdt.0
+grep ./data/factors_update_binance_swap_apt_usdt.0 obs_factor_trades_049
+grep sell_avg_price ./data/factors_update_binance_swap_apt_usdt.0
+cargo run
+cargo run -- -w obs_factor_170
+RUST_LOG=debug cargo run -- -w TD_PT_004
+cargo run
+cd ../
+nu arch.nu 
+python diff.py
+cd ../
+python diff.py
+nvim
+python diff.py
+ls
+cd combined/
+python diff.py
+exit
+cargo run
+cargo clean
+cd 
+exit
+cargo clean
+cargo build
+cargo run -- get_all_name
+cargo run --bin get_all_name
+python diff.py
+exit
+python diff.py
+cd msig_fdev_zl/
+cd ../
+python diff.py
+cargo run --bin test -- -w obs_TD_PT_003
+exit
+cargo run --bin test -- -w obs_TD_PT_003
+RUST_LOG=debug cargo run --bin test -- -w obs_TD_CI_003
+RUST_LOG=debug cargo run --bin test -- -w obs_baseline_178
+RUST_LOG=debug cargo run --bin test -- -w obs_TD_TI_039
+RUST_LOG=debug cargo run --bin test -- -w obs_TD_MT_008
+RUST_LOG=debug cargo run --bin test -- -w obs_factor_052
+RUST_LOG=debug cargo run --bin test -- -w obs_factor_134
+RUST_LOG=debug cargo run --bin test -- -w obs_factor_128
+RUST_LOG=debug cargo run --bin test -- -w obs_factor_134
+RUST_LOG=debug cargo run --bin test -- -w obs_factor_128
+RUST_LOG=debug cargo run --bin test -- -w obs_factor_032
+cd msig_fdev_zl/
+cargo run
+cd ../
+python diff.py
+python msig_fdev_zl/split.ipynb
+python diff.py
+cd msig_fdev_zl/
+cargo run
+cd ../
+python diff.py
+python diff2.py
+python diff1.py
+python diff.py
+RUST_LOG=debug cargo run --bin test -- -w obs_factor_021
+RUST_LOG=debug cargo run --bin test -- -w obs_baseline_029
+cd msig_fdev_zl/
+cargo run
+cd ../
+python diff.py
+RUST_LOG=debug cargo run --bin test -- -w obs_baseline_178
+cargo run
+cargo run --bin test
+python merge.py
+uv add openpyxl
+cd ../
+cd python_run_factor/
+uv add openpyxl
+cd /home/sqfzy/work_space/work_code/rust/run_factor3/combined/help_work
+python merge.py
+cargo run --bin test
+python merge.py
+nu arch.nu 
+nvim
+noxe new "XMAL.md"
+noxe new "LD_PRELOAD.md"
+cd Rust/
+noxe new "cargo-dist.md"
+noxe new "sled.md"
+noxe new "redb.md"
+cd ../
+cd `../Cyberspace Security/`
+ls
+noxe new "blind.md"
+nvim blind.md 
+cd ../Programme/
+noxe new "linux调试.md"
+tree 
+ls tree
+ls --help
+tree
+tee
+tr
+tre
+ls
+ls --help
+cd factors_split/
+ls
+cd ../
+python diff.py
+cd /home/sqfzy/work_space/work_code/rust/run_factor3/combined
+python diff.py
+exit
+python diff.py
+cd combined/
+python diff.py
+cd msig_fdev_zl/
+cargo run
+cd help_work/
+cargo run --bin test -- -w obs_TD_PT_003
+cargo run
+cd ../
+python diff.py
+nvim
+cd ../msig_fdev_zl/
+cargo run
+cd ../
+python diff.py
+cd msig_fdev_zl/
+cargo run
+cd ../
+python diff.py
+RUST_LOG=debug cargo run --bin test -- -w obs_TD_MT_008
+t
+exit
+RUST_LOG=debug cargo run --bin test -- -w obs_TD_MT_008
+python diff.py
+python diff2.py
+cd ../msig_fdev_zl/
+cd ../
+nu arch.nu 
+cd msig_fdev_zl/
+cargo run
+python diff2.py
+jupyter lab
+python diff2.py
+jupyter lab
+nu arch.nu 
+nvim
+cd ../
+python diff2.py
+cd msig_fdev_zl/
+cargo run
+cd ../
+python diff2.py
+exit
+cd ../
+python diff2.py
+cargo run
+jupyter lab
+exit
+cargo nextest run --no-capture foo
+cargo run
+python diff2.py
+jupyter lab
+exit
+python diff2.py
+cd ../
+python diff2.py
+cargo run
+cargo run --bin test
+exit
+cargo run --bin test
+cargo run --bin test -- -w baseline_016
+exit
+cargo run --bin test -- -w baseline_016
+cargo add rand
+python diff2.py
+cd ../
+python diff2.py
+cargo run --bin test -- -w factor_128 -l 50000
+cargo run --bin test -- -w factor_128 -l 1000
+RUST_LOG=debug cargo run --bin test -- -w obs_factor_trades_020
+RUST_LOG=debug cargo run --bin test -- -w obs_factor_trades_020 -l 20000
+npm install -g @google/gemini-cli
+sudo npm install -g @google/gemini-cli
+cd msig_fdev_zl/
+ls ~/key/gemini_api_key
+ls ~/key/gemini_api_key | name
+ls ~/key/gemini_api_key | get name
+cat ~/key/gemini_api_key | get name
+cat ~/key/gemini_api_key
+exit
+echo $env.GEMINI_API_KEY
+gemini 
+gemini 
+gemini
+exit
+jupyter lab
+exit
+gemini
+nvim
+t
+cd /home/sqfzy/work_space/notes/Programme
+noxe new "cygwin.md"
+cd ../
+gitpush
+nvim
+nvim
+noxe new "stablecoin.md"
+nvim
+nvim -v
+sudo pacman -Syu
+cd Programme/
+noxe new "proof-of-concept.md"
+nvim proof-of-concept.md 
+cd Performance/
+noxe new "canary testing.md"
+nvim "canary testing.md" 
+noxe new "workload&resource analysis.md"
+noxe search
+noxe --help
+noxe search Observable
+noxe search Observ
+noxe search Obser\
+noxe search Obser
+cd 
+exit
+noxe new "obeservability.md"
+noxe new "micro-benchmarking.md"
+cargo install bottom --locked
+btm 
+btm
+noxe new "user-mode syscall.md"
+noxe new "kernel bypass.md"
+cd ../
+cargo noxe "NUMA.md"
+noxe new "NUMA.md"
+nvim
+pa
+sudo bpftrace -e 'tracepoint:sched:sched_switch { @cs++ } tracepoint:block:block_rq_issue { @io++ } interval:s:1 { time("%H:%M:%S  "); printf("cs: %-8d io: %-8d\n", @cs, @io); clear(@cs); clear(@io); }'
+sudo pacman -S bpftrace
+sudo bpftrace -e 'tracepoint:sched:sched_switch { @cs++ } tracepoint:block:block_rq_issue { @io++ } interval:s:1 { time("%H:%M:%S  "); printf("cs: %-8d io: %-8d\n", @cs, @io); clear(@cs); clear(@io); }'
+# 按进程名统计每秒写入的字节数<\n>sudo bpftrace -e 'tracepoint:block:block_rq_issue /args->rwbs=="W"/ { @bytes[comm] = sum(args->bytes); } interval:s:1 { print(@bytes); clear(@bytes); }'
+noxe new "bpftrace handbook.md"
+wc -w "bpftrace handbook.md" 
+pandocgpt `bpftrace handbook.md`
+typst -h
+typst compile `bpftrace handbook.typ`
+sudo bpftrace -e 'BEGIN {printf("Hello, eBPF World!\n");}'
+sudo bpftrace -e 'tracepoint:syscalls:sys_enter_*'
+sudo bpftrace -l 'tracepoint:syscalls:sys_enter_*'
+cargo run --bin test
+exit
+cargo run --bin test
+cargo run --release --bin test
+cargo run --bin test
+cargo clean
+cargo run --bin test
+python merge.py
+cargo run --bin test
+python merge.py
+wc -w foo.md 
+cargo nextest run --no-capture foo
+cargo run --bin test
+python merge.py
+cargo run --bin test
+cargo run --release --bin test
+python merge.py
+noxe new "bpftrace handbook.md"
+rm `bpftrace handbook.md`
+cd /home/sqfzy/work_space/notes/CS/Performance
+noxe new "bpftrace handbook.md"
+pandocgpt `bpftrace handbook.md`
+nvim
+vmstat
+mpstat
+btm
+iostat
+tcpdump
+sar
+ls --help
+ls --tree
+ls -D
+ls --help
+ls --depth
+dir
+ls
+ls --depth
+eza
+eza --help
+eza
+eza --help
+eza
+eza --tree
+eza --tree --depth 2
+eza --tree --help
+eza --tree -L 2
+cat
+cat foo.md
+exit
+ls
+ls --tree
+ls --help
+ls --bytes
+ls -@
+eza -@
+eza --total-size 
+eza --long
+ls --long
+exa
+sudo pacman -Rns exa
+eza
+exit
+nvim
+ls -l /proc
+noxe new "/proc.md"
+ls
+cd /proc/
+cd cd /home/sqfzy/work_space/notes/CS
+cd /home/sqfzy/work_space/notes/CS/Performance
+ls
+noxe new "proc folder.md"
+echo $nu.pid
+ls "/proc/38960"
+cat /proc/($pid)/cmdline | str replace "\x00" " "
+let pid = ($nu.pid)
+cat /proc/($pid)/cmdline | str replace "\x00" " "
+cat /proc/($pid)/cmdline | str replace "\\x00" " "
+cat /proc/($pid)/status
+cat /proc/($pid)/maps
+ls -i /usr/bin/nu
+ls -i
+ls --help
+ls -i /usr/bin/nu
+ls -l -i /usr/bin/nu
+cat /proc/($pid)/maps
+cat /proc/($pid)/fd
+ls /proc/($pid)/fd
+ls /proc/($pid)
+ls /proc/($pid)/fd/
+ls /proc/($pid)/fd
+cat /proc/($pid)/fd/1
+ls /proc/($pid)/fd/1
+ls /proc/($pid)/maps
+ls -l /proc/($pid)/maps
+ls -l /proc/($pid)
+ls /proc/($pid)
+ls /proc/($pid)/meminfo
+ls /proc/meminfo
+cat /proc/meminfo
+ls /proc
+cat /proc/cpuinfo
+let pid = ($nu.pid)
+cat /proc/cpuinfo
+cat /proc/($pid)/maps
+cat /proc/uptime
+ls /proc/sys
+uname -a
+noxe new "procfs&sysfs.md"
+nvim
+cat /proc/swaps
+cat /proc/partitions
+cat /proc/mounts
+cat /proc/stat
+cat /proc/net
+ls /proc/net
+cat /proc/status
+let pid = ($nu.pid)
+cat /proc/($pid)/status
+cd /home/sqfzy/work_space/notes/CS/Performance
+wc -w "procfs&sysfs.md" 
+cargo run --bin test -- -w baseline_189
+exit
+cargo run --bin test -- -w baseline_189
+RUST_LOG=debug cargo run --bin test -- -w baseline_189
+nvim
+noxe preview prompt
+nvim
+sar -u -n TCP
+vtm
+btm
+sudo pacman -S btop 
+btop
+ip addr
+ls 
+cd work_space/
+cd notes/
+cat README.md
+sudo bpftrace -e 'tracepoint:syscalls:sys_enter_execve {printf("New process: %s\n", str(args->filename))}'
+sudo bpftrace -e 'tracepoint:syscalls:sys_enter_execve { printf("%s\n", str(args->filename)); }' | lines | where $it starts-with "/usr/bin"
+sudo bpftrace -l 'tracepoint:syscalls:sys_enter_*'
+sudo bpftrace -l 'tracepoint:syscalls:sys_enter_*' | lines | grep open
+sudo bpftrace -l 'tracepoint:syscalls:sys_enter_fsopen'
+sudo bpftrace -e 'tracepoint:syscalls:sys_enter_fsopen'
+sudo bpftrace -e 'tracepoint:syscalls:sys_enter_fsopen {printf("%s\n", str(args))}'
+sudo bpftrace -lv tracepoint:syscalls:sys_enter_fsopen
+sudo bpftrace -lv tracepoint:syscalls:sys_enter_execve
+nvim
+cat README.md
+j notes
+cat README.md
+nvim
+cat README.md
+sudo bpftrace -e 'tracepoint:syscalls:sys_enter_fsopen {printf("%s\n", str(args->_fs_name))}'
+sudo bpftrace -l 'tracepoint:syscalls:sys_enter_' | lines | grep 'write'
+sudo bpftrace -l 'tracepoint:syscalls:sys_enter_' | lines
+sudo bpftrace -l 'tracepoint:syscalls:sys_enter_*' | lines
+sudo bpftrace -l 'tracepoint:syscalls:sys_enter_*' | lines | grep write
+sudo bpftrace -l 'tracepoint:syscalls:sys_enter_*' | lines | grep open
+sudo bpftrace -l 'tracepoint:syscalls:sys_enter_*' | lines | grep write
+sudo bpftrace -e 'tracepoint:syscalls:sys_enter_execve { printf("%s\n", str(args->filename)); }' | lines | where $it starts-with "/usr/bin"
+sudo bpftrace -e 'tracepoint:syscalls:sys_enter_execve { printf("name: %s, pid=%d\n", str(args->filename)), pid; }' | lines | where $it starts-with "/usr/bin"
+nvim
+sudo bpftrace -e 'tracepoint:syscalls:sys_enter_execve { printf("name: %s, pid=%d\n", str(args->filename), pid); }' | lines | where $it starts-with "/usr/bin"
+sudo bpftrace -e 'tracepoint:syscalls:sys_enter_execve { printf("name: %s, pid=%d\n", str(args->filename), pid); }'
+nvim
+sudo bpftrace -e 'tracepoint:syscalls:sys_enter_execve { printf("name: %s, pid=%d\n", str(args->filename), pid); }' | lines | where $it starts-with "/usr/bin"
+ls
+sudo bpftrace -e 'tracepoint:syscalls:sys_enter_* {@syscall_countsp[comm]++;}'
+sudo bpftrace -e 'tracepoint:syscalls:sys_enter_* /comm == "nvim"/ {@syscall_countsp[prob]++;}'
+sudo bpftrace -e 'tracepoint:syscalls:sys_enter_* /comm == "nvim"/ {@syscall_countsp[probe]++;}'
+j rust
+nvim
+j rust
+sudo bpftrace -e 'tracepoint:syscalls:sys_enter_openat {@[comm]++;}'
+cd foo
+cargo run
+sudo bpftrace -e 'tracepoint:syscalls:sys_enter_openat /comm == "foo"/ {printf("%s\n", str(args->filename))}'
+/
+ldd ./target/debug/foo
+cd /home/sqfzy/work_space/work_code/rust/foo/src
+ldd ./target/debug/foo
+ls
+cd ../
+ldd ./target/debug/foo
+cd ../
+mkdir bpftrace
+cd bpftrace/
+nvim
+touch latency.bt
+nvim latency.bt 
+nvim
+cd /home/sqfzy/work_space/work_code/bpftrace
+sudo bpftrace latency.bt 
+sudo bpftrace -l 'kprobe:SyS_*'
+sudo bpftrace -l 'kprobe:*'
+sudo bpftrace -l 'kprobe:*' | lines | grep sys
+sudo bpftrace -l 'kprobe:*' | lines | grep sys_openat
+sudo bpftrace latency.bt
+sudo bpftrace -l 'kprobe:*' | lines | grep openat
+nvim
+sudo bpftrace latency.bt
+sudo modprobe kheaders
+ls
+# 获取当前内核版本字符串<\n>let kernel_version = (uname -r)<\n># 构造目标目录路径<\n>let headers_path = $"/usr/src/linux-headers-($kernel_version)"<\n># 创建目录<\n>sudo mkdir -p $headers_path<\n># 解压<\n>sudo tar -C $headers_path -xf /sys/kernel/kheaders.tar.xz
+uname -r
+uname
+let kernel_version = "6.6.87.1-microsoft-standard-WSL2"
+let headers_path = $"/usr/src/linux-headers-($kernel_version)"<\n># 创建目录<\n>sudo mkdir -p $headers_path<\n># 解压<\n>sudo tar -C $headers_path -xf /sys/kernel/kheaders.tar.xz
+uname --help
+uname -h
+uname
+uname | get kernel-release
+excd /home/sqfzy/work_space/work_code/bpftrace
+exit
+cd /home/sqfzy/work_space/work_code/bpftrace
+echo $env.BPFTRACE_KERNEL_SOURCE
+sudo bpftrace latency.bt
+# 在 nushell 中临时设置环境变量并执行命令<\n>sudo env BPFTRACE_KERNEL_SOURCE=$headers_path bpftrace latency.bt
+ls /usr/src/linux-headers-6.6.87.1-microsoft-standard-WSL2/
+ls /usr/src/linux
+# 在 nushell 中临时设置环境变量并执行命令<\n>sudo env BPFTRACE_KERNEL_SOURCE=/usr/src/linux-headers-6.6.87.1-microsoft-standard-WSL2 bpftrace latency.bt
+echo $env.BPFTRACE_KERNEL_SOURCE
+sudo bpftrace latency.bt
+# 在 nushell 中临时设置环境变量并执行命令<\n>sudo env BPFTRACE_KERNEL_SOURCE=/usr/src/linux-headers-6.6.87.1-microsoft-standard-WSL2 bpftrace latency.bt
+cd /usr/src
+cd linux-headers-6.6.87.1-microsoft-standard-WSL2/
+sudo make prepare
+ls
+ls /usr/src/linux-headers-6.6.87.1-microsoft-standard-WSL2/
+gitpush
+exit
+j work_space/
+cd bpftrace/
+j bpftrace
+sudo bpftrace latency.bt
+echo $env.BPFTRACE_KERNEL_SOURCE
+ls
+nvim
+cd /usr/src
+rm linux-headers-6.6.87.1-microsoft-standard-WSL2/ 6.6.87.1-microsoft-standard-WSL2
+rm linux-headers-6.6.87.1-microsoft-standard-WSL2 6.6.87.1-microsoft-standard-WSL2
+mv linux-headers-6.6.87.1-microsoft-standard-WSL2 6.6.87.1-microsoft-standard-WSL2
+sudo mv linux-headers-6.6.87.1-microsoft-standard-WSL2 6.6.87.1-microsoft-standard-WSL2
+ls
+nvim
+j bpftrace
+sudo bpftrace latency.bt
+sudo tar -xf /sys/kernel/kheaders.tar.xz
+ls
+nivm
+nvim
+cd /usr/src
+ls
+cd linux
+ls
+nvim
+cd ../
+ls
+sudo BPFTRACE_KERNEL_SOURCE=/usr/src/6.6.87.1-microsoft-standard-WSL2 bpftrace latency-fixed.bt
+sudo BPFTRACE_KERNEL_SOURCE=/usr/src/6.6.87.1-microsoft-standard-WSL2 bpftrace latency.bt
+nvim
+sudo BPFTRACE_KERNEL_SOURCE=/usr/src/6.6.87.1-microsoft-standard-WSL2 bpftrace latency.bt
+sudo echo $env.BPFTRACE_KERNEL_SOURCE
+sudo BPFTRACE_KERNEL_SOURCE=/usr/src/6.6.87.1-microsoft-standard-WSL2 bpftrace latency.bt
+sudo bpftrace latency.bt
+nvim
+sudo bpftrace latency.bt
+j foo
+ls
+cd
+cd /home/sqfzy/.config/nushell
+cd /home/sqfzy/work_space/work_code/bpftrace
+sudo bpftrace latency.bt
+nvim
+cargo run
+sudo bpftrace -l 'kprobe:*write*'
+sudo bpftrace -l 'kprobe:*sys_write*'
+ls
+rm -rf arch
+sudo rm -rf arch
+sudo rm -rf include/
+ls
+dd if=/dev/zero of=/tmp/testfile bs=1M count=10
+sudo bpftrace latency.bt
+cargo build --release
+nm
+nm target/release/foo | grep a_slow_function
+nvim
+sudo bpftrace -e 'uprobe:/home/sqfzy/work_space/work_code/rust/foo/target/release/foo:a_slow_functioin {@calls++;}'
+sudo bpftrace -e 'uprobe:/home/sqfzy/work_space/work_code/rust/foo/target/release/foo:_ZN3foo15a_slow_function17h5405167b7dfe7fa8E {@calls++;}'
+cargo run --release
+sudo bpftrace latency.bt 
+nm target/release/foo | grep a_slow_function
+sudo pacman -S rizin 
+rizin target/release/foo
+rizin -q -c 'afl' | lines | grep slow
+rizin -q -c 'afl' | lines
+rizin -c 'afl' | lines
+rizin -c 'afl' target/release/foo
+rizin --help
+rizin -h
+rizin -c 'afl'
+rizin -c 'aflj' target/release/foo 
+rizin -q -c 'aflj' target/release/foo 
+rizin -q -c 'afl' target/release/foo 
+rizin -q -c 'aaa' target/release/foo 
+rizin -q -c 'aflj' target/release/foo | from json
+# 在 Nushell 中<\n>> rizin -q -c 'aflj' target/debug/foo | from json
+rizin -q -c 'aflj' target/debug/foo | from json
+rizin -q -c 'aaa; aflj' target/debug/foo | from json
+echo $nu.data-dir
+exit
+rizin -q -c 'aaa; aflj' target/debug/foo | from json
+cd foo
+rizin -q -c 'aaa; aflj' target/debug/foo | from json
+echo $env.STARSHIP_SHELL
+echo $STARSHIP_PALETTE
+which nu
+echo $STARSHIP_PALETTE
+data now
+date now
+(date now).hour
+date now
+date now hour
+date now | get hour
+date now
+date now --help
+data now | format date '%H'
+date now | format date '%H'
+date now | get hour
+date now | date to-record | get hour
+date now | date to-timezone
+date now | date to-timezone 
+date now | date to-timezone 'UTC'
+date now
+(date now) - ($"($in)min" | into duration)
+30 | (date now) - ($"($in)min" | into duration)
+date now | format date '%H' | into int
+echo $STARSHIP_THEME
+echo $envSTARSHIP_THEME
+echo $env.STARSHIP_THEME
+ls
+echo $env.STARSHIP_THEME
+ls | lines
+j foo
+rizin -q -c 'aaa; aflj' target/debug/foo | from json
+rizin -q -c 'aaa; aflj' target/debug/foo | from json | select 'slow'
+const aaa_data = rizin -q -c 'aaa; aflj' target/debug/foo
+const aaa_data = rizin -q -c 'aaa; aflj' target/debug/foo | from json
+const aaa_data = （rizin -q -c 'aaa; aflj' target/debug/foo | from json)
+const aaa_data = (rizin -q -c 'aaa; aflj' target/debug/foo | from json)
+let aaa_data = rizin -q -c 'aaa; aflj' target/debug/foo | from json
+$aaa_data | grep slow
+$aaa_data | grep slow_function
+$aaa_data
+let aaa_data = rizin -q -c 'aaa; aflj' target/debug/foo | from json
+$aaa_data
+ls
+cat src/main.rs
+rizin
+rizin target/release/foo
+$aaa_data | grep 0x000158f0    
+$aaa_data | grep 0x000158f0
+$aaa_data
+let aaa_data = rizin -q -c 'aaa; aflj' target/release/foo | from json
+$aaa_data | grep slow_function
+j bpftrace
+cd /home/sqfzy/work_space/work_code/bpftrace
+sudo pacman -S rizin 
+sudo bpftrace latency.bt 
+cargo run --release
+sudo bpftrace latency.bt 
+cargo run --release
+sudo bpftrace latency.bt 
+sudo bpftrace -l 'kprobe:*vfs_read*'
+sudo bpftrace -l 'kprobe:*read*'
+sudo bpftrace -l 'kprobe:*fs_read*'
+sudo bpftrace -lv 'kprobe:*vfs_read*'
+sudo bpftrace -l -vv 'kprobe:*vfs_read*'
+sudo bpftrace -l -v 'kprobe:*vfs_read*'
+sudo bpftrace --help
+sudo bpftrace -lv 'kprobe:*vfs_read*'
+sudo bpftrace -lv 'kprobe:vfs_read'
+sudo bpftrace -lv kprobe:vfs_read
+sudo bpftrace -lv tracepoint:syscalls:sys_enter_execve
+sudo bpftrace -l 'kprobe:vfs_read'
+ls /sys/kernel/btf/vmlinux
+sudo bpftrace -l 'kprobe:vfs_read'
+sudo bpftrace -lv 'kprobe:vfs_read'
+sudo bpftrace -l -v 'kprobe:vfs_read'
+sudo bpftrace -l -v kprobe:vfs_read
+uname
+sudo bpftrace -l 'kprobe:vfs_read'
+sudo bpftrace -h
+grep --type c -l "struct task_struct {" $env.BPFTRACE_KERNEL_SOURCE
+grep --type c -l "struct task_struct" $env.BPFTRACE_KERNEL_SOURCE
+grep --type c -l "struct task_struct \{" $env.BPFTRACE_KERNEL_SOURCE
+grep --type c -l "struct task_struct {" $env.BPFTRACE_KERNEL_SOURCE
+grep --type c -l "struct task_struct \{" $env.BPFTRACE_KERNEL_SOURCE
+grep --type c -l 'struct task_struct {' $env.BPFTRACE_KERNEL_SOURCE
+grep --type c -l 'struct task_struct \{' $env.BPFTRACE_KERNEL_SOURCE
+grep --type c 'struct task_struct \{' $env.BPFTRACE_KERNEL_SOURCE
+grep -h
+grep --type c -A 10 'struct task_struct \{' $env.BPFTRACE_KERNEL_SOURCE
+grep --type c -A 20 'struct task_struct \{' $env.BPFTRACE_KERNEL_SOURCE
+grep --type c -A 30 'struct task_struct \{' $env.BPFTRACE_KERNEL_SOURCE
+grep --type c -A 50 'struct task_struct \{' $env.BPFTRACE_KERNEL_SOURCE
+grep --type c -A  'struct task_struct \{.*?^\};' $env.BPFTRACE_KERNEL_SOURCE
+rg --type c -U 'struct task_struct \{.*?^\};' $env.BPFTRACE_KERNEL_SOURCE
+rg -h
+# 1. 把你想要测试的文本块放入一个变量<\n>let test_data = $"<\n>#include <linux/sched.h><\n>/*<\n> * a random comment<\n> */<\n>struct task_struct {<\n>    volatile long state;    /* -1 unrunnable, 0 runnable, >0 stopped */<\n>    void *stack;<\n>    atomic_t usage;<\n>    // more fields here...<\n>}; // a comment at the end<\n><\n>struct another_struct {<\n>    int x;<\n>};<\n>"<\n><\n># 2. 把你的正则表达式放入另一个变量<\n>#    注意我们去掉了开头的 '^'，让它更灵活<\n>let pattern = 'struct task_struct \{.*?\};'<\n><\n># 3. 执行测试！<\n>echo $test_data | rg -U $pattern
+# 1. 把你想要测试的文本块放入一个变量<\n>let test_data = $"<\n>#include <linux/sched.h><\n>/*<\n> * a random comment<\n> */<\n>struct task_struct {<\n>    volatile long state;    /* -1 unrunnable, 0 runnable, >0 stopped */<\n>    void *stack;<\n>    atomic_t usage;<\n>    // more fields here...<\n>}; // a comment at the end<\n><\n>struct another_struct {<\n>    int x;<\n>};<\n>"<\n><\n># 2. 把你的正则表达式放入另一个变量<\n>#    注意我们去掉了开头的 '^'，让它更灵活<\n>let pattern = 'struct task_struct \{.*?\};'<\n><\n># 3. 执行测试！<\n>echo $test_data | rg -U --passthru $pattern
+# 1. 把你想要测试的文本块放入一个变量<\n>let test_data = $"<\n>#include <linux/sched.h><\n>/*<\n> * a random comment<\n> */<\n>struct task_struct {<\n>    volatile long state;    /* -1 unrunnable, 0 runnable, >0 stopped */<\n>    void *stack;<\n>    atomic_t usage;<\n>    // more fields here...<\n>}; // a comment at the end<\n><\n>struct another_struct {<\n>    int x;<\n>};<\n>"<\n><\n># 2. 把你的正则表达式放入另一个变量<\n>#    注意我们去掉了开头的 '^'，让它更灵活<\n>let pattern = 'struct task_struct \{.*'<\n><\n># 3. 执行测试！<\n>echo $test_data | rg -U --passthru $pattern
+# 1. 把你想要测试的文本块放入一个变量<\n>let test_data = $"<\n>#include <linux/sched.h><\n>/*<\n> * a random comment<\n> */<\n>struct task_struct {<\n>    volatile long state;    /* -1 unrunnable, 0 runnable, >0 stopped */<\n>    void *stack;<\n>    atomic_t usage;<\n>    // more fields here...<\n>}; // a comment at the end<\n><\n>struct another_struct {<\n>    int x;<\n>};<\n>"<\n><\n># 2. 把你的正则表达式放入另一个变量<\n>#    注意我们去掉了开头的 '^'，让它更灵活<\n>let pattern = 'struct task_struct \{.*\};'<\n><\n># 3. 执行测试！<\n>echo $test_data | rg -U --passthru $pattern
+grep -h
+# 1. 把你想要测试的文本块放入一个变量<\n>let test_data = $"<\n>#include <linux/sched.h><\n>/*<\n> * a random comment<\n> */<\n>struct task_struct {<\n>    volatile long state;    /* -1 unrunnable, 0 runnable, >0 stopped */<\n>    void *stack;<\n>    atomic_t usage;<\n>    // more fields here...<\n>}; // a comment at the end<\n><\n>struct another_struct {<\n>    int x;<\n>};<\n>"<\n><\n># 2. 把你的正则表达式放入另一个变量<\n>#    注意我们去掉了开头的 '^'，让它更灵活<\n>let pattern = 'struct task_struct \{.*'<\n><\n># 3. 执行测试！<\n>echo $test_data | rg -U --passthru $pattern
+# 1. 把你想要测试的文本块放入一个变量<\n>let test_data = $"<\n>#include <linux/sched.h><\n>/*<\n> * a random comment<\n> */<\n>struct task_struct {<\n>    volatile long state;    /* -1 unrunnable, 0 runnable, >0 stopped */<\n>    void *stack;<\n>    atomic_t usage;<\n>    // more fields here...<\n>}; // a comment at the end<\n><\n>struct another_struct {<\n>    int x;<\n>};<\n>"<\n><\n># 2. 把你的正则表达式放入另一个变量<\n>#    注意我们去掉了开头的 '^'，让它更灵活<\n>let pattern = 'struct task_struct \{\.*'<\n><\n># 3. 执行测试！<\n>echo $test_data | rg -U --passthru $pattern
+# 1. 把你想要测试的文本块放入一个变量<\n>let test_data = $"<\n>#include <linux/sched.h><\n>/*<\n> * a random comment<\n> */<\n>struct task_struct {<\n>    volatile long state;    /* -1 unrunnable, 0 runnable, >0 stopped */<\n>    void *stack;<\n>    atomic_t usage;<\n>    // more fields here...<\n>}; // a comment at the end<\n><\n>struct another_struct {<\n>    int x;<\n>};<\n>"<\n><\n># 2. 把你的正则表达式放入另一个变量<\n>#    注意我们去掉了开头的 '^'，让它更灵活<\n>let pattern = 'struct task_struct \{.*'<\n><\n># 3. 执行测试！<\n>echo $test_data | rg -U --passthru $pattern
+echo "adawd" | grep '.*'
+echo "adawd\n" | grep '.*'
+echo "adawd\nwdawd" | grep '.*'
+echo "adawd\nwdawd" | grep -U '.*'
+# --- 你的 Regex 实时测试场 (修正版) ---<\n><\n># 1. 测试数据保持不变<\n>let test_data = $"<\n>#include <linux/sched.h><\n>/*<\n> * a random comment<\n> */<\n>struct task_struct {<\n>    volatile long state;    /* -1 unrunnable, 0 runnable, >0 stopped */<\n>    void *stack;<\n>    atomic_t usage;<\n>    // more fields here...<\n>}; // a comment at the end<\n><\n>struct another_struct {<\n>    int x;<\n>};<\n>"<\n><\n># 2. 使用非贪婪的正则表达式<\n>#    它会匹配到第一个满足条件的 '};' 就停止<\n>let pattern = 'struct task_struct \{.*?};'<\n><\n># 3. 执行测试！<\n>echo $test_data | rg -U --passthru $pattern
+# --- 你的 Regex 实时测试场 (修正版) ---<\n><\n># 1. 测试数据保持不变<\n>let test_data = $"<\n>#include <linux/sched.h><\n>/*<\n> * a random comment<\n> */<\n>struct task_struct {<\n>    volatile long state;    /* -1 unrunnable, 0 runnable, >0 stopped */<\n>    void *stack;<\n>    atomic_t usage;<\n>    // more fields here...<\n>}; // a comment at the end<\n><\n>struct another_struct {<\n>    int x;<\n>};<\n>"<\n><\n># 2. 使用非贪婪的正则表达式<\n>#    它会匹配到第一个满足条件的 '};' 就停止<\n>let pattern = 'struct task_struct \{.*?};'<\n><\n># 3. 执行测试！<\n>echo $test_data | rg --passthru $pattern
+let foo = $"<\n>abc<\n>efg<\n>"
+echo $foo
+echo $foo | grep '.*'
+echo $foo | grep 'abc.*'
+echo $foo | grep -U 'abc.*'
+echo $foo | grep 'abc.*'
+grep -h
+echo $foo | grep --multiline-dotall 'abc.*'
+echo $foo | grep --multiline-dotall '.*'
+echo $foo | grep --multiline-dotall 'a.*'
+echo $foo | grep --multiline-dotall 'abc.*'
+echo $foo | grep --multiline-dotall 'abc\n.*'
+echo $foo | grep -U 'abc\n.*'
+echo $foo | grep -z 'abc\n.*'
+echo $foo | grep -z 'abc.*'
+echo $foo | rg -U --multiline-dotall  'abc.*'
+echo $foo | rg  --multiline-dotall 'abc.*'
+echo $foo | rg -U --multiline-dotall 'abc.*'
+nvim
+exit
+exit
+echo $env.config.completions
+exit
+rg --type c -U --multiline-dotall  'struct task_struct \{.*?^\};' $env.BPFTRACE_KERNEL_SOURCE
+eixt
+exit
+rg --type c -U --multiline-dotall  'struct task_st.* \{.*?^\};' $env.BPFTRACE_KERNEL_SOURCE
+rg --type c -U --multiline-dotall  'struct task_st.*' $env.BPFTRACE_KERNEL_SOURCE
+rg --type c -U --multiline-dotall  'struct task_st.* \{' $env.BPFTRACE_KERNEL_SOURCE
+rg --type c -U --multiline-dotall  'struct task_st%s* \{' $env.BPFTRACE_KERNEL_SOURCE
+rg --type c -U --multiline-dotall  'struct task_st%S* \{' $env.BPFTRACE_KERNEL_SOURCE
+rg --type c --multiline-dotall 'struct\s+(\w+)\s*\{' --replace '$1' $env.BPFTRACE_KERNEL_SOURCE |<\n>    lines |<\n>    each { |it|<\n>        {<\n>            name: $it,<\n>            distance: ($it | str distance $search_term)<\n>        }<\n>    } |<\n>    sort-by distance |<\n>    first
+let search_term = "task_struct"
+rg --type c --multiline-dotall 'struct\s+(\w+)\s*\{' --replace '$1' $env.BPFTRACE_KERNEL_SOURCE |<\n>    lines |<\n>    each { |it|<\n>        {<\n>            name: $it,<\n>            distance: ($it | str distance $search_term)<\n>        }<\n>    } |<\n>    sort-by distance |<\n>    first
+rg --json -U --multiline-dotall 'struct\s+(\w+)\s*\{.*?};' $env.BPFTRACE_KERNEL_SOURCE |<\n>    lines |<\n>    par-each { |line|<\n>        # Parse the JSON output from rg<\n>        let match_data = ($line | from json).data<\n>        # The first capture group ($1) is the struct name<\n>        let name = $match_data.submatches.1.match.text<\n>        {<\n>            # The full match is the struct's content<\n>            content: $match_data.submatches.0.match.text,<\n>            # Calculate the distance for sorting<\n>            distance: ($name | str distance $search_term)<\n>        }<\n>    } |<\n>    sort-by distance |<\n>    first |<\n>    get content
+rg --json -U --multiline-dotall 'struct\s+(\w+)\s*\{.*?};' $env.BPFTRACE_KERNEL_SOURCE |<\n>    lines |<\n>    par-each { |line|<\n>        # Parse the JSON output from rg<\n>        let match_data = ($line | from json).data<\n>        # The first capture group ($1) is the struct name<\n>        let name = $match_data.submatches.0.match.text<\n>        {<\n>            # The full match is the struct's content<\n>            content: $match_data.submatches.0.match.text,<\n>            # Calculate the distance for sorting<\n>            distance: ($name | str distance $search_term)<\n>        }<\n>    } |<\n>    sort-by distance |<\n>    first |<\n>    get content
+rg -h
+fzf
+exit
+linuxheaexit
+exit
+linuxheader
+exit
+linuxheader task_stru
+linuxheader task_stru | first 10
+linuxheader task_stru
+linuxheader task_stru | lines | first 10
+linuxheader task_stru | first 10
+linuxheader task_stru
+linuxheader task_stru | lines | first 10
+rg --type c 'vfs_read' $env.BPFTRACE_KERNEL_SOURCE
+exit
+linuxheader vfs_read
+rg --type c 'vfs_read' $env.BPFTRACE_KERNEL_SOURCE
+linuxheader vfs_read
+exit
+linuxheader vfs_read
+exit
+linuxheader vfs_read
+exit
+linuxheader vfs_read
+exit
+linuxheader vfs_read
+linuxheader task
+exit
+linuxheader vfs_read
+exit
+linuxheader vfs_read
+exit
+linuxheader vfs_read
+linuxheader task
+exit
+linuxheader task
+linuxheader vfs
+linuxheader vfs_read
+pinrt 'hello'
+print 'hello'
+exit
+linuxheader vfs_read
+exit
+linuxheader vfs_read
+pinrt -h
+print -h
+linuxheader vfs_read
+cd functions/
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu"
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" vfs_read
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" vfs
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" read
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" vfs_read
+clear
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" vfs_read
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" vfs_read
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" vfs_read
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task
+rg --help
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task
+rg --help
+rg main
+rg main --json
+rg main
+rg main | first
+rg main | first 1
+rg main | lines | 1
+rg main | lines | first
+rg main | lines | first 1
+rg main
+rg main | lines | first 1
+rg main -h | lines | first 1
+rg main -h
+rg --no-filename main
+rg --no-filename main | lines
+rg --no-filename main | lines | first 1
+rg --no-filename main | lines | first
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task_stru
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task_struct
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" struct task_struct
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" 'struct task_struct'
+rg --help
+rg main --json | from json
+rg main --json | lines | each { from json }
+rg main --json | lines | each { from json } | where type == 'match'
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" 'struct task_struct'
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" main
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task_struct
+rg --help
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task_struct --max-count 10
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task_struct --max-count
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task_struct 10
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task_struct --max-count 10
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task_struct --max-count
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task_struct --max-count 10
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task_struct max-count 10
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task_struct --max-count 10
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task_struct
+5 | to string
+5 | into string
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task_struct
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" struct task_struct
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task_struct
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task_struct -v
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task_struct
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task_struct -v
+let my_tuple = (1, "hello", true)
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task_struct -v
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task_struct
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" 'struct task_struct'
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" 'struct task_struct' -v
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" vfs_read
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" file
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" task_struct
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" file -v
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" file
+rg main --max-count=5
+rg .* --max-count=5
+rg '.*' --max-count=5
+rg '.*' --max-count=3
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" file -v
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" file 
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" file
+rg '.*' --max-count=3
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" file
+rg --help
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" file
+rg '.*' --max-count=5
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" file
+rg --help
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" file -v
+clangd
+'struct file {                                           <\n>    union {                                             <\n>            struct llist_node       f_llist;            <\n>            struct rcu_head         f_rcuhead;          <\n>            unsigned int            f_iocb_flags;       <\n>    };                                                  <\n>                                                        <\n>                                                        <\n>    spinlock_t              f_lock;                     <\n>    fmode_t                 f_mode;                     <\n>    atomic_long_t           f_count;                    <\n>    struct mutex            f_pos_lock;                 <\n>    loff_t                  f_pos;                      <\n>    unsigned int            f_flags;                    <\n>    struct fown_struct      f_owner;                    <\n>    const struct cred       *f_cred;                    <\n>    struct file_ra_state    f_ra;                       <\n>    struct path             f_path;                     <\n>    struct inode            *f_inode;                   <\n>    const struct file_operations    *f_op;              <\n>                                                        <\n>    u64                     f_version;                  <\n>#ifdef CONFIG_SECURITY                                  <\n>    void                    *f_security;                <\n>#endif                                                  <\n>                                                        <\n>    void                    *private_data;              <\n>                                                        <\n>#ifdef CONFIG_EPOLL                                     <\n>                                                        <\n>    struct hlist_head       *f_ep;                      <\n>#endif                                                  <\n>    struct address_space    *f_mapping;                 <\n>    errseq_t                f_wb_err;                   <\n>    errseq_t                f_sb_err;                   <\n>}' | bat
+bat --help
+pacman -S bat-extras
+sudo pacman -S bat-extras
+'struct file {                                           <\n>    union {                                             <\n>            struct llist_node       f_llist;            <\n>            struct rcu_head         f_rcuhead;          <\n>            unsigned int            f_iocb_flags;       <\n>    };                                                  <\n>                                                        <\n>                                                        <\n>    spinlock_t              f_lock;                     <\n>    fmode_t                 f_mode;                     <\n>    atomic_long_t           f_count;                    <\n>    struct mutex            f_pos_lock;                 <\n>    loff_t                  f_pos;                      <\n>    unsigned int            f_flags;                    <\n>    struct fown_struct      f_owner;                    <\n>    const struct cred       *f_cred;                    <\n>    struct file_ra_state    f_ra;                       <\n>    struct path             f_path;                     <\n>    struct inode            *f_inode;                   <\n>    const struct file_operations    *f_op;              <\n>                                                        <\n>    u64                     f_version;                  <\n>#ifdef CONFIG_SECURITY                                  <\n>    void                    *f_security;                <\n>#endif                                                  <\n>                                                        <\n>    void                    *private_data;              <\n>                                                        <\n>#ifdef CONFIG_EPOLL                                     <\n>                                                        <\n>    struct hlist_head       *f_ep;                      <\n>#endif                                                  <\n>    struct address_space    *f_mapping;                 <\n>    errseq_t                f_wb_err;                   <\n>    errseq_t                f_sb_err;                   <\n>}' | prettybat 
+prettybat -h
+'struct file {                                           <\n>    union {                                             <\n>            struct llist_node       f_llist;            <\n>            struct rcu_head         f_rcuhead;          <\n>            unsigned int            f_iocb_flags;       <\n>    };                                                  <\n>                                                        <\n>                                                        <\n>    spinlock_t              f_lock;                     <\n>    fmode_t                 f_mode;                     <\n>    atomic_long_t           f_count;                    <\n>    struct mutex            f_pos_lock;                 <\n>    loff_t                  f_pos;                      <\n>    unsigned int            f_flags;                    <\n>    struct fown_struct      f_owner;                    <\n>    const struct cred       *f_cred;                    <\n>    struct file_ra_state    f_ra;                       <\n>    struct path             f_path;                     <\n>    struct inode            *f_inode;                   <\n>    const struct file_operations    *f_op;              <\n>                                                        <\n>    u64                     f_version;                  <\n>#ifdef CONFIG_SECURITY                                  <\n>    void                    *f_security;                <\n>#endif                                                  <\n>                                                        <\n>    void                    *private_data;              <\n>                                                        <\n>#ifdef CONFIG_EPOLL                                     <\n>                                                        <\n>    struct hlist_head       *f_ep;                      <\n>#endif                                                  <\n>    struct address_space    *f_mapping;                 <\n>    errseq_t                f_wb_err;                   <\n>    errseq_t                f_sb_err;                   <\n>}' | prettybat -l c
+bat -h
+'struct file {                                           <\n>    union {                                             <\n>            struct llist_node       f_llist;            <\n>            struct rcu_head         f_rcuhead;          <\n>            unsigned int            f_iocb_flags;       <\n>    };                                                  <\n>                                                        <\n>                                                        <\n>    spinlock_t              f_lock;                     <\n>    fmode_t                 f_mode;                     <\n>    atomic_long_t           f_count;                    <\n>    struct mutex            f_pos_lock;                 <\n>    loff_t                  f_pos;                      <\n>    unsigned int            f_flags;                    <\n>    struct fown_struct      f_owner;                    <\n>    const struct cred       *f_cred;                    <\n>    struct file_ra_state    f_ra;                       <\n>    struct path             f_path;                     <\n>    struct inode            *f_inode;                   <\n>    const struct file_operations    *f_op;              <\n>                                                        <\n>    u64                     f_version;                  <\n>#ifdef CONFIG_SECURITY                                  <\n>    void                    *f_security;                <\n>#endif                                                  <\n>                                                        <\n>    void                    *private_data;              <\n>                                                        <\n>#ifdef CONFIG_EPOLL                                     <\n>                                                        <\n>    struct hlist_head       *f_ep;                      <\n>#endif                                                  <\n>    struct address_space    *f_mapping;                 <\n>    errseq_t                f_wb_err;                   <\n>    errseq_t                f_sb_err;                   <\n>}' | bat -l c
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" file -v
+rg --json main | lines
+rg --json main | lines | from json
+rg --json main | lines | each {|it| $it | from json | get data.path.text data.linus.text}
+rg --json main | lines | each {|it| $it | from json | get data.path.text data.lines.text}
+rg --json main | lines |  each {|it| $it | from json }
+rg --json main | lines |  each {|it| $it | from json } | where type == "match"
+rg --json main | lines |  each {|it| $it | from json } | where type == "match" | each {|it| $it | get data.path.text data.lines.text }
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" file -v
+rg --json main | lines |  each {|it| $it | from json } | where type == "match" | each {|it| $it | get data.lines.text | bat }
+rg --json main | lines |  each {|it| $it | from json } | where type == "match" | each {|it| $it | get data.lines.text }
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" file -v
+rg --json main | lines |  each {|it| $it | from json } | where type == "match" | each {|it| $it | get data.lines.text | bat -l c }
+rg --json main | lines |  each {|it| $it | from json } | where type == "match" | each {|it| $it | get data.lines.text } | bat
+rg --json main | lines |  each {|it| $it | from json } | where type == "match" | each {|it| $it | get data.lines.text } | bat -l c
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" file -v
+bat --help
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" file -v
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" file
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" file -t
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" read -t
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" '\w*read\w*' -t
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" '\w*vfs_read\w*' -t
+nu "/home/sqfzy/.config/nushell/functions/linuxheader.nu" vfs_read -f
+cd ../
+gitpush
+exit
+cd /home/sqfzy/work_space/work_code/bpftrace
+linuxheader file
+linuxheader path
+sudo bpftrace latency.bt 
+linuxheader dentry 
+linuxheader qstr 
+sudo bpftrace latency.bt 
+linuxheader vfs_read
+sudo bpftrace latency.bt 
+exit
+lh vfs_read
+sudo bpftrace latency.bt 
+cd /home/sqfzy/work_space/work_code/bpftrace
+sudo bpftrace latency.bt 
+sudo bpftrace -l 'kprobe:vfs_read'
+sudo bpftrace latency.bt 
+lh vfs_read
+ls /sys/kernel/btf/vmlinux
+lh read
+lh read -t
+lh read -f
+cargo generate https://github.com/aya-rs/aya-template
+cargo run --release --config 'target."cfg(all())".runner="sudo -E"'
+cd ebpf_trace/
+cargo run --release --config 'target."cfg(all())".runner="sudo -E"'
+http get "http://www.google.com"
+curl "http://google.com"
+http get "http://www.google.com"
+RUST_LOG=info cargo run --release --config 'target."cfg(all())".runner="sudo -E"'
+nvim
+cd /sys/kernel/debug/
+ls
+sudo cd /sys/kernel/debug
+ls
+sudo ls /sys/kernel/debug/
+sudo ls /sys/kernel/debug//tracing
+sudo ls /sys/kernel/debug//tracing/events/syscalls/sys_enter_connect
+sudo bat /sys/kernel/debug//tracing/events/syscalls/sys_enter_connect/format
+RUST_LOG=info cargo run --release --config 'target."cfg(all())".runner="sudo -E"'
+http get "http://www.google.com"
+RUST_LOG=info cargo run --config 'target."cfg(all())".runner="sudo -E"'
+sudo cat /sys/kernel/debug/tracing/trace_pipe
+cargo generate https://github.com/aya-rs/aya-template
+cd ebpf_kprobe/
+htp
+http get "http://www.google.com"
+RUST_LOG=info cargo run --config 'target."cfg(all())".runner="sudo -E"'
+man syscall
+echo $env.BPFTRACE_KERNEL_SOURCE
+lh sock
+bat --help
+exit
+lh sock
+lh sock_common  
+nvim
+nvim
+nvim
+http get "http://www.google.com"
+RUST_LOG=info cargo run --config 'target."cfg(all())".runner="sudo -E"'
+man socket.2
+man socket
+cargo install bindgen-cli
+sudo pacman -S bpftool
+yay -S bpftool
+cargo install --git https://github.com/aya-rs/aya -- aya-tool
+echo $env.BPFTRACE_KERNEL_SOURCE
+j work_space/
+git clone https://github.com/libbpf/libbpf.git<\n>cd libbpf/src
+make BPFTRACE_KERNEL_SOURCE=/usr/src/6.6.87.1-microsoft-standard-WSL2 VMLINUX_BTF=$BPFTRACE_KERNEL_SOURCE/vmlinux
+sudo make install
+bpftool
+exit
+aya-tool
+aya-tool sock sock_common > src/vmlinux.rs
+aya-tool generate sock sock_common > src/vmlinux.rs
+ls
+aya-tool generate sock sock_common > ./ebpf_kprobe-ebpf/src/vmlinux.rs
+aya-tool generate sock sock_common > ebpf_kprobe-ebpf/src/sock.rs
+aya-tool
+aya-tool generate
+aya-tool generate --help
+aya-tool generate sock > ebpf_kprobe-ebpf/src/sock.rs
+aya-tool generate sock sock_common > ebpf_kprobe-ebpf/src/sock.rs
+echo "aabc" > ebpf_kprobe-ebpf/src/sock.rs
+echo "aabc" | ebpf_kprobe-ebpf/src/sock.rs
+aya-tool generate sock sock_common | save ebpf_kprobe-ebpf/src/sock.rs
+aya-tool --help
+aya-tool generate --help
+save --help
+aya-tool generate --header sock sock_common | save --force ebpf_kprobe-ebpf/src/sock.rs
+aya-tool generate sock sock_common --header | save --force ebpf_kprobe-ebpf/src/sock.rs
+aya-tool generate sock sock_common | save --force ebpf_kprobe-ebpf/src/sock.rs
+aya-tool generate --header sock sock_common | save --force ebpf_kprobe-ebpf/src/sock.rs
+aya-tool generate --btf $env.BPFTRACE_KERNEL_SOURCE --header sock sock_common | save --force ebpf_kprobe-ebpf/src/sock.rs
+aya-tool generate sock sock_common | save --force ebpf_kprobe-ebpf/src/sock.rs
+cargo build
+RUST_LOG=info cargo run --config 'target."cfg(all())".runner="sudo -E"'
+cargo clean
+RUST_LOG=info cargo run --config 'target."cfg(all())".runner="sudo -E"'
+cd /home/sqfzy/work_space/work_code/rust/ebpf_kprobe/target/rust-analyzer/build/ebpf_kprobe-ebpf-435dbd0f8db18e62/out
+ls /home/sqfzy/work_space/work_code/rust/ebpf_kprobe/target/rust-analyzer/build/
+ls /home/sqfzy/work_space/work_code/rust/ebpf_kprobe/target/rust-analyzer/build/ebpf_kprobe-*
+cargo run --release --config 'target."cfg(all())".runner="sudo -E"'
+RUST_LOG=info cargo run --config 'target."cfg(all())".runner="sudo -E"'
+nvim
+nivm\
+nvim
+echo "# Bcoin_Factor" >> README.md<\n>git init<\n>git add README.md<\n>git commit -m "first commit"<\n>git branch -M main<\n>git remote add origin git@github.com:sqfzy/Bcoin_Factor.git<\n>git push -u origin main
+git add .
+git commit -m "update"
+git branch -M main<\n>git remote add origin git@github.com:sqfzy/Bcoin_Factor.git<\n>git push -u origin main
+uv add h5py
+cd /home/sqfzy/work_space/work_code/rust/run_factor3/yanghan/Bcoin_Factor
+python -u/Coin_main.py
+python -u /Coin_main.py
+python -u Coin_main.py
+exit
+cd /home/sqfzy/work_space/work_code/rust/run_factor3/yanghan/Bcoin_Factor
+python -u Coin_main.py
+uv add numba
+exit
+cd /home/sqfzy/work_space/work_code/rust/run_factor3/yanghan/Bcoin_Factor
+python -u Coin_main.py
+nvim
+gemini
+exit
+git pull
+gemini
+gemini --help
+exit
+gemini
+nvim
+http get "http://www.google.com"
+RUST_LOG=info cargo run --config 'target."cfg(all())".runner="sudo -E"'
+lh sock_common  
+lh AF_INET
+http get "http://www.google.com"
+RUST_LOG=info cargo run --config 'target."cfg(all())".runner="sudo -E"'
+http get "http://www.google.com" -6
+httpie --help
+http --help
+http get --help
+http get "http://www.google.com" -v -6
+http  get -v -6 "http://www.google.com" 
+http -v -6 "http://www.google.com" 
+curl -6 "google.com"
+curl -6 google.com
+curl -6 [::-1]
+curl -6 [::1]
+curl -6 "[::1]"
+curl https://google.com
+curl www.google.com
+curl -6 www.google.com
+nvim
+curl -6 www.google.com
+RUST_LOG=info cargo run --config 'target."cfg(all())".runner="sudo -E"'
+cd../
+cd ../
+cargo generate https://github.com/aya-rs/aya-template
+which openssl
+ldd $(which curl) | grep ssl
+ldd (which curl) | grep ssl
+which curl | ldd | grep ssl
+which curl | ld
+which curl | ld $it
+ldd
+ldd (which curl)
+ldd ...(which curl)
+ldd which curl
+ldd (which curl)
+which curl | ldd
+ldd (which curl)
+ldd ...(which curl)
+ldd ...(which curl).path
+RUST_LOG=info cargo run --config 'target."cfg(all())".runner="sudo -E"'
+cd ebpf_uprobe/
+curl www.google.com
+curl https://google.com
+curl https://ww.google.com
+curl https://www.google.com
+RUST_LOG=info cargo run --config 'target."cfg(all())".runner="sudo -E"'
+gitpush
+cd /home/sqfzy/work_space/work_code/rust/run_factor3/Bcoin_Factor/Bcoin_Factor
+cd ../
+gitpush
+git pull
+j Bcoin
+ls
+gemini
+sudo pacman -Syu
+gemini
+pa
+noxe new "computational graph model.md"
+npx https://github.com/google-gemini/gemini-cli
+exit
+nvim
+cd /home/sqfzy/work_space/notes/CS/Programme/Rust/crates
+cd ../
+noxe new "moka&cached.md"
+nvim
+RUST_LOG=debug cargo run --bin test -- -w obs_baseline_040
+exi
+exit
+RUST_LOG=debug cargo run --bin test -- -w obs_baseline_040
+RUST_LOG=debug cargo run --bin test -- -w obs_factor_031
+RUST_LOG=debug cargo run --bin test -- -w obs_HF_active_rate_rank
+RUST_LOG=debug cargo run --bin test -- -w obs_factor_031
+RUST_LOG=debug cargo run --bin test -- -w baseline_016
+RUST_LOG=debug cargo run --bin test -- -w baseline_040
+RUST_LOG=debug cargo run --bin test -- -w factor_031
+RUST_LOG=debug cargo run --bin test -- -w TD_PT_004
+RUST_LOG=debug cargo run --bin test -- -w factor_031
+RUST_LOG=debug cargo run --bin test -- -w TD_PT_004
+RUST_LOG=debug cargo run --bin test -- -w obs_baseline_040
+RUST_LOG=debug cargo run --bin test -- -w obs_sell_avg_price
+RUST_LOG=debug cargo run --bin test -- -w obs_TD_PT_004
+RUST_LOG=debug cargo run --bin test -- -w obs_sell_avg_price
+RUST_LOG=debug cargo run --bin test -- -w -l 100 obs_sell_avg_price
+RUST_LOG=debug cargo run --bin test -- -w  obs_sell_avg_price
+RUST_LOG=debug cargo run --bin test -- -w  obs_sell_avg_price -l 100
+RUST_LOG=debug cargo run --bin test -- -w   ┆ f64    ┆ f64    ┆   ┆ f64         ┆ f64       ┆ f64           ┆ f64            │                                                    │<\n> 17   ▏ │╞══════════╪════════╪════════╪════════╪═══╪═════════════╪═══════════╪═══════════════╪════════════════╡
+RUST_LOG=debug cargo run --bin test -- -w  baseline_016
+RUST_LOG=debug cargo run --bin test -- -w  baseline_040 factor_031 TD_PT_004 HF_active_rate_rank sell_avg_price
+cd msig_fdev_zl/
+cargo run
+cd ../
+python diff2.py
+exig
+exit
+python diff2.py
+exit
+python diff2.py
+cargo run
+cd msig_fdev_zl/
+cargo run
+python diff2.py
+cargo run
+nu arch.nu 
+jupyter lab
+jupyter lab
+exit
+jupyter lab
+exit
+jupyter lab
+readelf
+j foo
+nvim
+j foo
+rizin target/release/foo
+cargo build --release
+rizin target/release/foo
+cargo build --release
+rizin target/release/foo
+cargo build --release
+rizin target/release/foo
+cargo build --release
+ls ~/config/rizin
+nvim
+nivm
+rizin target/release/foo
+car
+cargo build --release
+rizin target/release/foo
+cargo build --release
+rizin target/release/foo
+which curl
+nvim
+ldd ...(which curl).path
+json
+first
+ls | first
+ls
+cat a.dot
+sudo pacman -S graphviz
+ls
+dot -Tsvg a.dot -o a.sve
+dot -Tsvg a.dot -o a.svg
+rizin target/release/foo
+rizin ls
+rizin rg
+which ls
+which rg
+rizin /usr/sbin/rg
+readelf -d ...(which curl).payh
+readelf -d ...(which curl).path
+id
+ldd ...(which curl).path
+llvm-objdump
+exit
+readelf
+readelf -d ...(which curl).path
+objdump --help
+llvm-objdump 
+sudo pacman -S llvm-objdump
+man llvm-objdump
+llvm-objdump --help | grep dynamic
+llvm-objdump --dynamic-syms usr/sbin/curl
+llvm-objdump --dynamic-syms /usr/sbin/curl
+llvm-objdump --help | grep dynamic
+llvm-objdump --dynamic-reloc /usr/sbin/curl
+llvm-objdump --dynamic-syms /usr/sbin/curl
+ldd ...(which curl).path
+readelf -S /usr/sbin/curl
+readelf -h /usr/sbin/curl
+llvm-objdump -d /usr/sbin/curl
+readelf /usr/sbin/curl
+readelf /usr/sbin/curl -S
+rizin ...(which curl).path
+rizin tar
+sudo pacman -S ghidra
+ghidra
+sudo pacman -S cutter 
+sudo pacman -Q cutter
+sudo pacman -Qi
+sudo pacman -Qi cutter
+sudo pacman -Si cutter
+cd ~/.local/bin/
+sudo chmod +x Cutter*.AppImage
+./Cutter-v2.4.1-Linux-x86_64.AppImage
+sudo pacman -S fuse2 
+./Cutter-v2.4.1-Linux-x86_64.AppImage
+nvim
+nvim
+ghidra .
+rizin /usr/sbin/curl
+objdump target/release/foo
+objdump -d target/release/foo
+llvm-readobj -h
+llvm-readobj target/release/foo
+llvm-readobj -d target/release/foo
+rizin /usr/sbin/curl
+nvim
+llvm-readobj --help
+readobj --help
+carapace --help
+carapace --codegen
+carapace --codegen spec --help
+carapace --codegen spec -h
+carapace --codegen spec
+jupyter lab
+bas
+bash
+jupyter lab
+uv add jupyterlab
+jupyter lab
+exit
+jupyter lab
+cd ../
+jupyter lab
+source python_run_factor/.venv/bin/activate.nu
+ls
+nvim
+carg run
+cargo run
+cd msig_fdev_zl/
+cargo run
+jupyter lab
+exit
+jupyter lab
+which jupyter
+/home/sqfzy/work_space/work_code/rust/run_factor3/.venv/bin/jupyter lab
+uv remove jupyter
+source .venv/bin/activate.nu
+cd ../
+source .venv/bin/activate.nu
+jupyter lab
+uv init
+uv add pandas numpy jupyter
+source .venv/bin/activate.nu
+uv add pandas numpy jupyter
+cd combined/
+cd msig_fdev_zl/
+cargo run
+cd msig_fdev_zl/
+cargo run --release
+jupyter lab
+cd ../
+cd ..
+cd ../
+source .venv/bin/activate.nu
+cd run_factor3/
+source .venv/bin/activate.nu
+cd msig_fdev_zl/
+cd combined/msig_fdev_zl/
+jupyter lab
+nvim
+cargo run --release
+exit
+cd msig_fdev_zl/
+cargo run --release
+cd msig_fdev_zl/
+cargo run --release
+RUST_LOG=debug cargo run --bin test -- -w  TD_PT_004 -l 10000
+eixt
+exit
+cd help_work/
+RUST_LOG=debug cargo run --bin test -- -w  TD_PT_004 -l 10000
+uv add polars
+RUST_LOG=debug cargo run --bin test -- -w  TD_PT_004 -l 10000
+uv add pyarrow
+RUST_LOG=debug cargo run --bin test -- -w  TD_PT_004 -l 10000
+clear
+cargo run --release
+RUST_LOG=debug cargo run --bin test -- -w  TD_PT_004 -l 10000
+cargo run --release
+RUST_LOG=debug cargo run --bin test -- -w  TD_PT_004 -l 10000
+/Ru
+RUST_LOG=debug cargo run --bin test -- -w  TD_PT_004 -l 10000
+N
+RUST_LOG=debug cargo run --bin test -- -w  TD_PT_004 -l 10000
+clear
+RUST_LOG=debug cargo run --bin test -- -w  TD_PT_004 -l 10000
+clear
+RUST_LOG=debug cargo run --bin test -- -w  TD_PT_004 -l 10000
+clear
+RUST_LOG=debug cargo run --bin test -- -w  TD_PT_004 -l 10000
+clear
+RUST_LOG=debug cargo run --bin test -- -w  TD_PT_004 -l 10000
+clear
+RUST_LOG=debug cargo run --bin test -- -w  TD_PT_004 -l 10000
+j msg
+j combin
+cd msig_fdev_zl/
+nu arch.nu 
+cd ../
+nu arch.nu 
+sudo pacman -Syu
+rustup --update
+rustup --help
+rustup update
+nvim
+j help_work
+ls
+cargo run --release
+cargo build --bin test release
+cargo dep
+cargo --list
+cargo udeps
+cargo --help
+cargo build --bin test --release
+cargo-update
+cargo install cargo-update
+cargo-update
+cargo-install-update
+cargo-install-update install-update
+cargo build --bin test --release
+readobj --help
+ls
+ls .
+readobj target/release/build/
+readobj target/release/test
+readobj target/release/test -d
+readobj target/release/test -A
+readobj target/release/test -a
+j help_work
+readobj target/release/test -a
+readobj target/release/test
+clear
+readobj --help
+readobj target/release/test -d
+cargo-install-update install-update --all
+grep --help
+grep --help | grep file
+readobj target/release/test -d
+grep -f libpython /ust/bin/
+grep -f /usr/bin pyton
+grep /usr/bin -f pyton
+fd
+fd --help
+fd python3 /usr/bin/
+fd python3 /usr/sbin
+fd libc /usr/bin
+fd libc /usr/sbin
+ls usr/bin
+ls /usr/bin
+ldd target/release/test
+fd python3 /usr/lib
+readobj --help
+readobj target/release/test -all
+readobj target/release/test --sd
+readobj target/release/test --section-data
+readobj target/release/test --section-details
+readobj target/release/test --headers
+readobj target/release/test --file-header
+j combin
+nu arch.nu 
+cd msig_fdev_zl/
+cargo run
+cd ../
+nu arch.nu 
+cargo clean
+cargo clean --help
+nvim
+RUST_LOG=debug cargo run --bin test -- -w obs_baseline_008
+cargo run
+RUST_LOG=debug cargo run --bin test -- -w obs_baseline_008
+exit
+RUST_LOG=debug cargo run --bin test -- -w obs_baseline_008
+nvim
+RUST_LOG=debug cargo run --bin test -- -w obs_baseline_008
+exit
+RUST_LOG=debug cargo run --bin test -- -w obs_baseline_008
+RUST_LOG=debug cargo run --bin test -- -w obs_baseline_035
+RUST_LOG=debug cargo run --bin test -- -w obs_baseline_047
+RUST_LOG=debug cargo run --bin test -- -w obs_baseline_196
+RUST_LOG=debug cargo run --bin test -- -w obs_baseline_046
+RUST_LOG=debug cargo run --bin test -- -w obs_TD_TI_031
+cargo run --release
+nvim
+cargo add linregress
+RUST_LOG=debug cargo run --bin test -- -w obs_baseline_046
+cargo run --release
+cd ../
+python diff.py
+cd ../
+source .venv/bin/activate.nu
+cd combined/msig_fdev_zl/
+cd ../
+python diff.py
+nu arch.nu 
+RUST_LOG=debug cargo run --bin test -- -w obs_HF_large_order_std
+RUST_LOG=debug cargo run --bin test -- -w obs_HF_medium_order_rate_std
+RUST_LOG=debug cargo run --bin test -- -w obs_HF_small_order_rate_mean
+RUST_LOG=debug cargo run --bin test -- -w obs_HF_small_order_rate_std
+nvi
+RUST_LOG=debug cargo run --bin test -- -w obs_active_buy_ratio_120m
+gemini
+nvim
+j help_work
+gemini
+nvim
+npx https://github.com/google-gemini/gemini-cli
+cargo run --bin test
+cargo run --bin test --release
+cargo run --bin test
+cargo run --bin test --release
+cargo run --bin test
+gitpush
+gemini
+gemini --help
+gemini
+exit
+j help_work
+gemini
+gemini --auth
+gemini --debug
+top
+gemini
+gemini 
+http get "http://www.google.com" 
+gemini 
+ge
+gemini 
+j help_work
+npx https://github.com/google-gemini/gemini-cli
+RUST_LOG=debug cargo run --bin test -- -w obs_baseline_102
+RUST_LOG=debug cargo run --bin test
+RUST_LOG=debug cargo run --bin test -- -w obs_baseline_155
+RUST_LOG=debug cargo run --bin test -- -w baseline_048
+cargo run --bin test
+cargo run --bin get_all_name
+cd msig_fdev_zl/
+cargo run --release
+cd ../
+python diff.py
+cd ../
+source .venv/bin/activate.nu
+cd msig_fdev_zl/
+cd combined/msig_fdev_zl/
+cd ../
+python diff.py
+cargo run --release
+cargo run --bin get_all_name
+python diff.py
+nu arch.nu 
+uv add scipy
+cargo run --bin test --release
+cargo run --bin test -w baseline_155 -l 20
+cargo run --bin test -- -w baseline_155 -l 20
+RUST_LOG=debug cargo run --bin test -- -w baseline_155 -l 100
+cd msig_fdev_zl/
+cargo run --release
+RUST_LOG=debug cargo run --bin test -- -w baseline_155 -l 1000
+RUST_LOG=debug cargo run --bin test -- -w baseline_155 -l 10
+cd ../
+nu arch.nu 
+python diff.py
+jupyter lab
+python diff.py
+cd ../
+nu arch.nu 
+rustup --version
+rustc --versio
+rustc --version
+exit
+nu arch.nu 
+exit
+cargo run --bin get_all_name
+cargo run --bin test
+exirt
+exit
+cargo run --bin test
+exit
+cargo run --bin test
+python merge.py
+uv add openpyxl
+python merge.py
+cargo run --bin test --release
+python merge.py
+nvim
+j help_work
+gemini 
+geimini
+gemini 
+cargo run --bin test -- -w baseline_155
+source .venv/bin/activate.nu
+dc ../
+cd ../
+source .venv/bin/activate.nu
+cd ../
+source .venv/bin/activate.nu
+j help_work
+cargo run --bin test -- -w baseline_155
+gemini 
+gemini
+gemini 
+gemini --debug
+gemini
+gitpush
+git remote
+git remote get-url
+git remote get-url --all
+git branch
+git remote --verbose
+gitpush
+git add .
+git fetch
+nvim
+gitpush
+git pull
+git pull --rebase
+gitpush
+git pull --rebase
+git pull
+gitpush
+git add .
+git commit -m "update"
+git rebase --continue
+gitpush
+git push
+gitpush
+cargo nextest run --no-capture
+git pull
+git fetch
+git rebase --help
+git checkout -- .
+nvim
+nvim
+cd ../
+gitpush
+git --help
+j help_work
+readobj target/release/test --file-header
+nvim
+readobj target/release/test -d
+ldd target/release/test
+objdump -d target/release/foo
+readobj target/release/test -d
+ldd target/release/test
+nvim
+exit
+python -c "from sysconfig import get_paths; print(get_paths()['include'])"
+gcc
+gcc --help
+gcc --shared
+gcc --shared -o native_module.so native_module.c
+gcc --shared -o native_module.so -I /usr/include/python3.13 native_module.c
+gcc --shared -o native_module.so -fPIC -I /usr/include/python3.13 native_module.c
+python
+python -c
+python -c "from sysconfig import get_paths; print(get_paths()[""include])"
+python -c "from sysconfig import get_paths; print(get_paths()['include'])"
+clangd --help
+clangd -I
+clangd native_module.c
+clangd --help
+clangd
+clangd --compile-arg=-I/usr/include
+clangd --include-directory
+clangd --check native_module.c
+clangd --check=native_module.c
+clangd --help | grep Flags
+clangd --help
+clangd --help | grep include
+clangd --include-directory
+clangd --help | grep arg
+clangd --help | grep flag
+git init
+git add README.md<\n>git commit -m "first commit"<\n>git branch -M main<\n>git remote add origin git@github.com:sqfzy/my_configs.git<\n>git push -u origin main
+git add .
