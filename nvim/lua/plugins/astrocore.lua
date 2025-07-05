@@ -255,14 +255,14 @@ return {
         -- 插件快捷键
         ["<Leader>o"] = { function() require("aerial").toggle() end, desc = "Symbols outline" },
 
-        ["<Leader>c"] = { "", desc = "Colorscheme" },
-        ["<Leader>ct"] = { "<cmd>colorscheme tokyonight<CR>", desc = "Tokyonight" },
-        ["<Leader>cc"] = { "<cmd>colorscheme catppuccin<CR>", desc = "Catppuccin" },
-        ["<Leader>cf"] = { "<cmd>colorscheme duskfox<CR>", desc = "Catppuccin" },
-        ["<Leader>cr"] = { "<cmd>colorscheme rose-pine<CR>", desc = "Rose-pine" },
-        ["<Leader>ce"] = { "<cmd>colorscheme everforest<CR>", desc = "Everforest" },
-        ["<Leader>ck"] = { "<cmd>colorscheme kanagawa<CR>", desc = "Kanagawa" },
-        ["<Leader>co"] = { "<cmd>colorscheme osaka<CR>", desc = "Osaka" },
+        -- ["<Leader>c"] = { "", desc = "Colorscheme" },
+        -- ["<Leader>ct"] = { "<cmd>colorscheme tokyonight<CR>", desc = "Tokyonight" },
+        -- ["<Leader>cc"] = { "<cmd>colorscheme catppuccin<CR>", desc = "Catppuccin" },
+        -- ["<Leader>cf"] = { "<cmd>colorscheme duskfox<CR>", desc = "Catppuccin" },
+        -- ["<Leader>cr"] = { "<cmd>colorscheme rose-pine<CR>", desc = "Rose-pine" },
+        -- ["<Leader>ce"] = { "<cmd>colorscheme everforest<CR>", desc = "Everforest" },
+        -- ["<Leader>ck"] = { "<cmd>colorscheme kanagawa<CR>", desc = "Kanagawa" },
+        -- ["<Leader>co"] = { "<cmd>colorscheme osaka<CR>", desc = "Osaka" },
 
         -- 打开终端
         ["<A-4>"] = {
@@ -300,6 +300,8 @@ return {
         },
 
         ["<A-m>"] = false,
+
+        ["<Leader><CR>"] = { "mmo<Esc>`m" },
       },
       i = {
         ["<S-Right>"] = { "<Left>" },
