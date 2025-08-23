@@ -91,10 +91,10 @@ local function choose_theme_by_time_from_all(scheme)
   if hr > 7 and hr < 9 then
     vim.opt.background = "light"
     time_of_day = "dawns"
-  elseif hr >= 9 and hr < 18 then
+  elseif hr >= 9 and hr < 19 then
     vim.opt.background = "light"
     time_of_day = "days"
-  elseif hr >= 18 and hr < 24 then
+  elseif hr >= 19 and hr < 24 then
     vim.opt.background = "dark"
     time_of_day = "dusk"
   else

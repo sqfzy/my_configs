@@ -3,11 +3,9 @@ return { -- override nvim-cmp plugin
     "Saghen/blink.cmp",
     opts = function(_, opts)
       opts.keymap["<A-m>"] = {
-        "snippet_forward",
         function()
           if vim.g.ai_accept then return vim.g.ai_accept() end
         end,
-        "fallback",
       }
       opts.keymap["<Tab>"] = { "select_and_accept", "fallback" }
       opts.keymap["<C-n>"] = { "select_next" }

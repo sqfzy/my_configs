@@ -37,7 +37,7 @@ return {
       large_buf = { size = 1024 * 256, lines = 10000 }, -- set global limits for large files for disabling features like treesitter
       autopairs = true, -- enable autopairs at start
       cmp = true, -- enable completion at start
-      diagnostics = { virtual_text = false, virtual_lines = false }, -- diagnostic settings on startup
+      -- diagnostics = { virtual_text = false, virtual_lines = false }, -- diagnostic settings on startup
       highlighturl = true, -- highlight URLs at start
       notifications = true, -- enable notifications at start
     },
@@ -71,7 +71,7 @@ return {
         mouse = "a",
         cursorline = false,
         clipboard = "unnamedplus",
-        guifont = "0xProto,LXGW WenKai,Hack_Nerd_Font:h12",
+        guifont = "LXGW WenKai,0xProto,Hack_Nerd_Font:h12",
       },
       g = { -- vim.g.<key>
         -- configure global vim variables (vim.g)
@@ -131,6 +131,7 @@ return {
 
         ["db"] = { 'vi("_d' }, --()
         ["di"] = { 'vi{"_d' }, --{}
+        ["dw"] = { '"_diw' },
         ["ds"] = { 'vi""_d' }, --字符串
         ["d'"] = { "vi'\"_d" }, -- ''
         ["d["] = { 'vi["_d' }, -- []
@@ -299,7 +300,6 @@ return {
           desc = "Snacks highlights",
         },
 
-        ["<A-m>"] = false,
 
         ["<Leader><CR>"] = { "mmo<Esc>`m" },
       },
@@ -332,6 +332,8 @@ return {
 
         ["<A-h>"] = { "<cmd>lua require('luasnip').jump(-1)<Cr>" },
         ["<A-l>"] = { "<cmd>lua require('luasnip').jump(1)<Cr>" },
+
+        ["<A-m>"] = false,
       },
       v = {
 
@@ -408,6 +410,8 @@ return {
 
         ["<A-h>"] = { "<cmd>lua require('luasnip').jump(-1)<Cr>" },
         ["<A-l>"] = { "<cmd>lua require('luasnip').jump(1)<Cr>" },
+
+        ["<A-m>"] = false
       },
     },
   },

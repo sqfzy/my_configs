@@ -46,15 +46,5 @@ return {
   -- {import = "astrocommunity.completion.copilot-lua-cmp"}
   -- import/override with your plugins folder
   { import = "astrocommunity.recipes.ai" },
-
-  {
-    "OXY2DEV/markview.nvim",
-    lazy = false,
-
-    -- For blink.cmp's completion
-    -- source
-    dependencies = {
-      "saghen/blink.cmp",
-    },
-  },
+  { import = "astrocommunity.remote-development.remote-sshfs-nvim" },
 }

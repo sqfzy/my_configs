@@ -62,27 +62,6 @@ vim.keymap.set(
   { silent = true, buffer = bufnr, desc = "Join Lines" }
 )
 
--- vim.keymap.set(
---   "n",
---   "<leader>lf",
---   function() vim.lsp.buf.format() end,
---   { silent = true, buffer = bufnr, desc = "Foramat" }
--- )
-
--- vim.keymap.set(
---   "n",
---   "<leader>lr",
---   function() vim.lsp.buf.rename() end,
---   { silent = true, buffer = bufnr, desc = "Rename" }
--- )
---
--- vim.keymap.set(
---   "n",
---   "<leader>la",
---   function() vim.cmd.RustLsp "codeAction" end,
---   { silent = true, buffer = bufnr, desc = "Code Action" }
--- )
-
 vim.keymap.set(
   "n",
   "<leader>le",
@@ -99,13 +78,6 @@ vim.keymap.set("n", "<leader>ld", function()
     vim.cmd.RustLsp { "renderDiagnostic", "current" }
   end
 end, { silent = true, buffer = bufnr, desc = "Render Diagnostic" })
-
--- vim.keymap.set(
---   "n",
---   "<leader>lC",
---   function() vim.cmd.RustLsp "openCargo" end,
---   { silent = true, buffer = bufnr, desc = "Open Cargo" }
--- )
 
 vim.keymap.set(
   "n",
@@ -141,17 +113,3 @@ vim.keymap.set(
   function() vim.cmd.RustLsp { "view", "mir" } end,
   { silent = true, buffer = bufnr, desc = "View MIR" }
 )
-
--- vim.keymap.set(
---   "n",
---   "<leader>luh",
---   function() vim.cmd.RustLsp { "unpretty", "hir" } end,
---   { silent = true, buffer = bufnr, desc = "Unpretty HIR" }
--- )
---
--- vim.keymap.set(
---   "n",
---   "<leader>lum",
---   function() vim.cmd.RustLsp { "unpretty", "mir" } end,
---   { silent = true, buffer = bufnr, desc = "Unpretty MIR" }
--- )

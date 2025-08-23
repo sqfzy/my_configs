@@ -22,11 +22,6 @@ return {
   {
     "folke/snacks.nvim",
     opts = function(_, opts)
-      -- opts.picker.win.input.keys = {
-      --   ["<c-u>"] = { "preview_scroll_up", mode = { "i", "n" } },
-      --   ["<c-d>"] = { "preview_scroll_down", mode = { "i", "n" } },
-      -- }
-
       opts.dashboard = {
         preset = {
           header = table.concat({
@@ -127,6 +122,54 @@ return {
         { desc = "Notification History" }
       )
       vim.api.nvim_create_user_command("Marks", function() Snacks.picker.marks() end, { desc = "Marks" })
+
+      -- opts.picker = {
+      --   win = {
+      --     input = {
+      --       keys = {
+      --         ["<c-u>"] = { "preview_scroll_up", mode = { "i", "n" } },
+      --         ["<c-d>"] = { "preview_scroll_down", mode = { "i", "n" } },
+      --         ["<c-w>"] = { "cycle_win", mode = { "i", "n" } },
+      --       },
+      --     },
+      --     list = {
+      --       keys = {
+      --         ["<c-u>"] = { "preview_scroll_up", mode = { "i", "n" } },
+      --         ["<c-d>"] = { "preview_scroll_down", mode = { "i", "n" } },
+      --         ["<c-w>"] = { "cycle_win" },
+      --       }
+      --     },
+      --     preview = {
+      --       keys = {
+      --         ["<Esc>"] = "cancel",
+      --         ["q"] = "close",
+      --         -- ["i"] = "focus_input",
+      --         ["<c-w>"] = "cycle_win",
+      --       },
+      --     },
+      --   },
+      -- }
+      -- opts.image = {
+      --   force = true,
+      --   -- 启用对文档内嵌图片的支持
+      --   doc = {
+      --     enabled = true,
+      --     -- 对于支持的终端，直接在 buffer 中渲染图片
+      --     -- 这比浮动窗口的体验更无缝
+      --     inline = true,
+      --     -- 如果 `inline` 设为 false 或终端不支持，则在浮动窗口中显示
+      --     -- float = {
+      --     --   -- 浮动窗口的最大宽度和高度（字符数）
+      --     --   max_width = 40,
+      --     --   max_height = 20,
+      --     -- },
+      --   },
+      --   -- 启用对 LaTeX 数学公式的渲染 ($...$, $$...$$)
+      --   -- `math` 依赖于 `doc` 模块
+      --   math = {
+      --     enabled = true,
+      --   },
+      -- }
     end,
     keys = {
       { '<leader>s"', function() Snacks.picker.registers() end, desc = "Registers" },
@@ -169,6 +212,8 @@ return {
               [motion] = "next",
               -- 按下大小写相反的键会朝相反方向搜索
               [motion:match "%l" and motion:upper() or motion:lower()] = "prev",
+              [";"] = "next", -- set to `right` to always go right
+              [","] = "prev", -- set to `left` to always go left
             }
           end,
         },
@@ -268,5 +313,22 @@ return {
       hl(0, "MultiCursorDisabledVisual", { link = "Visual" })
       hl(0, "MultiCursorDisabledSign", { link = "SignColumn" })
     end,
+  },
+
+  {
+    "mrjones2014/smart-splits.nvim",
+    enabled = false,
+  },
+
+  {
+    "OXY2DEV/markview.nvim",
+    -- enabled = false,
+    -- lazy = false,
+
+    -- For blink.cmp's completion
+    -- source
+    dependencies = {
+      "saghen/blink.cmp",
+    },
   },
 }

@@ -1,7 +1,7 @@
 local ls = require "luasnip"
 local extras = require "luasnip.extras"
 local s = ls.snippet
-local t = ls.text_node   -- 文本节点
+local t = ls.text_node -- 文本节点
 local i = ls.insert_node -- 插入节点
 local fmt = require("luasnip.extras.fmt").fmt
 local postfix = require("luasnip.extras.postfix").postfix
@@ -12,12 +12,39 @@ return {
   -- s({ trig = "foo", snippetType = "autosnippet" }, t "this is a autosnippet"),
 
   s({
-    trig = "debug(%d)(%s)",
+    trig = "debug(%d+)(%s)",
     regTrig = true,
     snippetType = "autosnippet",
   }, {
-    f(function(_args, snip) return 'println!("debug' .. snip.captures[1] .. '");' end, {}),
+    f(function(_, snip) return 'println!("debug' .. snip.captures[1] .. '");' end, {}),
   }),
+
+  s(
+    {
+      trig = "debugloop(%d+)(%s)",
+      regTrig = true,
+      snippetType = "autosnippet",
+    },
+    fmt(
+      [[
+{{
+    static DEBUG_COUNTER: std::sync::atomic::AtomicUsize =
+        std::sync::atomic::AtomicUsize::new(0);
+    if DEBUG_COUNTER.load(std::sync::atomic::Ordering::Relaxed) < {1} {{
+        {2}
+
+        DEBUG_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    }}
+}}
+]],
+      {
+        -- {1}: 对应循环次数, 从触发器捕获
+        f(function(_, snip) return snip.captures[1] end, {}),
+        i(0),
+      }
+    )
+  ),
+
   s("derivedebug", t "#[derive(Debug)]"),
   s("deadcode", t "#[allow(dead_code)]"),
   s("allowfreedom", t "#![allow(clippy::disallowed_names, unused_variables, dead_code)]"),
@@ -43,7 +70,7 @@ return {
   }),
 
   s("sleep", {
-    t { "std::thread::sleep(std::time::Duration::from_secs(" },
+    t { "std::thread::sleep(std::time::Duration::from_millis(" },
     i(1),
     t { "));" },
   }),
