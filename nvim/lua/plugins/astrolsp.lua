@@ -84,6 +84,7 @@ local rust_settings = {
     cargo = {
       extraEnv = { CARGO_PROFILE_RUST_ANALYZER_INHERITS = "dev" },
       extraArgs = { "--profile", "rust-analyzer" },
+      allFeatures = true,
     },
   },
 }
