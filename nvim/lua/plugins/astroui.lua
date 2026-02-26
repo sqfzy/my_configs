@@ -102,6 +102,10 @@ local function choose_theme_by_time_from_all(scheme)
     time_of_day = "night"
   end
 
+  -- always dusk
+  -- time_of_day = "dusk"
+  -- vim.opt.background = "dark"
+
   local all_themes = {}
   for _, v in pairs(scheme) do
     for _, theme in ipairs(v[time_of_day]) do

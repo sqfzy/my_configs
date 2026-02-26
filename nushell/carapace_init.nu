@@ -18,7 +18,7 @@ let carapace_completer = {|spans: list<string>|
 let external_completer = {|spans|
     let expanded_alias = scope aliases
     | where name == $spans.0
-    | get -i 0.expansion
+    | get -o 0.expansion
 
     let spans = if $expanded_alias != null {
         $spans
@@ -30,7 +30,9 @@ let external_completer = {|spans|
 
     match $spans.0 {
         # carapace completions are incorrect for nu
-        nu => $fish_completer
+        # WARN: 会导致使用 nu 时，全路径补全
+        # nu => $fish_completer
+
         # fish completes commits and branch names in a nicer way
         git => $fish_completer
         # carapace doesn't have completions for asdf

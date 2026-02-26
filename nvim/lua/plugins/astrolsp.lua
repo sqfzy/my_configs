@@ -131,6 +131,9 @@ return {
       -- customize language server configuration options passed to `lspconfig`
       ---@diagnostic disable: missing-fields
       config = {
+        neocmake = {
+          cmd = { "neocmakelsp", "stdio" },
+        },
         tinymist = {
           single_file_support = true,
         },
@@ -153,7 +156,24 @@ return {
           end,
           single_file_support = true,
         },
-        -- clangd = { capabilities = { offsetEncoding = "utf-8" } },
+        clangd = {
+          cmd = {
+            "clangd",
+            "--background-index", -- 后台建立索引
+            "--clang-tidy", -- 开启 clang-tidy 实时检查
+            "--header-insertion=iwyu", -- 智能头文件插入
+            "--completion-style=detailed",
+            -- "--function-arg-placeholders",
+            -- "--fallback-style=LLVM",
+          },
+          init_options = {
+            fallbackFlags = { "--std=c++23" },
+            usePlaceholders = true,
+            completeUnimported = true,
+            clangdFileStatus = true,
+          },
+          -- capabilities = { offsetEncoding = "utf-8" }
+        },
       },
       -- customize how language servers are attached
       handlers = {
@@ -198,9 +218,16 @@ return {
 
           ["<A-k>"] = {
             function()
-              vim.lsp.buf.hover {
-                border = "rounded",
-              }
+              -- 检查当前缓冲区的文件类型
+              if vim.bo.filetype == "rust" then
+                -- 如果是 Rust 文件，调用 RustLsp 的 hover actions
+                vim.cmd.RustLsp { "hover", "actions" }
+              else
+                -- 否则，使用默认的 LSP hover
+                vim.lsp.buf.hover {
+                  border = "rounded",
+                }
+              end
             end,
             desc = "Hover",
           },
@@ -371,6 +398,7 @@ return {
     opts = function(_, opts)
       opts.tools.float_win_config = {
         border = "rounded",
+        auto_focus = false, -- 禁止自动聚焦到浮窗
       }
     end,
   },

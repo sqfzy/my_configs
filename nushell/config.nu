@@ -36,6 +36,11 @@ $env.config = {
 }
 # FIX: issue: https://github.com/nushell/nushell/issues/5585
 $env.config.shell_integration.osc133 = false
+# $env.config.history.isolation = true
+$env.config.history = {
+    isolation: true,
+    file_format: "sqlite"
+}
 
 # 主题设置
 let hr = date now | format date '%H' | into int
@@ -73,15 +78,23 @@ $env.NOXE_EDIT = "nvim"
 alias oldls = ^ls
 alias ls = ^eza
 alias oldcat = ^cat
-alias cat = ^bat
+alias cat = ^bat --paging=never
 alias oldgrep = ^grep
 alias grep = ^rg
 alias top = ^btop
-alias objdump = ^llvm-objdump
-alias readelf = ^llvm-readobj
-alias readobj = ^llvm-readobj
+# alias objdump = ^llvm-objdump
+# alias readelf = ^llvm-readobj
+# alias readobj = ^llvm-readobj
+alias netcat = ^ncat
+alias nc = ^ncat
+
+def nvim-nolsp [...rest] {
+    with-env { NVIM_APPNAME: "nvim-nolsp" } { nvim ...$rest }
+}
 
 # carapace: 自动补全工具
+$env.CARAPACE_BRIDGES = 'zsh,fish,bash,inshellisense'
+# carapace _carapace nushell | save --force ~/.carapace_init.nu
 source ./carapace_init.nu
 
 # pyenv configuration for Nushell
@@ -95,3 +108,22 @@ $env.GEMINI_API_KEY = ^cat $"($env.HOME)/key/gemini_api_key"
 
 # bpftrace configuration
 $env.BPFTRACE_KERNEL_SOURCE = $"/usr/src/((uname | get kernel-release))"
+
+$env.SNACKS_WEZTERM = true
+
+$env.VCPKG_ROOT = $"($env.HOME)/vcpkg"
+$env.PATH = ($env.PATH | prepend $"($env.VCPKG_ROOT)")
+
+# # 1. 自动获取 Windows 主机的 IP (从 /etc/resolv.conf 中提取 nameserver)
+# let host_ip = (ip route show | lines | find "default" | first | split row " " | get 2)#
+# # 2. 打印 IP 确认是否获取正确 (应该是 172.x.x.x 或 192.168.x.x)
+# print $"Host IP: ($host_ip)"
+#
+# # 3. 设置当前会话的代理环境变量
+# $env.HTTP_PROXY = ""
+# $env.HTTPS_PROXY = ""
+# $env.all_proxy = $"socks5://($host_ip):7890" # 这一行可选，部分工具走 socks5
+# $env.no_proxy = ""
+#
+# # 4. 再次测试
+# curl -I https://api.github.com

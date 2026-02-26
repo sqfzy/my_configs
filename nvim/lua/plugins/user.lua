@@ -321,14 +321,45 @@ return {
   },
 
   {
-    "OXY2DEV/markview.nvim",
-    -- enabled = false,
-    -- lazy = false,
-
-    -- For blink.cmp's completion
-    -- source
-    dependencies = {
-      "saghen/blink.cmp",
-    },
+    "terrastruct/d2-vim",
+    ft = { "d2" },
   },
+
+  {
+    "ravsii/tree-sitter-d2",
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
+    version = "*", -- use the latest git tag instead of main
+    build = "make nvim-install",
+  },
+
+  {
+    "p00f/clangd_extensions.nvim",
+  },
+
+  { "Mythos-404/xmake.nvim" },
+
+  -- {
+  --   "OXY2DEV/markview.nvim",
+  --   -- enabled = false,
+  --   -- lazy = false,
+  --
+  --   -- For blink.cmp's completion
+  --   -- source
+  --   opts = {
+  --     typst = {
+  --       enable = true,
+  --
+  --       code_blocks = {
+  --         enable = false,
+  --       },
+  --
+  --       code_spans = {
+  --         enable = false,
+  --       },
+  --     },
+  --   },
+  --   dependencies = {
+  --     "saghen/blink.cmp",
+  --   },
+  -- },
 }

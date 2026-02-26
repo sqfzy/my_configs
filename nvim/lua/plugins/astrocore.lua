@@ -2,6 +2,7 @@
 -- Configuration documentation can be found with `:h astrocore`
 -- NOTE: We highly recommend setting up the Lua Language Server (`:LspInstall lua_ls`)
 --       as this provides autocomplete and documentation while editing
+local home = "/home/sqfzy"
 
 ---@type LazySpec
 return {
@@ -72,6 +73,14 @@ return {
         cursorline = false,
         clipboard = "unnamedplus",
         guifont = "LXGW WenKai,0xProto,Hack_Nerd_Font:h12",
+        -- -- 确保 Tab 键插入的是空格
+        -- expandtab = true,
+        -- -- Tab 键所占的列数（在文件中实际显示为多少个空格）
+        -- tabstop = 4,
+        -- -- 自动缩进时使用的空格数（如按回车后、使用 '=' 重新缩进等）
+        -- shiftwidth = 4,
+        -- -- 按 <BS> 退格键时，退格的步长（设置为 4 配合 tabstop 和 shiftwidth）
+        -- softtabstop = 4,
       },
       g = { -- vim.g.<key>
         -- configure global vim variables (vim.g)
@@ -236,9 +245,9 @@ return {
         ["<Leader>w"] = { "<cmd>w!<cr>", desc = "Save" },
 
         ["<Leader>n"] = { "", desc = "Neo-tree" },
-        ["<Leader>nh"] = { "<cmd>Neotree ~/<CR>", desc = "Home" },
-        ["<Leader>nw"] = { "<cmd>Neotree ~/work_space/<CR>", desc = "Work dir" },
-        ["<Leader>nc"] = { "<cmd>Neotree ~/.config/nvim/<CR>", desc = "Config dir" },
+        ["<Leader>nh"] = { "<cmd>Neotree " .. home .. "/<CR>", desc = "Home" },
+        ["<Leader>nw"] = { "<cmd>Neotree " .. home .. "/work_space/<CR>", desc = "Work dir" },
+        ["<Leader>nc"] = { "<cmd>Neotree " .. home .. "/.config/nvim/<CR>", desc = "Config dir" },
         ["<Leader>nn"] = { "<cmd>Neotree dir=%:p:h<CR>", desc = "Current dir" },
 
         ["<A-w>"] = {
@@ -299,7 +308,6 @@ return {
           function() require("snacks").picker.highlights() end,
           desc = "Snacks highlights",
         },
-
 
         ["<Leader><CR>"] = { "mmo<Esc>`m" },
       },
@@ -411,7 +419,7 @@ return {
         ["<A-h>"] = { "<cmd>lua require('luasnip').jump(-1)<Cr>" },
         ["<A-l>"] = { "<cmd>lua require('luasnip').jump(1)<Cr>" },
 
-        ["<A-m>"] = false
+        ["<A-m>"] = false,
       },
     },
   },

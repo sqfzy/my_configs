@@ -9,6 +9,7 @@ return {
   { import = "astrocommunity.pack.rust" },
   { import = "astrocommunity.pack.go" },
   { import = "astrocommunity.pack.cpp" },
+  { import = "astrocommunity.pack.cmake" },
   { import = "astrocommunity.pack.html-css" },
   { import = "astrocommunity.pack.python" },
   { import = "astrocommunity.pack.typescript-deno" },
@@ -19,6 +20,7 @@ return {
   { import = "astrocommunity.pack.typst" },
   { import = "astrocommunity.pack.markdown" },
   { import = "astrocommunity.pack.svelte" },
+  { import = "astrocommunity.pack.cs" },
   -- { import = "astrocommunity.pack.kotlin" },
   -- { import = "astrocommunity.utility.noice-nvim" },
 
