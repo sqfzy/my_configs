@@ -58,7 +58,8 @@ starship init nu | save -f ($nu.data-dir | path join "vendor/autoload/starship.n
 let new_paths = [
     $"($env.HOME)/.cargo/bin",
     $"($env.HOME)/.local/share/nvim/mason/bin",
-    $"($env.HOME)/.local/bin"
+    $"($env.HOME)/.local/bin",
+    $"($env.HOME)/.deno/bin",
 ]
 for path_item in $new_paths {
     if not ($path_item in $env.PATH) {
