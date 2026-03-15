@@ -88,6 +88,7 @@ alias top = ^btop
 # alias readobj = ^llvm-readobj
 alias netcat = ^ncat
 alias nc = ^ncat
+alias whereami = curl cip.cc
 
 def nvim-nolsp [...rest] {
     with-env { NVIM_APPNAME: "nvim-nolsp" } { nvim ...$rest }
@@ -115,14 +116,14 @@ $env.SNACKS_WEZTERM = true
 $env.VCPKG_ROOT = $"($env.HOME)/vcpkg"
 $env.PATH = ($env.PATH | prepend $"($env.VCPKG_ROOT)")
 
-# # 1. 自动获取 Windows 主机的 IP (从 /etc/resolv.conf 中提取 nameserver)
-# let host_ip = (ip route show | lines | find "default" | first | split row " " | get 2)#
-# # 2. 打印 IP 确认是否获取正确 (应该是 172.x.x.x 或 192.168.x.x)
+# 1. 自动获取 Windows 主机的 IP (从 /etc/resolv.conf 中提取 nameserver)
+# let host_ip = (ip route show | lines | find "default" | first | split row " " | get 2)
+# 2. 打印 IP 确认是否获取正确 (应该是 172.x.x.x 或 192.168.x.x)
 # print $"Host IP: ($host_ip)"
-#
-# # 3. 设置当前会话的代理环境变量
-# $env.HTTP_PROXY = ""
-# $env.HTTPS_PROXY = ""
+
+# 3. 设置当前会话的代理环境变量
+# $env.HTTP_PROXY = $"http://($host_ip):7890"
+# $env.HTTPS_PROXY = $"http://($host_ip):7890"
 # $env.all_proxy = $"socks5://($host_ip):7890" # 这一行可选，部分工具走 socks5
 # $env.no_proxy = ""
 #

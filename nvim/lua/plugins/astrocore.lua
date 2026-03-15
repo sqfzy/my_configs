@@ -278,7 +278,9 @@ return {
         ["<A-4>"] = {
           function()
             local dir = tostring(vim.fn.expand "%:p:h")
-            require("toggleterm").exec("cd " .. dir, 3, nil, nil, "float", "Term3", false, true)
+            -- 使用 vim.fn.shellescape 处理路径，它会自动添加引号并处理特殊字符
+            local cd_cmd = "cd " .. vim.fn.shellescape(dir)
+            require("toggleterm").exec(cd_cmd, 3, nil, nil, "float", "Term3", false, true)
           end,
           desc = "ToggleTerm current dir",
         },
