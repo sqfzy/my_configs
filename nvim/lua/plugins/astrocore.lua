@@ -249,6 +249,7 @@ return {
         ["<Leader>nw"] = { "<cmd>Neotree " .. home .. "/work_space/<CR>", desc = "Work dir" },
         ["<Leader>nc"] = { "<cmd>Neotree " .. home .. "/.config/nvim/<CR>", desc = "Config dir" },
         ["<Leader>nn"] = { "<cmd>Neotree dir=%:p:h<CR>", desc = "Current dir" },
+        ["<Leader>nH"] = { "<cmd>Neotree /mnt/c/Users/<CR>", desc = "Windows dir" },
 
         ["<A-w>"] = {
           "<C-w>w",
