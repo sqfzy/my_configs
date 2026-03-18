@@ -87,17 +87,17 @@ return {
         -- NOTE: `mapleader` and `maplocalleader` must be set in the AstroNvim opts or before `lazy.setup`
         -- This can be found in the `lua/lazy_setup.lua` file
         mkdp_width = 80,
-        clipboard = {
-          name = "OSC 52",
-          copy = {
-            ["+"] = require("vim.ui.clipboard.osc52").copy "+",
-            ["*"] = require("vim.ui.clipboard.osc52").copy "*",
-          },
-          paste = {
-            ["+"] = require("vim.ui.clipboard.osc52").paste "+",
-            ["*"] = require("vim.ui.clipboard.osc52").paste "*",
-          },
-        },
+        -- clipboard = {
+        --   name = "OSC 52",
+        --   copy = {
+        --     ["+"] = require("vim.ui.clipboard.osc52").copy "+",
+        --     ["*"] = require("vim.ui.clipboard.osc52").copy "*",
+        --   },
+        --   paste = {
+        --     ["+"] = require("vim.ui.clipboard.osc52").paste "+",
+        --     ["*"] = require("vim.ui.clipboard.osc52").paste "*",
+        --   },
+        -- },
       },
     },
     -- Mappings can be configured through AstroCore as well.
