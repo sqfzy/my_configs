@@ -10905,3 +10905,5 @@ cargo run
 cargo nextest run --no-capture --package foo
 cargo build
 nvim
+xmake
+exit
