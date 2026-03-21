@@ -1,6 +1,8 @@
 ---
 name: refactor
-description: Targeted structural refactoring — restructures code while preserving behavior. Supports extract, inline, rename, split, merge, and move operations with pre/post verification. Use when reshaping existing code rather than adding new features or fixing bugs. Auto-saves refactoring report to .discuss/
+description: Targeted structural refactoring — restructures code while preserving behavior. Supports extract, inline, rename, split, merge, and move operations with pre/post verification. Auto-saves refactoring report to .discuss/
+TRIGGER when: user asks to refactor, extract function/module, inline, rename, split, merge, or move code while explicitly preserving existing behavior.
+DO NOT TRIGGER when: user wants to change behavior (use /feature or /fix), or wants broad quality improvement (use /improve).
 argument-hint: "<refactoring intent> [target: <file or module>] [no-commit] [dry-run] [auto]"
 allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---

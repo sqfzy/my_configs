@@ -1,6 +1,8 @@
 ---
 name: improve
-description: Structured code quality improvement cycle — reviews current state, iteratively improves through adversarial discussion, and captures lessons learned. Use for periodic technical debt cleanup, post-milestone polish, or when a module feels "not quite right" but nothing is broken. Auto-saves improve report to .discuss/
+description: Structured code quality improvement cycle — reviews current state, iteratively improves through adversarial discussion, and captures lessons learned. Auto-saves improve report to .discuss/
+TRIGGER when: user asks to clean up tech debt, polish code quality, improve a module that works but feels messy, or do periodic code health checks.
+DO NOT TRIGGER when: user is fixing a specific bug (use /fix), restructuring without behavior change (use /refactor), or preparing to release (use /ship).
 argument-hint: "<target: file or module> [iter: N] [depth: quick|full] [auto]"
 allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---

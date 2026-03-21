@@ -1,6 +1,8 @@
 ---
 name: summary
 description: Analyze a codebase and produce a comprehensive, visually rich code_summary.md.
+TRIGGER when: user asks for a codebase summary, project overview, code architecture overview, or "what does this project do".
+DO NOT TRIGGER when: user asks about a specific file or function (just read it directly), or wants documentation (use /doc).
 argument-hint: [target-path]
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(head:*), Bash(wc:*)
 ---

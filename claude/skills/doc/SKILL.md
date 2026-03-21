@@ -1,6 +1,8 @@
 ---
 name: doc
 description: Generate or update project documentation — API docs, README, CHANGELOG, inline doc comments, and onboarding guides. Reads actual code to produce accurate documentation rather than inventing descriptions. Auto-saves doc generation report to .discuss/
+TRIGGER when: user asks to write/update/generate documentation, README, CHANGELOG, API docs, or inline doc comments.
+DO NOT TRIGGER when: user asks to write code comments as part of implementation (that's normal coding), or update CHANGELOG as part of /ship.
 argument-hint: "<target> [type: api|readme|changelog|onboard|inline|all] [update] [auto]"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(date:*), Bash(mkdir:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---

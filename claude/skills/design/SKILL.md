@@ -1,6 +1,8 @@
 ---
 name: design
-description: Design-first feature development — deeply discusses requirements and technical approach through adversarial multi-role debate before writing any code. Use when the problem space is ambiguous, multiple viable approaches exist, or you want a well-reasoned design before committing to implementation. Combines /discuss depth with /feature execution. Auto-saves design report to .discuss/
+description: Design-first feature development — deeply discusses requirements and technical approach through adversarial multi-role debate before writing any code. Combines /discuss depth with /feature execution. Auto-saves design report to .discuss/
+TRIGGER when: user describes a feature with ambiguous requirements, multiple viable approaches, or explicitly asks to discuss/design before coding; user says "how should we build X" or "what's the best approach for X".
+DO NOT TRIGGER when: requirements are clear and user wants to start coding (use /feature), or user only wants a discussion without implementation (use /discuss).
 argument-hint: "<requirement description> [no-commit] [target: <path>] [rounds: N] [roles: N] [auto]"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(head:*), Bash(mkdir:*), Bash(date:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---

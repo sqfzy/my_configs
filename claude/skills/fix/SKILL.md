@@ -1,6 +1,8 @@
 ---
 name: fix
-description: End-to-end bug fix workflow — traces root cause, implements fix, adds regression test, and commits with proper message. Combines /debug → /test → /git into a single disciplined pipeline where no step can be skipped. Use when you have a bug to fix and want the complete cycle done right. Auto-saves fix report to .discuss/
+description: End-to-end bug fix workflow — traces root cause, implements fix, adds regression test, and commits with proper message. Combines /debug → /test → /git into a single disciplined pipeline where no step can be skipped. Auto-saves fix report to .discuss/
+TRIGGER when: user reports a bug, error, crash, panic, test failure, or unexpected behavior and wants it fixed; user pastes error output/stack trace and asks to resolve it.
+DO NOT TRIGGER when: user only asks what caused an error without wanting a fix, or is building new functionality (use /feature).
 argument-hint: "[error text | file: <path> | run] [target: <file>] [no-commit] [auto]"
 allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---

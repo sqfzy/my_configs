@@ -1,6 +1,8 @@
 ---
 name: retro
-description: Generate a structured retrospective after completing a coding session — extracts lessons learned, pitfalls, insights, and key decisions with enough context to be useful months later. Run after finishing a feature, debug session, or refactor.
+description: Generate a structured retrospective after completing a coding session — extracts lessons learned, pitfalls, insights, and key decisions with enough context to be useful months later.
+TRIGGER when: user asks for a retrospective, session review, lessons learned, or post-mortem after completing a feature/debug/refactor session.
+DO NOT TRIGGER when: user is still actively working on a task, or asking for a code review (use /review).
 argument-hint: "[scope: <path or description>] [since: <git-ref>] [depth: quick|full]"
 allowed-tools: Bash(git:*), Bash(find:*), Bash(cat:*), Bash(date:*), Bash(mkdir:*)
 ---

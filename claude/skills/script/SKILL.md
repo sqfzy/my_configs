@@ -1,6 +1,8 @@
 ---
 name: script
-description: Generate robust, beginner-friendly scripts for any purpose — project launchers, automation, deployment, data processing, setup wizards, etc. Handles environment detection with transparent reporting, dependency checks, and produces scripts with actionable guidance at every step. Supports --verbose mode for beginners who want to understand what the script does and why.
+description: Generate robust, beginner-friendly scripts for any purpose — project launchers, automation, deployment, data processing, setup wizards, etc. Handles environment detection with transparent reporting, dependency checks, and produces scripts with actionable guidance at every step.
+TRIGGER when: user asks to create/generate a shell script, automation script, setup wizard, deployment script, or any standalone executable script.
+DO NOT TRIGGER when: user is writing application code that happens to include shell commands, or writing a one-liner in the terminal.
 argument-hint: "[target: <path>] [lang: bash|nu|powershell] [name: <script-name>] [purpose: <what the script does>]"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(head:*), Bash(uname:*), Bash(which:*), Bash(date:*)
 ---

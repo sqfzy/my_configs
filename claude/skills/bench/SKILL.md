@@ -1,6 +1,8 @@
 ---
 name: bench
-description: Performance analysis and optimization — run benchmarks, identify hot paths, compare before/after, and guide targeted optimization. Use when investigating performance, establishing baselines, or verifying optimization results. Auto-saves benchmark report to .discuss/
+description: Performance analysis and optimization — run benchmarks, identify hot paths, compare before/after, and guide targeted optimization. Auto-saves benchmark report to .discuss/
+TRIGGER when: user asks to profile, benchmark, optimize performance, investigate slowness/latency, or compare before/after performance.
+DO NOT TRIGGER when: user mentions "performance" casually in feature requirements, or is writing benchmarks as part of /feature or /test.
 argument-hint: "<target or intent> [mode: profile|compare|optimize|baseline] [iterations: N]"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(date:*), Bash(mkdir:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*), Bash(perf:*), Bash(hyperfine:*), Bash(valgrind:*)
 ---
