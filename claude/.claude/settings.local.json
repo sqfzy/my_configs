@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /home/sqfzy/.config/claude/ -name *.md -path */skills/*)",
+      "Bash(for f:*)",
+      "Bash(do echo:*)"
+    ]
+  }
+}

@@ -1,5 +1,5 @@
 #!/usr/bin/env nu
-#
+
 # 用法：
 #   nu cc-set-bypass.nu                        # 写入（默认 project scope）
 #   nu cc-set-bypass.nu --scope user           # 写入 user scope
@@ -10,7 +10,6 @@
 #   use cc-set-bypass.nu *
 #   cc-set-bypass apply
 #   cc-set-bypass restore
-
 const C_RST = "\e[0m"
 const C_DIM = "\e[2m"
 const C_GRN = "\e[32m"

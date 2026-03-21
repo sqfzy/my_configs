@@ -30,8 +30,8 @@ use ./functions/pandocgpt.nu
 use ./functions/gitpush.nu  
 use ./functions/lh.nu  
 use ./functions/cpcode.nu  
-use ./functions/cc-workflow.nu  
 use ./functions/cc-set-bypass.nu  
+use ./functions/cc-loop.nu 
 source ./functions/autojump.nu
 
 $env.config = {
