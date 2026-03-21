@@ -1,6 +1,6 @@
 ---
 description: End-to-end feature development from scratch — clarifies requirements, designs architecture, implements with tests, verifies, and commits. Use when starting a new feature, module, or non-trivial change that requires upfront design thinking before coding.
-argument-hint: "<feature description> [no-commit] [no-tests] [target: <path>]"
+argument-hint: "<feature description> [no-commit] [no-tests] [target: <path>] [auto]"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(head:*), Bash(mkdir:*), Bash(date:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---
 
@@ -25,6 +25,7 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(head:*), Bash(mkdir:*), Bash(date
 - `[no-commit]`：完成后不自动提交，仅实现代码
 - `[no-tests]`：跳过测试编写（不推荐，仅用于 spike/探索性实现）
 - `[target: <path>]`：新功能的目标模块或目录
+- `[auto]`：无人值守模式——跳过所有交互确认，自动继续（需求不确定点按最保守理解处理，设计方案直接执行）
 
 ---
 
@@ -71,6 +72,8 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(head:*), Bash(mkdir:*), Bash(date
 ```
 
 若存在不确定点，**在此处暂停，等待用户回答**，再继续。
+
+**`auto` 模式**：不暂停，对每个不确定点选择最保守的理解（功能范围最小、约束最严格的解读），并在输出中标注 `[auto: 保守假设]`。
 
 ---
 
@@ -129,11 +132,11 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(head:*), Bash(mkdir:*), Bash(date
 | R4   | 实用主义者   | 实证优先，拒绝过度设计             | 技术选型、复杂度权衡          |
 | R5   | 第一性原理者 | 质疑所有假设，回归根本需求         | 接口设计、架构选型            |
 | R6   | 维护性倡导者 | 三年后的可读性和可维护性           | 模块划分、命名、抽象          |
-| R7   | 测试驱动者   | 可测试性、测试覆盖、回归安全       | 接口边界、依赖注入            |
-| R8   | 激进重构者   | 无视当前约束，追求最优设计         | 架构探索、重新审视假设        |
-| R9   | 安全专家     | 安全性、资源泄漏、未定义行为       | 内存管理、并发、外部输入      |
-| R10  | 怀疑论者     | 默认质疑当前设计，要求严格举证     | 通用场景、复杂性验证          |
-| R11  | 系统思维者   | 全局影响、二阶效应、跨模块依赖     | 接口变更、跨模块功能          |
+| R8   | 激进探索者   | 无视当前约束，追求最优设计         | 架构探索、重新审视假设        |
+| R10  | 安全专家     | 安全性、资源泄漏、未定义行为       | 内存管理、并发、外部输入      |
+| R11  | 怀疑论者     | 默认质疑当前设计，要求严格举证     | 通用场景、复杂性验证          |
+| R12  | 系统思维者   | 全局影响、二阶效应、跨模块依赖     | 接口变更、跨模块功能          |
+| R13  | 测试驱动者   | 可测试性、测试覆盖、回归安全       | 接口边界、依赖注入            |
 
 **自定义角色格式**（当预定义角色无法覆盖领域需求时使用）：
 
@@ -182,11 +185,24 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(head:*), Bash(mkdir:*), Bash(date
 
 **在此处暂停，等待用户确认。**
 
+**`auto` 模式**：不暂停，直接采纳评审后的设计方案开始实现。
+
 ---
 
 ## Phase 3: 测试先行（TDD）
 
 除非指定 `no-tests`，先写测试，再写实现。
+
+### 3.0 Benchmark 基线（若存在）
+
+在写任何实现代码之前，检测并记录现有 benchmark 基线：
+
+```bash
+find . -path "*/benches/*.rs" -o -name "*.cpp" -exec grep -l "BENCHMARK" {} \; -o -name "bench_*.py" 2>/dev/null | head -10
+```
+
+**若存在 benchmark**：运行并保存基线，Phase 5 用于回归对比。
+**若不存在**：跳过，在最终报告中注明"无 benchmark 覆盖"。
 
 ### 3.1 测试用例设计
 
@@ -261,7 +277,10 @@ Go：     go build ./... 2>&1 && go test ./... 2>&1 && go vet ./... 2>&1
 ```
 
 **结果处理**：
-- ✅ 全部通过 → 进入 Phase 6
+- ✅ 全部通过 → 运行 Benchmark 回归检查（若 Phase 3.0 记录了基线），然后进入 Phase 6
+  - 无退化 → 继续
+  - 退化 ≥5% → 告知用户，分析原因，决定是否接受/优化/回滚
+  - 无基线 → 跳过，报告中注明
 - ❌ 失败 → 修复，不跳过，重新验证（参考 `/debug` 的根因追踪逻辑）
 - ⚠️ Clippy / lint 警告 → 逐一处理，不允许 `#[allow(...)]` 压制警告（除非有充分理由且附注释）
 
@@ -323,7 +342,7 @@ git commit -m "<generated message>"
 
 ### 已知限制 & 后续建议
 - <Out of scope 中的内容，若有优先级建议可注明>
-- 建议后续用 `/self-evolution` 对本模块做完整打磨
+- 建议后续用 `/improve` 对本模块做完整打磨
 ```
 
 ---

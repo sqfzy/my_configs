@@ -4,7 +4,7 @@ argument-hint: [target-path]
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(head:*), Bash(wc:*)
 ---
 
-# /code-summary
+# /summary
 
 当前时间：!`date '+%Y-%m-%d %H:%M:%S'`
 当前目录：!`pwd`

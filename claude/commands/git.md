@@ -1,6 +1,6 @@
 ---
 description: Intelligent git workflow — stages changes, generates Conventional Commits messages, writes changelog entries, and optionally drafts a PR description. Auto-detects what needs to be done based on repo state.
-argument-hint: "[msg: <hint>] [scope: <scope>] [pr] [push] [all]"
+argument-hint: "[msg: <hint>] [scope: <scope>] [pr] [push] [all] [auto]"
 allowed-tools: Bash(git:*), Bash(date:*), Bash(mkdir:*)
 ---
 
@@ -28,13 +28,14 @@ allowed-tools: Bash(git:*), Bash(date:*), Bash(mkdir:*)
 | `pr` | 额外生成 PR 描述（Markdown 格式，输出到终端） |
 | `push` | commit 完成后自动执行 `git push` |
 | `all` | 自动 `git add -A` 暂存所有变更，再提交 |
+| `auto` | 无人值守模式——自动选择候选 1 的 commit message，不暂停询问 |
 
 **状态检查**：根据 `git status` 结果判断当前情况：
 
 | 状态 | 行为 |
 |------|------|
 | 暂存区有内容 | 直接分析暂存区 diff |
-| 仅工作区有变更（暂存区为空） | 若指定 `all` 则 `git add -A`；否则询问用户确认后再暂存 |
+| 仅工作区有变更（暂存区为空） | 若指定 `all` 或 `auto` 则 `git add -A`；否则询问用户确认后再暂存 |
 | 工作区和暂存区均干净 | 输出 `✅ 工作区干净，无需提交` 后终止 |
 | 存在 merge conflict 标记 | 输出 `❌ 存在未解决的冲突，请先解决后再提交` 后终止 |
 
@@ -107,6 +108,8 @@ feat: add streaming parser
 ```
 
 询问用户：`使用候选 1？[1/2/3/e(自己输入)/回车默认1]`
+
+**`auto` 模式**：直接使用候选 1，不询问。
 
 ---
 
