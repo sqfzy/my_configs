@@ -1,29 +1,32 @@
 #!/usr/bin/env nu
 
-# cc-loop.nu — 循环调用 claude code command，每轮新开 context，定时结束
+# cc-loop.nu — 循环调用 claude code command，每轮可复用或新开 context，定时结束
 #
 # 用法：
-#   nu cc-loop.nu "/improve src/parser.rs auto"                       # 跑到收敛
-#   nu cc-loop.nu "/improve src/ auto" --until "07:00"                # 跑到明早 7 点
-#   nu cc-loop.nu "/improve src/ auto" --duration 2hr                 # 跑 2 小时
-#   nu cc-loop.nu "/improve src/ auto" --max-runs 5                   # 最多 5 轮
-#   nu cc-loop.nu "/review last 5" --max-runs 1                       # 单次执行（利用新 context）
-#   nu cc-loop.nu "/fix run auto" --until "06:30" --cooldown 60
+#   cc-loop "/improve src/parser.rs auto"                                 # 跑到收敛（每轮新 context）
+#   cc-loop "/improve src/ auto" --until "07:00"                          # 跑到明早 7 点
+#   cc-loop "/improve src/ auto" --duration 2hr                           # 跑 2 小时
+#   cc-loop "/improve src/ auto" --max-runs 5                             # 最多 5 轮
+#   cc-loop "/review last 5" --max-runs 1                                 # 单次执行（利用新 context）
+#   cc-loop "/fix run auto" --until "06:30" --cooldown 1min               # 每轮冷却 1 分钟
+#   cc-loop "/improve src/ auto" --resume my-session                      # 每轮复用同一会话（保持上下文连续）
+#   cc-loop "/improve src/ auto" --resume my-session --project my-proj    # 复用会话 + 指定项目
 export def main [
-    command: string                        # claude code command（如 "/improve src/ auto"）
+    command: string                        # claude code 命令（如 "/improve src/ auto"）
     --until: string = ""                   # 结束时间，格式 "HH:MM"（若已过则视为明天）
-    --duration: string = ""               # 运行时长，格式如 "2hr" "30min" "1hr30min"
+    --duration: duration                   # 运行时长（如 2hr, 30min, 1hr30min）
     --max-runs: int = 0                    # 最大循环次数，0 = 不限
-    --cooldown: int = 30                   # 每轮之间的冷却秒数
+    --cooldown: duration = 30sec           # 每轮之间的冷却时长（如 30sec, 1min, 2min）
     --max-failures: int = 5               # 连续失败多少次后中止，0 = 不限
     --project: string = ""                 # claude code --project 参数
+    --resume: string = ""                  # claude code --resume 会话名（每轮复用同一会话，保持上下文）
 ] {
     # ══════════════════════════════════════
     # Pre-flight checks
     # ══════════════════════════════════════
 
     # 参数互斥
-    if ($until | is-not-empty) and ($duration | is-not-empty) {
+    if ($until | is-not-empty) and ($duration != null) {
         error make { msg: "--until 和 --duration 不能同时使用，请只传其中一个" }
     }
 
@@ -128,12 +131,15 @@ export def main [
     let sep = "════════════════════════════════════════════"
     let initial_hash = (^git rev-parse HEAD | str trim)
     let branch = (^git branch --show-current | str trim)
+    let mode_label = if ($resume | is-not-empty) { "复用会话" } else { "独立 context" }
 
     let header_lines = [
         $sep
         "  cc-loop"
         $sep
         $"  命令：($command)"
+        $"  模式：($mode_label)"
+        (if ($resume | is-not-empty) { $"  会话：($resume)" } else { null })
         $"  分支：($branch)"
         $"  起始 commit：($initial_hash | str substring 0..8)"
         $"  开始：($start_time | format date '%Y-%m-%d %H:%M:%S')"
@@ -144,15 +150,20 @@ export def main [
         } else {
             "  截止：收敛为止"
         })
-        $"  冷却：($cooldown) 秒/轮"
+        $"  冷却：($cooldown)"
         (if $max_failures > 0 { $"  最大连续失败：($max_failures) 次" } else { null })
         (if ($project | is-not-empty) { $"  项目：($project)" } else { null })
         $"  日志：($run_log)"
+        $"  摘要：($summary_json)"
+        $sep
+        $"  💡 停止：冷却期间 Ctrl-C | 或从另一终端 touch ($log_dir)/cc-loop.stop"
+        $"  💡 Ctrl-C 安全：中断后未提交变更会在下次启动时自动 checkpoint"
         $sep
     ] | compact | str join "\n"
 
     print $"(ansi attr_bold)($header_lines)(ansi reset)\n"
     $"($header_lines)\n\n" | save --force $run_log
+    log-saved $run_log "启动信息"
 
     # 记录循环开始前已有的报告，避免误读旧报告导致提前收敛
     let report_pattern = $"($log_dir)/($cmd_name)-*.md"
@@ -172,10 +183,19 @@ export def main [
     mut convergence_hits = 0                   # 累计触发收敛信号次数（可观测性）
     let has_deadline = ($deadline != null)
 
+    let stop_file = $"($log_dir)/cc-loop.stop"
+
     loop {
         $run_count = $run_count + 1
 
         # ── 终止条件检查 ──
+        if ($stop_file | path exists) {
+            rm -f $stop_file
+            print $"\n(ansi yellow)⚠ 检测到停止文件，退出。(ansi reset)"
+            $termination_reason = "stopped"
+            break
+        }
+
         if $deadline != null and (date now) >= $deadline {
             print $"\n(ansi yellow)⏰ 已到截止时间，停止。(ansi reset)"
             $termination_reason = "deadline"
@@ -193,7 +213,10 @@ export def main [
         let round_start = (date now)
         let round_ts = ($round_start | format date '%Y-%m-%d %H:%M:%S')
 
-        print $"\n(ansi blue)▶(ansi reset)  (ansi attr_bold)第 ($run_count) 轮(ansi reset) — ($round_ts)"
+        let round_sep = "──────────────────────────────────────────────"
+        print $"\n(ansi blue)($round_sep)(ansi reset)"
+        print $"(ansi blue)▶(ansi reset)  (ansi attr_bold)第 ($run_count) 轮(ansi reset) — ($round_ts)"
+        print $"(ansi blue)($round_sep)(ansi reset)"
 
         # 结构化日志 — 轮次开始
         let round_header = [
@@ -203,20 +226,21 @@ export def main [
             $"  before_hash: ($before_hash)"
         ] | str join "\n"
         $"($round_header)\n" | save --append $run_log
+        log-saved $run_log $"第 ($run_count) 轮开始"
 
         # ── 执行 claude command ──
-        let claude_args = if ($project | is-not-empty) {
-            ["--project", $project, "-p", $command]
-        } else {
-            ["-p", $command]
-        }
+        let claude_args = (build-claude-args $command $project $resume)
+        print $"  (ansi cyan)⏳ 执行：(ansi reset)claude ($claude_args | str join ' ')"
 
         let claude_ok = (try {
             let result = (^claude ...$claude_args | complete)
-            # 原始输出附加到日志（带标记便于解析）
+            # 原始输出附加到日志
             $"[STDOUT]\n($result.stdout)\n" | save --append $run_log
             if ($result.stderr | str trim | is-not-empty) {
                 $"[STDERR]\n($result.stderr)\n" | save --append $run_log
+                log-saved $run_log "claude stdout + stderr"
+            } else {
+                log-saved $run_log "claude stdout"
             }
             if $result.exit_code != 0 {
                 print $"  (ansi yellow)⚠ claude 退出码 ($result.exit_code)(ansi reset)"
@@ -226,6 +250,7 @@ export def main [
         } catch { |e|
             print $"  (ansi red)✗ claude 执行失败：($e)(ansi reset)"
             $"[ERROR] ($e)\n" | save --append $run_log
+            log-saved $run_log "错误信息"
             false
         })
 
@@ -234,6 +259,7 @@ export def main [
             let round_dur = ((date now) - $round_start)
             print $"  连续失败次数：($consecutive_failures)"
             $"  status: FAILED (consecutive: ($consecutive_failures))\n  duration: ($round_dur)\n" | save --append $run_log
+            log-saved $run_log "失败状态"
 
             # 记录本轮
             $round_records = ($round_records | append {
@@ -251,8 +277,13 @@ export def main [
                 $termination_reason = "max_failures"
                 break
             }
-            print $"  等待 ($cooldown) 秒后重试..."
-            sleep ($cooldown * 1sec)
+            print $"  等待 ($cooldown) 后重试..."
+            let retry_ok = (try { sleep $cooldown; true } catch { false })
+            if not $retry_ok {
+                print $"\n(ansi yellow)⚠ 收到中断信号，停止循环。(ansi reset)"
+                $termination_reason = "interrupted"
+                break
+            }
             continue
         }
 
@@ -263,7 +294,6 @@ export def main [
         commit-changes $project $run_log $run_count
 
         let round_duration = ((date now) - $round_start)
-        print $"  耗时：($round_duration)"
 
         # ── 检查是否有实际改动 ──
         let after_hash = (^git rev-parse HEAD | str trim)
@@ -286,9 +316,25 @@ export def main [
         } else {
             $consecutive_no_change = 0
             $current_cooldown = $cooldown      # 有改动 → 重置冷却到基准值
-            print $"  (ansi green)✓ ($round_commits) 个新提交(ansi reset)"
-            print $"  (ansi attr_dimmed)($diff_stat)(ansi reset)"
+            print $"  (ansi green)✓ ($round_commits) 个新提交：(ansi reset)"
+            # 显示每条 commit 的 hash + message
+            let commit_lines = (^git log --oneline $"($before_hash)..($after_hash)" | lines)
+            for line in $commit_lines {
+                print $"    (ansi green)•(ansi reset) (ansi attr_dimmed)($line)(ansi reset)"
+            }
+            # 显示变更文件列表
+            let changed_files = (^git diff --stat $"($before_hash)..($after_hash)" | lines)
+            let summary_line = ($changed_files | last | str trim)
+            let file_lines = ($changed_files | drop 1)  # 去掉最后的汇总行
+            print ""
+            for line in $file_lines {
+                print $"    (ansi attr_dimmed)($line | str trim)(ansi reset)"
+            }
+            print $"  (ansi attr_dimmed)($summary_line)(ansi reset)"
         }
+
+        # 轮次耗时
+        print $"\n  (ansi cyan)⏱(ansi reset)  耗时：($round_duration)"
 
         # 结构化日志 — 轮次结束
         let round_footer = [
@@ -300,6 +346,7 @@ export def main [
             $"  no_change_streak: ($consecutive_no_change)"
         ] | str join "\n"
         $"($round_footer)\n" | save --append $run_log
+        log-saved $run_log $"第 ($run_count) 轮结果"
 
         # 记录本轮结构化数据
         $round_records = ($round_records | append {
@@ -318,8 +365,9 @@ export def main [
             if $has_deadline {
                 # 有截止时间 → 不终止，加倍冷却继续（模型可能幻觉收敛）
                 $current_cooldown = $current_cooldown * 2
-                print $"\n(ansi cyan)🔄 连续 3 轮无改动（疑似收敛 #($convergence_hits)），但有截止时间，继续执行（冷却 → ($current_cooldown)s）(ansi reset)"
-                $"  [CONVERGENCE] no_change streak=($consecutive_no_change), hit #($convergence_hits), cooldown→($current_cooldown)s, continuing -- has deadline\n" | save --append $run_log
+                print $"\n(ansi cyan)🔄 连续 3 轮无改动（疑似收敛 #($convergence_hits)），但有截止时间，继续执行（冷却 → ($current_cooldown)）(ansi reset)"
+                $"  [CONVERGENCE] no_change streak=($consecutive_no_change), hit #($convergence_hits), cooldown→($current_cooldown), continuing -- has deadline\n" | save --append $run_log
+                log-saved $run_log "收敛信号"
                 $consecutive_no_change = 0   # 重置计数，让下一个周期重新判断
             } else {
                 print $"\n(ansi green)✅ 连续 3 轮无改动，判定为收敛。(ansi reset)"
@@ -340,8 +388,9 @@ export def main [
             $convergence_hits = $convergence_hits + 1
             if $has_deadline {
                 $current_cooldown = $current_cooldown * 2
-                print $"\n(ansi cyan)🔄 报告标记收敛（疑似收敛 #($convergence_hits)），但有截止时间，继续执行（冷却 → ($current_cooldown)s）(ansi reset)"
-                $"  [CONVERGENCE] report_signal, hit #($convergence_hits), cooldown→($current_cooldown)s, continuing -- has deadline\n" | save --append $run_log
+                print $"\n(ansi cyan)🔄 报告标记收敛（疑似收敛 #($convergence_hits)），但有截止时间，继续执行（冷却 → ($current_cooldown)）(ansi reset)"
+                $"  [CONVERGENCE] report_signal, hit #($convergence_hits), cooldown→($current_cooldown), continuing -- has deadline\n" | save --append $run_log
+                log-saved $run_log "报告收敛信号"
             } else {
                 print $"\n(ansi green)✅ 报告标记收敛，停止。(ansi reset)"
                 $converged = true
@@ -350,14 +399,22 @@ export def main [
             }
         }
 
-        # ── 冷却（再次检查 deadline 避免空等） ──
+        # ── 冷却 ──
+        # 注：nushell 中 Ctrl-C 在外部命令执行期间无法被捕获（SIGINT 只杀子进程，nushell 继续执行）
+        # 冷却期间的 sleep 是唯一可靠的 Ctrl-C 响应点
         if $deadline != null and (date now) >= $deadline {
             print $"\n(ansi yellow)⏰ 已到截止时间，停止。(ansi reset)"
             $termination_reason = "deadline"
             break
         }
-        print $"  冷却 ($current_cooldown) 秒..."
-        sleep ($current_cooldown * 1sec)
+        print $"  冷却 ($current_cooldown) ...（Ctrl-C 停止循环）"
+        let cooldown_ok = (try { sleep $current_cooldown; true } catch { false })
+        if not $cooldown_ok {
+            print $"\n(ansi yellow)⚠ 收到中断信号，停止循环。(ansi reset)"
+            commit-changes $project $run_log $run_count
+            $termination_reason = "interrupted"
+            break
+        }
     }
 
     # ══════════════════════════════════════
@@ -394,6 +451,7 @@ export def main [
         "  完成"
         $sep
         $"  命令：($command)"
+        (if ($resume | is-not-empty) { $"  会话：($resume)" } else { null })
         $"  分支：($branch)"
         $"  总耗时：($total_duration)"
         $"  执行轮数：($effective_rounds)"
@@ -406,18 +464,20 @@ export def main [
         $"  日志：($run_log)"
         $"  摘要：($summary_json)"
         $sep
-    ] | str join "\n"
+    ] | compact | str join "\n"
 
     print $"(ansi attr_bold)($footer_lines)(ansi reset)"
 
     # 写入结构化文本日志
     $"($footer_lines)\n" | save --append $run_log
+    log-saved $run_log "最终汇总"
 
     # 写入 JSON 摘要（供外部工具消费）
     let summary_data = {
         command: $command
         branch: $branch
         project: $project
+        resume: $resume
         initial_hash: $initial_hash
         final_hash: $current_hash
         start_time: ($start_time | format date '%Y-%m-%dT%H:%M:%S%z')
@@ -432,6 +492,7 @@ export def main [
         round_details: $round_records
     }
     $summary_data | to json --indent 2 | save --force $summary_json
+    log-saved $summary_json "JSON 摘要"
 
     # 清理 lock 文件
     rm -f $lock_file
@@ -440,6 +501,24 @@ export def main [
 # ══════════════════════════════════════════════
 # 辅助函数
 # ══════════════════════════════════════════════
+
+# 在控制台提示日志已写入
+def log-saved [file: string, what: string] {
+    print $"  (ansi attr_dimmed)📝 ($what) → ($file)(ansi reset)"
+}
+
+# 构建 claude CLI 参数列表
+# --resume 和 --project 按需追加，-p <command> 始终在最后
+def build-claude-args [command: string, project: string, resume: string] {
+    mut args = []
+    if ($project | is-not-empty) {
+        $args = ($args | append ["--project", $project])
+    }
+    if ($resume | is-not-empty) {
+        $args = ($args | append ["--resume", $resume])
+    }
+    $args | append ["-p", $command]
+}
 
 # 自动提交变更，两级 fallback 保证工作区在每轮结束时干净：
 #   Level 1: claude /git all auto（生成 Conventional Commits message）
@@ -450,10 +529,16 @@ def commit-changes [project: string, run_log: string, round: int] {
 
     let dirty_count = ($dirty | lines | length)
     print $"  (ansi blue)📦 ($dirty_count) 个文件待提交(ansi reset)"
+    # 显示待提交文件列表
+    let dirty_lines = ($dirty | lines)
+    for line in $dirty_lines {
+        print $"    (ansi attr_dimmed)($line | str trim)(ansi reset)"
+    }
     $"  [COMMIT] ($dirty_count) dirty files\n" | save --append $run_log
+    log-saved $run_log "待提交文件列表"
 
-    # Level 1: claude /git all auto
-    print $"  尝试 /git all auto ..."
+    # Level 1: claude /git all auto（不使用 --resume，避免污染主会话上下文）
+    print $"  (ansi cyan)⏳ 尝试 /git all auto ...(ansi reset)"
     let git_args = if ($project | is-not-empty) {
         ["--project", $project, "-p", "/git all auto"]
     } else {
@@ -465,12 +550,15 @@ def commit-changes [project: string, run_log: string, round: int] {
         $"[GIT-L1 STDOUT]\n($r.stdout)\n" | save --append $run_log
         if $r.exit_code != 0 {
             $"[GIT-L1 STDERR]\n($r.stderr)\n" | save --append $run_log
+            log-saved $run_log "/git 输出（失败）"
             false
         } else {
+            log-saved $run_log "/git 输出"
             true
         }
     } catch { |e|
         $"[GIT-L1 ERROR] ($e)\n" | save --append $run_log
+        log-saved $run_log "/git 错误"
         false
     })
 
@@ -503,11 +591,12 @@ def commit-changes [project: string, run_log: string, round: int] {
         print $"  (ansi red)✗ fallback 提交也失败：($e)(ansi reset)"
         print $"  (ansi red)  ⚠ 工作区仍有未提交变更，后续轮次结果可能受影响(ansi reset)"
         $"  [COMMIT] level2 FAILED: ($e)\n" | save --append $run_log
+        log-saved $run_log "提交失败详情"
     }
 }
 
 # 解析 --until 和 --duration 为截止时间
-def resolve-deadline [until: string, duration: string] {
+def resolve-deadline [until: string, duration: any] {
     if ($until | is-not-empty) {
         let now = (date now)
         let today_str = ($now | format date '%Y-%m-%d')
@@ -518,9 +607,8 @@ def resolve-deadline [until: string, duration: string] {
         } else {
             $target
         }
-    } else if ($duration | is-not-empty) {
-        let dur = ($duration | into duration)
-        (date now) + $dur
+    } else if ($duration != null) {
+        (date now) + $duration
     } else {
         null
     }
