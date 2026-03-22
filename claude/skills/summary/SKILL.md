@@ -1,6 +1,6 @@
 ---
 name: summary
-description: Analyze a codebase and produce a comprehensive, visually rich code_summary.md.
+description: Analyze a codebase and produce a comprehensive, visually rich summary.md.
 TRIGGER when: user asks for a codebase summary, project overview, code architecture overview, or "what does this project do".
 DO NOT TRIGGER when: user asks about a specific file or function (just read it directly), or wants documentation (use /doc).
 argument-hint: [target-path]
@@ -22,8 +22,8 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(head:*), Bash(wc:*)
 
 ## Step 0: 参数解析 & 路径确定
 
-- **若 `$ARGUMENTS` 非空**：以其作为项目根目录，输出文件写入 `<target>/code_summary.md`
-- **若 `$ARGUMENTS` 为空**：以当前工作目录为项目根，输出写入 `./code_summary.md`
+- **若 `$ARGUMENTS` 非空**：以其作为项目根目录，输出文件写入 `<target>/summary.md`
+- **若 `$ARGUMENTS` 为空**：以当前工作目录为项目根，输出写入 `./summary.md`
 
 将目标路径解析为绝对路径，后续所有步骤均相对此根目录执行。
 
@@ -88,7 +88,7 @@ find "$TARGET" -not \( -path '*/.git*' -o -path '*/target*' -o -path '*/build*' 
 
 ---
 
-## Step 5: 生成 `code_summary.md`
+## Step 5: 生成 `summary.md`
 
 将以下结构写入目标文件：
 
@@ -245,7 +245,7 @@ Key test scenarios:
 - **语言特性**：Rust 注明 unsafe 块和 FFI 边界；C++ 注明模板实例化复杂度
 - **可扫描性**：不熟悉项目的开发者应能在 5 分钟内理解整体结构
 
-完成后输出：`✅ <target>/code_summary.md written — <N> modules documented, <N> ASCII diagrams generated`
+完成后输出：`✅ <target>/summary.md written — <N> modules documented, <N> ASCII diagrams generated`
 
 ---
 
