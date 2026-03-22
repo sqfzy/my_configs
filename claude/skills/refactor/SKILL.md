@@ -45,11 +45,7 @@ allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep
 ### 0.1 运行现有测试
 
 ```
-Rust：   cargo test 2>&1
-C++：    xmake build 2>&1 && xmake test 2>&1
-Python： uv run pytest 2>&1
-Node：   npm test 2>&1
-Go：     go test ./... 2>&1
+若用户提供了构建/测试/benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与 benchmark 命令；若项目无测试或 benchmark 则跳过对应步骤。
 ```
 
 **结果处理**：
@@ -75,9 +71,7 @@ find . -name "bench_*.py" -o -name "*_bench.py" 2>/dev/null | head -10
 
 **若存在与重构目标相关的 benchmark**：
 ```
-Rust：   cargo bench 2>&1 | tee .discuss/bench-baseline.txt
-C++：    xmake build -g bench 2>&1 && xmake run -g bench 2>&1 | tee .discuss/bench-baseline.txt
-Python： uv run pytest --benchmark-only 2>&1 | tee .discuss/bench-baseline.txt
+若用户提供了 benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行 benchmark 命令，结果 tee 到 .discuss/bench-baseline.txt；若无 benchmark 则跳过。
 ```
 
 记录基线数据，Phase 4 将用于对比。若无相关 benchmark 则跳过，注明"无 benchmark 覆盖"。
@@ -265,7 +259,7 @@ grep -rn "<函数名/模块名/类型名>" --include="*.rs" --include="*.py" --i
 ```
 for each step in 重构步骤:
     1. 执行改动
-    2. 编译验证（cargo build / xmake build / 等）
+    2. 编译验证（根据项目构建系统执行）
     3. 若编译失败 → 立即修复，不继续下一步
     4. 编译通过 → 记录该步完成，继续下一步
 ```
@@ -302,11 +296,7 @@ for each step in 重构步骤:
 所有步骤执行完毕后，运行完整测试套件：
 
 ```
-Rust：   cargo build 2>&1 && cargo test 2>&1 && cargo clippy 2>&1
-C++：    xmake build 2>&1 && xmake test 2>&1
-Python： uv run pytest 2>&1 && uv run ruff check . 2>&1
-Node：   npm run build 2>&1 && npm test 2>&1
-Go：     go build ./... 2>&1 && go test ./... 2>&1 && go vet ./... 2>&1
+若用户提供了构建/测试/lint 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与静态检查命令；若项目无测试或 linter 则跳过对应步骤。
 ```
 
 **结果处理**：
@@ -321,9 +311,7 @@ Go：     go build ./... 2>&1 && go test ./... 2>&1 && go vet ./... 2>&1
 **若 Phase 0 记录了 benchmark 基线**，重新运行相同的 benchmark：
 
 ```
-Rust：   cargo bench 2>&1 | tee .discuss/bench-after.txt
-C++：    xmake build -g bench 2>&1 && xmake run -g bench 2>&1 | tee .discuss/bench-after.txt
-Python： uv run pytest --benchmark-only 2>&1 | tee .discuss/bench-after.txt
+若用户提供了 benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行 benchmark 命令，结果 tee 到 .discuss/bench-after.txt；若无 benchmark 则跳过。
 ```
 
 对比基线数据：

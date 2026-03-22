@@ -64,11 +64,7 @@ git rev-parse HEAD 2>&1
 **运行完整构建和测试，建立基线**：
 
 ```
-Rust：   cargo build 2>&1 && cargo test 2>&1
-C++：    xmake build 2>&1 && xmake test 2>&1
-Python： uv run pytest 2>&1
-Node：   npm run build 2>&1 && npm test 2>&1
-Go：     go build ./... 2>&1 && go test ./... 2>&1
+若用户提供了构建/测试/benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与 benchmark 命令；若项目无测试或 benchmark 则跳过对应步骤。
 ```
 
 - ✅ 全部通过 → 记录基线，继续
@@ -215,15 +211,9 @@ git checkout -b migrate/<简短描述> 2>&1
 ```
 for each step in 迁移计划:
     1. 执行改动
-    2. 构建验证：
-       Rust：   cargo build 2>&1
-       C++：    xmake build 2>&1
-       Python： uv run python -c "import <module>" 2>&1
+    2. 构建验证：根据项目构建系统执行编译/导入验证（若用户提供了命令则优先使用）
     3. 若构建失败 → 分析错误，修复，重试
-    4. 运行测试：
-       Rust：   cargo test 2>&1
-       C++：    xmake test 2>&1
-       Python： uv run pytest 2>&1
+    4. 运行测试：根据项目配置执行测试（若用户提供了命令则优先使用）
     5. 测试结果：
        ✅ 通过 → 提交该步骤，继续下一步
        ❌ 失败 → 区分原因：
@@ -263,11 +253,7 @@ for each step in 迁移计划:
 ### 构建 + 测试
 
 ```
-Rust：   cargo build 2>&1 && cargo test 2>&1 && cargo clippy 2>&1
-C++：    xmake build 2>&1 && xmake test 2>&1
-Python： uv run pytest 2>&1 && uv run ruff check . 2>&1
-Node：   npm run build 2>&1 && npm test 2>&1
-Go：     go build ./... 2>&1 && go test ./... 2>&1 && go vet ./... 2>&1
+若用户提供了构建/测试/lint 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与静态检查命令；若项目无测试或 linter 则跳过对应步骤。
 ```
 
 ### Benchmark 回归
@@ -275,8 +261,7 @@ Go：     go build ./... 2>&1 && go test ./... 2>&1 && go vet ./... 2>&1
 若 Phase 0 记录了 benchmark 基线，重新运行并对比：
 
 ```
-Rust：   cargo bench 2>&1
-C++：    xmake build -g bench 2>&1 && xmake run -g bench 2>&1
+若用户提供了 benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行 benchmark 命令；若无 benchmark 则跳过。
 ```
 
 - 无退化 → 继续

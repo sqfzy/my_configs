@@ -51,15 +51,17 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(head:*), Bash(uname:*), Bash(whic
 
 | 线索 | 判断 |
 |------|------|
-| `Cargo.toml` | Rust，`cargo build/run` |
-| `xmake.lua` | C++，`xmake build && xmake run` |
-| `CMakeLists.txt` | C++，需判断 out-of-tree build 路径 |
-| `pyproject.toml` / `uv.lock` | Python，`uv run` |
-| `requirements.txt` | Python，virtualenv 模式 |
-| `package.json` | Node.js，检查 `scripts.start` / `scripts.dev` |
-| `go.mod` | Go，`go build && ./binary` |
-| `Makefile` | 读取 `make help` 或 `all`/`run` target |
+| `Cargo.toml` | Rust |
+| `xmake.lua` | C++ (xmake) |
+| `CMakeLists.txt` | C++ (CMake) |
+| `pyproject.toml` / `uv.lock` | Python |
+| `requirements.txt` | Python (virtualenv) |
+| `package.json` | Node.js |
+| `go.mod` | Go |
+| `Makefile` | Make |
 | `docker-compose.yml` | 容器化部署 |
+
+根据识别到的构建系统，自行确定构建和运行命令（若用户提供了命令则优先使用）。
 
 ### 0.3 依赖与环境要求识别
 

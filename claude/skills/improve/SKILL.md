@@ -80,10 +80,7 @@ allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep
 ### 1.1 建立基线
 
 ```
-Rust：   cargo build 2>&1 && cargo test 2>&1
-C++：    xmake build 2>&1 && xmake test 2>&1
-Python： uv run pytest 2>&1
-Go：     go build ./... 2>&1 && go test ./... 2>&1
+若用户提供了构建/测试/benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与 benchmark 命令；若项目无测试或 benchmark 则跳过对应步骤。
 ```
 
 - ✅ 通过 → 记录测试数量，继续
@@ -231,10 +228,7 @@ Phase 1 的输出是 Phase 2 的输入——迭代改进按此优先级逐一攻
 ### 2.4 验证
 
 ```
-Rust：   cargo build 2>&1 && cargo test 2>&1
-C++：    xmake build 2>&1 && xmake test 2>&1
-Python： uv run pytest 2>&1
-Go：     go build ./... 2>&1 && go test ./... 2>&1
+若用户提供了构建/测试/benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与 benchmark 命令；若项目无测试或 benchmark 则跳过对应步骤。
 ```
 
 **结果处理**：

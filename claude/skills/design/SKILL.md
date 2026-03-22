@@ -330,12 +330,8 @@ Go：    <module>_test.go
 ```
 
 验证骨架编译通过：
-```
-Rust：   cargo test --no-run 2>&1
-C++：    xmake build 2>&1
-Python： uv run pytest --collect-only 2>&1
-Go：     go test -run=^$ ./... 2>&1
-```
+
+根据项目构建系统，验证测试代码能编译/收集通过（不实际运行）。
 
 ---
 
@@ -370,13 +366,7 @@ Go：     go test -run=^$ ./... 2>&1
 
 ### 5.1 验证
 
-```
-Rust：   cargo build 2>&1 && cargo test 2>&1 && cargo clippy 2>&1
-C++：    xmake build 2>&1 && xmake test 2>&1
-Python： uv run pytest 2>&1 && uv run ruff check . 2>&1
-Node：   npm run build 2>&1 && npm test 2>&1
-Go：     go build ./... 2>&1 && go test ./... 2>&1 && go vet ./... 2>&1
-```
+若用户提供了构建/测试/lint 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与静态检查命令；若项目无测试或 linter 则跳过对应步骤。
 
 **结果处理**：
 - ✅ 全部通过 → 运行 Benchmark 回归检查（若 Phase 3.0 记录了基线），继续提交

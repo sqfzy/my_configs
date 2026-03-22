@@ -130,11 +130,7 @@ func BenchmarkTargetFunction(b *testing.B) {
 **确保在 release / 优化模式下运行**（debug 模式的数据无意义）：
 
 ```
-Rust：   cargo bench 2>&1 | tee .discuss/bench-run.txt
-         # 或指定 target：cargo bench --bench <name> 2>&1
-C++：    xmake build -m release -g bench 2>&1 && xmake run -g bench 2>&1 | tee .discuss/bench-run.txt
-Python： uv run pytest --benchmark-only --benchmark-min-rounds=10 2>&1 | tee .discuss/bench-run.txt
-Go：     go test -bench=. -benchmem -count=5 ./... 2>&1 | tee .discuss/bench-run.txt
+若用户提供了 benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行 benchmark 命令（确保 release/优化模式），结果 tee 到 .discuss/bench-run.txt。
 ```
 
 ### 1.2 解析结果
@@ -161,15 +157,10 @@ Go：     go test -bench=. -benchmem -count=5 ./... 2>&1 | tee .discuss/bench-ru
 
 **perf（首选，若可用）**：
 ```bash
-# Rust
-cargo build --release 2>&1
-perf record -g --call-graph dwarf target/release/<binary> <args> 2>&1
-perf report --stdio --sort=overhead 2>&1 | head -60
-
-# C++
-xmake build -m release 2>&1
-perf record -g --call-graph dwarf ./build/<binary> <args> 2>&1
-perf report --stdio --sort=overhead 2>&1 | head -60
+# 根据项目构建系统，以 release 模式编译，然后用 perf 进行性能剖析：
+# 1. 编译 release 版本
+# 2. perf record -g --call-graph dwarf <binary> <args> 2>&1
+# 3. perf report --stdio --sort=overhead 2>&1 | head -60
 ```
 
 **flamegraph（若可用）**：
@@ -262,9 +253,9 @@ go test -bench=. -memprofile=.discuss/mem.prof ./... 2>&1
 ```
 for each 优化 in 方案:
     1. 实施改动
-    2. 编译：cargo build --release / xmake build -m release
-    3. 测试：cargo test / xmake test  （确认正确性未受损）
-    4. 单点 benchmark：cargo bench --bench <name>  （确认该点确实变快了）
+    2. 编译：根据项目构建系统，以 release 模式编译
+    3. 测试：执行项目测试（若用户提供了命令则优先使用），确认正确性未受损
+    4. 单点 benchmark：执行针对该优化点的 benchmark（确认该点确实变快了）
     5. 记录结果：
        - 改进幅度：<X>ns → <Y>ns（提升 Z%）
        - 若无改进或退化 → 回滚该优化，记录原因
@@ -286,19 +277,13 @@ for each 优化 in 方案:
 ### 完整 Benchmark
 
 ```
-Rust：   cargo bench 2>&1 | tee .discuss/bench-after.txt
-C++：    xmake build -m release -g bench 2>&1 && xmake run -g bench 2>&1 | tee .discuss/bench-after.txt
-Python： uv run pytest --benchmark-only 2>&1 | tee .discuss/bench-after.txt
-Go：     go test -bench=. -benchmem -count=5 ./... 2>&1 | tee .discuss/bench-after.txt
+若用户提供了 benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行 benchmark 命令，结果 tee 到 .discuss/bench-after.txt。
 ```
 
 ### 正确性回归
 
 ```
-Rust：   cargo test 2>&1
-C++：    xmake test 2>&1
-Python： uv run pytest 2>&1
-Go：     go test ./... 2>&1
+若用户提供了测试命令则优先使用；否则根据项目构建系统和配置，自行确定并执行测试命令。
 ```
 
 ### 前后对比汇总

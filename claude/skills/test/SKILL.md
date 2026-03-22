@@ -236,12 +236,7 @@ Go：    <module>_test.go（同包）
 
 测试编写完成后，先确认编译/导入通过（不运行）：
 
-```
-Rust：   cargo test --no-run 2>&1
-C++：    xmake build 2>&1
-Python： uv run pytest --collect-only 2>&1
-Go：     go test -run=^$ ./... 2>&1
-```
+根据项目构建系统，验证测试代码能编译/收集通过（不实际运行）。
 
 修复编译错误直到通过。
 
@@ -253,12 +248,7 @@ Go：     go test -run=^$ ./... 2>&1
 
 ### 3.1 运行测试
 
-```
-Rust：   cargo test <test_filter> 2>&1
-C++：    xmake test 2>&1
-Python： uv run pytest <test_file> -v 2>&1
-Go：     go test -run <filter> -v ./... 2>&1
-```
+若用户提供了测试命令则优先使用；否则根据项目构建系统和配置，自行确定并执行测试命令（可指定 filter 运行特定测试）。
 
 ### 3.2 结果分析
 
@@ -283,12 +273,7 @@ Go：     go test -run <filter> -v ./... 2>&1
 
 确认新增测试没有破坏现有测试：
 
-```
-Rust：   cargo test 2>&1
-C++：    xmake test 2>&1
-Python： uv run pytest 2>&1
-Go：     go test ./... 2>&1
-```
+若用户提供了测试命令则优先使用；否则根据项目构建系统和配置，自行确定并执行全量测试命令。
 
 全部通过方可继续。
 

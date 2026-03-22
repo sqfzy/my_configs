@@ -167,8 +167,7 @@ def parse_config(input: str) -> Config:
 生成或更新后，运行文档测试（若支持）：
 
 ```
-Rust：   cargo test --doc 2>&1
-Python： uv run pytest --doctest-modules 2>&1
+根据项目构建系统，执行文档测试（若用户提供了命令则优先使用）；若项目不支持文档测试则跳过。
 ```
 
 ---
@@ -432,10 +431,7 @@ counter.fetch_add(1, std::memory_order_relaxed);
 ### 文档测试
 
 ```
-Rust：   cargo test --doc 2>&1           # doc examples 编译通过
-Rust：   cargo doc --no-deps 2>&1        # rustdoc 无警告
-C++：    xmake build 2>&1                # 注释修改未破坏编译
-Python： uv run pytest --doctest-modules 2>&1
+根据项目构建系统，执行文档测试或编译验证（如 Rust 的 cargo test --doc、Python 的 doctest 等）；若无文档测试则仅做编译验证。
 ```
 
 ### 构建验证
@@ -443,9 +439,7 @@ Python： uv run pytest --doctest-modules 2>&1
 确认文档注释和 inline 注释的添加未引入语法错误：
 
 ```
-Rust：   cargo build 2>&1
-C++：    xmake build 2>&1
-Python： uv run python -c "import <module>" 2>&1
+根据项目构建系统，执行编译或导入验证，确认文档注释的添加未引入语法错误。
 ```
 
 ### 链接检查（README / onboard）

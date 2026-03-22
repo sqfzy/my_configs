@@ -185,13 +185,7 @@ git diff <source> --numstat 2>&1
 
 ### 2.3 全量验证
 
-```
-Rust：   cargo build 2>&1 && cargo test 2>&1 && cargo clippy 2>&1
-C++：    xmake build 2>&1 && xmake test 2>&1
-Python： uv run pytest 2>&1 && uv run ruff check . 2>&1
-Node：   npm run build 2>&1 && npm test 2>&1
-Go：     go build ./... 2>&1 && go test ./... 2>&1 && go vet ./... 2>&1
-```
+若用户提供了构建/测试/lint 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与静态检查命令；若项目无测试或 linter 则跳过对应步骤。
 
 **结果处理**：
 - ✅ 全部通过 → 继续 Gate 3
@@ -234,12 +228,7 @@ ls -t .discuss/bench-baseline-*.txt 2>/dev/null | head -1
 
 ### 3.2 运行当前 benchmark
 
-```
-Rust：   cargo bench 2>&1 | tee .discuss/bench-ship.txt
-C++：    xmake build -m release -g bench 2>&1 && xmake run -g bench 2>&1 | tee .discuss/bench-ship.txt
-Python： uv run pytest --benchmark-only 2>&1 | tee .discuss/bench-ship.txt
-Go：     go test -bench=. -benchmem -count=5 ./... 2>&1 | tee .discuss/bench-ship.txt
-```
+若用户提供了 benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行 benchmark 命令，结果 tee 到 .discuss/bench-ship.txt；若无 benchmark 则跳过。
 
 ### 3.3 对比
 
@@ -310,11 +299,7 @@ Go：     go test -bench=. -benchmem -count=5 ./... 2>&1 | tee .discuss/bench-sh
 
 ### 4.3 文档验证
 
-```
-Rust：   cargo test --doc 2>&1 && cargo doc --no-deps 2>&1
-C++：    xmake build 2>&1
-Python： uv run pytest --doctest-modules 2>&1
-```
+根据项目构建系统，执行文档测试或编译验证（如 Rust 的 cargo test --doc、Python 的 doctest 等）；若无文档测试则跳过。
 
 ```
 ## Gate 4 结果
@@ -333,12 +318,7 @@ Python： uv run pytest --doctest-modules 2>&1
 
 在提交前做最后一轮完整验证（因为 Gate 2–4 可能引入了新改动）：
 
-```
-Rust：   cargo build 2>&1 && cargo test 2>&1
-C++：    xmake build 2>&1 && xmake test 2>&1
-Python： uv run pytest 2>&1
-Go：     go build ./... 2>&1 && go test ./... 2>&1
-```
+若用户提供了构建/测试/benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与 benchmark 命令；若项目无测试或 benchmark 则跳过对应步骤。
 
 - ✅ 通过 → 继续
 - ❌ 失败 → 修复，重新验证

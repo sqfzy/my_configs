@@ -86,11 +86,7 @@ allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep
 
 **自动捕获时**，按以下顺序检测并执行：
 ```
-Rust：   cargo build 2>&1; cargo test 2>&1
-C++：    xmake build 2>&1; xmake test 2>&1
-Python： uv run pytest 2>&1
-Node：   npm run build 2>&1; npm test 2>&1
-Go：     go build ./... 2>&1; go test ./... 2>&1
+若用户提供了构建/测试命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建与测试命令（注意：此处用 ; 分隔以收集所有输出）；若项目无测试则跳过测试步骤。
 ```
 
 若构建/测试**全部通过**：
@@ -170,11 +166,7 @@ mkdir -p .discuss
 ### 1.5 修复验证
 
 ```
-Rust：   cargo build 2>&1 && cargo test 2>&1
-C++：    xmake build 2>&1 && xmake test 2>&1
-Python： uv run pytest 2>&1
-Node：   npm run build 2>&1 && npm test 2>&1
-Go：     go build ./... 2>&1 && go test ./... 2>&1
+若用户提供了构建/测试/benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与 benchmark 命令；若项目无测试或 benchmark 则跳过对应步骤。
 ```
 
 **结果处理**：
@@ -251,10 +243,7 @@ Go：    <module>_test.go
 先确认测试能编译通过：
 
 ```
-Rust：   cargo test --no-run 2>&1
-C++：    xmake build 2>&1
-Python： uv run pytest --collect-only 2>&1
-Go：     go test -run=^$ ./... 2>&1
+根据项目构建系统，验证测试代码能编译/收集通过（不实际运行）。
 ```
 
 ### 2.4 运行与全量回归
@@ -262,10 +251,7 @@ Go：     go test -run=^$ ./... 2>&1
 运行新增测试，再运行全量测试：
 
 ```
-Rust：   cargo test 2>&1
-C++：    xmake test 2>&1
-Python： uv run pytest 2>&1
-Go：     go test ./... 2>&1
+若用户提供了测试命令则优先使用；否则根据项目构建系统和配置，自行确定并执行测试命令。
 ```
 
 **结果处理**：

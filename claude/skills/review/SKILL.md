@@ -186,13 +186,7 @@ git diff <source> --numstat 2>&1
 
 若审查的是本地分支或工作区变更（而非远程 PR），主动运行构建和测试：
 
-```
-Rust：   cargo build 2>&1 && cargo test 2>&1 && cargo clippy -- -W clippy::all 2>&1
-C++：    xmake build 2>&1 && xmake test 2>&1
-Python： uv run pytest 2>&1 && uv run ruff check . 2>&1
-Node：   npm run build 2>&1 && npm test 2>&1
-Go：     go build ./... 2>&1 && go test ./... 2>&1 && go vet ./... 2>&1
-```
+若用户提供了构建/测试/lint 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与静态检查命令；若项目无测试或 linter 则跳过对应步骤。
 
 若存在与变更相关的 benchmark，运行并记录结果（供 review 意见参考，不做 pass/fail 判断）。
 
