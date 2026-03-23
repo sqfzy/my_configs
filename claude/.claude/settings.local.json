@@ -13,7 +13,8 @@
       "Bash(find /home/sqfzy/.claude -name *.md)",
       "Bash(find /home/sqfzy/.claude -name *.md -path *commands*)",
       "Read(//home/sqfzy/.config/claude/**)",
-      "Bash(done)"
+      "Bash(done)",
+      "Skill(design)"
     ]
   }
 }
