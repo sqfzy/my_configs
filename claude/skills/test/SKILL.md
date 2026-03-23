@@ -15,6 +15,8 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 项目文件概览：!`find . -type f \( -name "*.rs" -o -name "*.cpp" -o -name "*.hpp" -o -name "*.h" -o -name "*.py" -o -name "*.ts" -o -name "*.go" \) ! -path "*/target/*" ! -path "*/.git/*" ! -path "*/node_modules/*" | head -60`
 现有测试文件：!`find . -type f \( -name "*_test.rs" -o -name "*_test.cpp" -o -name "test_*.py" -o -name "*.test.ts" -o -name "*_test.go" \) ! -path "*/target/*" ! -path "*/.git/*" ! -path "*/node_modules/*" | head -30`
 
+构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
+
 目标：$ARGUMENTS
 
 ---
@@ -260,7 +262,7 @@ Go：    <module>_test.go（同包）
     - 测试：<test_name>
     - 预期：<expected>
     - 实际：<actual>
-    - 建议使用 /debug 修复
+    - 建议使用 /fix 修复（或 /debug 先定位根因）
     ```
   - **测试本身写错了**（预期值不正确）→ 修正测试，重新运行
   - **测试暴露了未文档化的行为**（代码"正常工作"但与直觉不符）→ 标记为需确认：
@@ -331,7 +333,7 @@ mkdir -p .discuss
 ## 后续建议
 - <哪些函数仍需更多覆盖>
 - <是否建议增加 fuzz / prop 测试>
-- <是否建议用 /self-evolution 进行更深度的质量改善>
+- <是否建议用 /improve 进行更深度的质量改善>
 ```
 
 写入完成后输出：

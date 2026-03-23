@@ -3,7 +3,7 @@ name: evolve
 description: Project evolution engine — autonomously analyzes project maturity, discovers missing features, uncovers implicit requirements, and drives iterative growth through prioritized discuss → design → implement cycles. Auto-saves evolution report to .discuss/
 TRIGGER when: user says the project is immature/incomplete and wants to grow it, asks "what's missing", "what should I build next", or wants autonomous feature discovery and implementation.
 DO NOT TRIGGER when: user has a specific feature in mind (use /feature or /design), is fixing bugs (use /fix), or improving existing code quality (use /improve).
-argument-hint: "[target: <module or domain>] [rounds: N] [discover-only] [auto]"
+argument-hint: "[target: <module or domain>] [rounds: N] [implement] [auto]"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(date:*), Bash(mkdir:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---
 
@@ -18,6 +18,8 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 现有测试：!`find . -type f \( -name "*_test.rs" -o -name "*_test.cpp" -o -name "test_*.py" -o -name "*.test.ts" -o -name "*_test.go" -o -path "*/tests/*" \) ! -path "*/target/*" ! -path "*/.git/*" ! -path "*/node_modules/*" | head -30`
 近期提交历史：!`git log --oneline -20 2>&1`
 公开接口/导出：!`grep -rn "^pub " --include="*.rs" . 2>/dev/null | head -30; grep -rn "^export " --include="*.ts" . 2>/dev/null | head -30; grep -rn "^def [^_]" --include="*.py" . 2>/dev/null | head -30`
+
+构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
 
 参数：$ARGUMENTS
 
@@ -40,8 +42,8 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 ## 参数解析
 
 - `[target: <module or domain>]`：聚焦特定模块或功能域；未指定则分析整个项目
-- `[rounds: N]`：最多推进 N 个功能点；未指定则持续推进直到用户停止
-- `[discover-only]`：仅执行 Phase 1–2（发现 + 排序），不进入实现阶段。适合先摸底再决定
+- `[rounds: N]`：进入实现模式时，最多推进 N 个功能点；未指定则持续推进直到用户停止
+- `[implement]`：进入实现阶段（Phase 3）。**默认仅执行 Phase 1–2（发现 + 排序）**，输出优先级清单后停止。用户确认后可追加 `implement` 或逐个用 `/feature` 实现
 - `[auto]`：无人值守模式——跳过所有交互确认，自动推进
 
 ---
@@ -177,41 +179,9 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 
 选出 **5 个角色**，对缺口清单进行优先级对抗讨论（3–5 轮）。
 
-**预定义角色库**：
+!`cat ~/.claude/skills/shared/roles.md`
 
-| 代号 | 角色 | 核心偏好 | 适用场景 |
-|------|------|----------|----------|
-| R1 | 风险卫士 | 识别风险、边界条件、失败模式 | 架构决策、系统设计 |
-| R2 | 极简主义者 | 反对一切不必要的复杂性 | 代码设计、API 设计 |
-| R3 | 性能狂热者 | 吞吐量 / 延迟 / 资源效率优先 | 性能敏感场景、底层优化 |
-| R4 | 实用主义者 | 只接受实证支撑的方案，拒绝纯理论 | 技术选型、方案评估 |
-| R5 | 第一性原理者 | 从根本需求出发，质疑所有假设 | 需求分析、产品决策 |
-| R6 | 维护性倡导者 | 三年后的可读性和可维护性优先 | 代码审查、长期项目 |
-| R7 | 用户代言人 | 终端用户体验为唯一标准 | 产品/UX 决策 |
-| R8 | 激进创新者 | 无视当前约束，追求理论最优解 | 架构探索、技术前瞻 |
-| R9 | 成本审计者 | 资源、时间、金钱成本为核心判断标准 | 资源分配、项目规划 |
-| R10 | 安全专家 | 安全性、隐私、合规为最高优先级 | 安全设计、数据处理 |
-| R11 | 怀疑论者 | 默认质疑一切方案，要求严格举证 | 通用问题、逻辑验证 |
-| R12 | 系统思维者 | 全局影响、二阶效应、跨系统依赖 | 复杂系统、跨团队决策 |
-| R13 | 测试驱动者 | 测试覆盖、可测试性、回归安全 | 代码审查、接口设计 |
-
-**自定义角色**：若预定义角色库无法覆盖项目领域需求，可根据项目特点临时创建角色：
-```
-【自定义】<角色名>
-核心偏好：<该角色的判断标准和优先级>
-立场预期：<与其他角色的主要冲突点>
-```
-
-**选角要求**：5 个角色必须存在真实价值冲突，不选立场相近的组合。优先级排序场景建议侧重 R5/R7/R4/R9/R1，但应根据项目特点动态调整。
-
-**每轮发言格式**：
-```
-【角色名 | 立场标签】
-论点：...
-反驳 [对方角色]：...   ← 第 2 轮起必填，须针对具体论点
-联盟 [对方角色]：...   ← 可选，当两个角色在某子议题上暂时一致时使用
-立场修正：...          ← 仅最后一轮必填
-```
+优先级排序场景建议侧重 R5/R7/R4/R9/R1，但应根据项目特点动态调整。
 
 **讨论输出**：
 
@@ -238,7 +208,9 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 
 **`auto` 模式**：跳过确认，按排序结果直接推进。
 
-**`discover-only` 模式**：到此结束，输出报告。
+**默认行为**：到此结束，输出报告。提示用户可追加 `implement` 进入 Phase 3，或逐个用 `/feature` 实现。
+
+**`implement` 模式**：继续进入 Phase 3。
 
 ---
 

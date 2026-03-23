@@ -14,7 +14,8 @@
       "Bash(find /home/sqfzy/.claude -name *.md -path *commands*)",
       "Read(//home/sqfzy/.config/claude/**)",
       "Bash(done)",
-      "Skill(design)"
+      "Skill(design)",
+      "Skill(create-agent)"
     ]
   }
 }

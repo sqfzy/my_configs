@@ -16,6 +16,8 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 现有 benchmark：!`find . -type f \( -path "*/benches/*" -o -name "bench_*.py" -o -name "*_bench.go" -o -name "*.bench.ts" \) ! -path "*/target/*" ! -path "*/.git/*" ! -path "*/node_modules/*" 2>/dev/null | head -20`
 性能工具可用性：!`command -v perf 2>/dev/null && echo "perf: yes" || echo "perf: no"; command -v hyperfine 2>/dev/null && echo "hyperfine: yes" || echo "hyperfine: no"; command -v valgrind 2>/dev/null && echo "valgrind: yes" || echo "valgrind: no"; command -v flamegraph 2>/dev/null && echo "flamegraph: yes" || echo "flamegraph: no"`
 
+构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
+
 目标：$ARGUMENTS
 
 ---
@@ -384,8 +386,10 @@ mkdir -p .discuss
 
 ### 执行对比
 
-1. 在参照状态运行 benchmark，记录结果
-2. 切回当前状态运行 benchmark，记录结果
+1. 保护工作区：`git stash --include-untracked`（若有未提交改动）
+2. 切到参照状态运行 benchmark，记录结果
+3. 切回当前状态：`git checkout -` && `git stash pop`（若之前 stash 了）
+4. 在当前状态运行 benchmark，记录结果
 3. 输出对比表：
 
 ```
