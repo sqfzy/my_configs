@@ -1,9 +1,9 @@
 ---
 name: refactor
-description: Targeted structural refactoring — restructures code while preserving behavior. Supports extract, inline, rename, split, merge, and move operations with pre/post verification. Auto-saves refactoring report to .discuss/
-TRIGGER when: user asks to refactor, extract function/module, inline, rename, split, merge, or move code while explicitly preserving existing behavior.
-DO NOT TRIGGER when: user wants to change behavior (use /feature or /fix), or wants broad quality improvement (use /improve).
-argument-hint: "<refactoring intent> [target: <file or module>] [no-commit] [dry-run] [auto]"
+description: Targeted structural refactoring — restructures code while preserving behavior by default. With [breaking] mode, supports destructive design-level refactoring (API reshape, architecture restructure, core abstraction replacement) with migration strategy and checkpoint commits. Auto-saves refactoring report to .discuss/
+TRIGGER when: user asks to refactor, extract function/module, inline, rename, split, merge, or move code; user wants to redesign internal architecture, reshape APIs, or replace core abstractions (use [breaking] mode).
+DO NOT TRIGGER when: user is upgrading dependencies, changing language editions, or switching frameworks (use /migrate); user wants broad quality improvement (use /improve); user is fixing a specific bug (use /fix).
+argument-hint: "<refactoring intent> [target: <file or module>] [breaking] [no-commit] [dry-run] [auto]"
 allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---
 
@@ -23,20 +23,49 @@ allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep
 
 ## 核心原则
 
+### 默认模式
+
 重构的唯一目标是**改变代码结构，不改变外部行为**。整个流程围绕一条铁律：
 
 > 测试在重构前通过，重构后必须仍然通过，且测试本身不被修改。
 
-若重构过程中需要修改测试，说明行为发生了变化——此时应暂停并与用户确认，这已超出纯重构的范畴。
+若重构过程中需要修改测试，说明行为发生了变化——此时应暂停并引导用户：
+```
+⚠️ 测试失败表明行为发生了变化。
+若你确实需要改变代码设计（接口重塑、架构重组、核心抽象替换），请使用：
+  /refactor breaking <意图>
+```
+
+### breaking 模式
+
+当指定 `[breaking]` 时，切换到**破坏性重构**流程——允许改变外部行为，但每项行为变更必须被**显式声明和验证**。
+
+铁律变为：
+
+> 行为变更必须在迁移计划中预先声明。未声明的行为变化仍视为 bug，必须修复。
+
+breaking 模式与默认模式的关键差异：
+
+| 维度 | 默认模式 | breaking 模式 |
+|------|----------|---------------|
+| 行为约束 | 不可变 | 可变，但必须声明 |
+| 分支策略 | 当前分支 | 自动创建 `refactor/<name>` 分支 |
+| 测试策略 | 不修改测试 | 旧测试按计划更新，新测试覆盖新行为 |
+| 迁移计划 | 无需 | 必须输出行为变更清单和分阶段迁移计划 |
+| 提交策略 | 完成后一次提交 | 每个迁移检查点自动提交 |
+| commit footer | 无 | 包含 `BREAKING CHANGE:` |
+
+> **注意**：若变更是由外部依赖升级、语言版本变化、框架替换驱动的，应使用 `/migrate` 而非 `/refactor breaking`。`breaking` 模式用于**内部设计层面**的破坏性重构。
 
 ---
 
 ## 参数解析
 
 - `[target: <path>]`：指定重构目标文件或模块；未指定则从意图描述中推断
+- `[breaking]`：启用破坏性重构模式——允许改变外部行为，自动创建分支，检查点提交，要求声明行为变更清单
 - `[no-commit]`：完成后不自动提交
 - `[dry-run]`：仅输出重构计划和影响分析，不执行任何代码改动
-- `[auto]`：无人值守模式——跳过方案确认直接执行；性能退化时自动回滚该改动并继续；行为变化时自动回滚并终止
+- `[auto]`：无人值守模式——跳过方案确认直接执行；性能退化时自动回滚该改动并继续；默认模式下行为变化时自动回滚并终止；breaking 模式下未声明的行为变化自动回滚并终止
 
 ---
 
@@ -91,6 +120,15 @@ git stash list 2>&1  # 确认没有未保存的 stash 干扰
 - 当前 HEAD commit hash
 - 工作区是否干净（若有未提交改动，提示用户先提交或 stash）
 
+### 0.4 创建重构分支（仅 breaking 模式）
+
+```bash
+# 从意图描述中生成简短分支名
+git checkout -b refactor/<简短描述> 2>&1
+```
+
+声明：`▶ breaking 模式：已创建分支 refactor/<name>，所有改动将在此分支上执行。`
+
 ---
 
 ## Phase 1: 代码阅读与重构意图分析
@@ -125,6 +163,21 @@ grep -rn "<函数名/模块名/类型名>" --include="*.rs" --include="*.py" --i
 | **接口重塑** (Reshape API) | 改变公共接口签名但保持语义等价 | 高 |
 
 声明：`重构类型：<类型> | 风险等级：<低/中/高> | 目标范围：<文件列表>`
+
+### 1.2.1 行为变更清单（仅 breaking 模式）
+
+在 breaking 模式下，必须在此阶段声明所有预期的行为变更：
+
+```
+## 行为变更清单
+
+| 序号 | 变更描述 | 影响范围 | 旧行为 | 新行为 | 调用方适配方式 |
+|------|----------|----------|--------|--------|----------------|
+| 1 | `process()` 签名变更 | 12 处调用 | 接受 `&str` | 接受 `Input` | 包装为 `Input::from()` |
+| 2 | `Config` 拆为 `Config` + `Runtime` | 8 处引用 | 单一配置 | 编译期/运行期分离 | 按用途引用对应类型 |
+```
+
+**未在此清单中声明的行为变化仍视为 bug**——在 Phase 4 验证阶段如果出现未声明的测试失败，必须修复而非更新测试。
 
 ### 1.3 影响范围分析
 
@@ -235,12 +288,28 @@ grep -rn "<函数名/模块名/类型名>" --include="*.rs" --include="*.py" --i
 **原子化**：每一步完成后代码必须可编译。绝不批量改动后才验证。
 
 **执行节奏**：
+
+**默认模式**：
 ```
 for each step in 重构步骤:
     1. 执行改动
     2. 编译验证（根据项目构建系统执行）
     3. 若编译失败 → 立即修复，不继续下一步
     4. 编译通过 → 记录该步完成，继续下一步
+```
+
+**breaking 模式**（每步提交作为检查点）：
+```
+for each step in 重构步骤:
+    1. 执行改动
+    2. 编译验证
+    3. 若编译失败 → 修复，重试
+    4. 运行测试：
+       - 测试失败且在行为变更清单中 → 更新对应测试，记录
+       - 测试失败但不在变更清单中 → 视为 bug，修复代码而非测试
+       - 三次修复仍失败 → 暂停，告知用户（auto 模式：回滚到上一个检查点并终止）
+    5. 编译+测试通过 → 提交检查点：
+       git add -A && git commit -m "refactor(<scope>): step N — <描述>"
 ```
 
 **语言特定注意事项**：
@@ -281,7 +350,8 @@ for each step in 重构步骤:
 **结果处理**：
 
 - ✅ 全部通过 → 与基线对比：
-  - 测试数量一致（重构不应增减测试）
+  - **默认模式**：测试数量一致（重构不应增减测试）
+  - **breaking 模式**：测试数量可以变化，但每项变化必须对应行为变更清单中的条目
   - 无新增 warning / lint 错误
   - → 进入 Benchmark 回归检查
 
@@ -350,12 +420,20 @@ for each step in 重构步骤:
 
 除非指定 `no-commit`，生成提交信息并执行：
 
+**默认模式**：
 ```
 refactor(<scope>): <subject>
 
 <body: 重构了什么、为什么重构、关键结构变化>
+```
 
-<footer: 若有 BREAKING CHANGE>
+**breaking 模式**（注意：分步检查点已在 Phase 3 中提交，此处为最终清理提交）：
+```
+refactor!(<scope>): <subject>
+
+<body: 重构了什么、为什么重构、关键结构变化>
+
+BREAKING CHANGE: <逐条列出行为变更清单中的每项变更及其影响>
 ```
 
 ```bash

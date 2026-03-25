@@ -2,7 +2,7 @@
 name: migrate
 description: Guided migration and upgrade — dependency major version bumps, API breaking change adaptation, language edition upgrades, and build system migrations. Preserves compatibility through incremental steps with rollback points. Auto-saves migration report to .discuss/
 TRIGGER when: user asks to upgrade a dependency, bump a major version, migrate an API, switch build systems, or adapt to breaking changes from a library/framework update.
-DO NOT TRIGGER when: user is adding a new dependency (use /feature), or making internal code changes unrelated to external API/version changes.
+DO NOT TRIGGER when: user is adding a new dependency (use /feature), or making internal design changes unrelated to external API/version changes (use /refactor or /refactor breaking for destructive internal redesign).
 argument-hint: "<migration target> [strategy: incremental|big-bang] [dry-run] [auto]"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(date:*), Bash(mkdir:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*), Bash(sed:*)
 ---
