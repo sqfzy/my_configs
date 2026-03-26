@@ -1,21 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find /home/sqfzy/.config/claude/ -name *.md -path */skills/*)",
-      "Bash(for f:*)",
-      "Bash(do echo:*)",
-      "Bash(find /home/sqfzy/.claude/plugins -type f \\\\\\(-name *debug* -o -name *fix* \\\\\\))",
-      "Bash(find /home/sqfzy/.claude -name *.md -path *skill*)",
-      "Bash(find /home/sqfzy/.claude -name *.md -path *debug*)",
-      "Bash(find /home/sqfzy/.claude -name *.md -path *fix*)",
-      "Bash(find /home/sqfzy/.claude/get-shit-done -name *.md -path *skills*)",
-      "Bash(find /home/sqfzy/.claude/get-shit-done -type f -name *.md)",
-      "Bash(find /home/sqfzy/.claude -name *.md)",
-      "Bash(find /home/sqfzy/.claude -name *.md -path *commands*)",
-      "Read(//home/sqfzy/.config/claude/**)",
-      "Bash(done)",
-      "Skill(design)",
-      "Skill(create-agent)"
+      "Skill(*)"
     ]
   }
 }
