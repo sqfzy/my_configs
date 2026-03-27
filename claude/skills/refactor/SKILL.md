@@ -16,6 +16,7 @@ allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep
 构建配置：!`find . -maxdepth 2 -name "xmake.lua" -o -name "Cargo.toml" -o -name "pyproject.toml" -o -name "package.json" -o -name "go.mod" -o -name "CMakeLists.txt" 2>/dev/null | head -10`
 
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
+Benchmark 持久化约定：!`cat ~/.claude/skills/shared/bench-data.md`
 
 意图：$ARGUMENTS
 

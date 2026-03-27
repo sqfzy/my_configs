@@ -16,6 +16,7 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 项目文件概览：!`find . -type f \( -name "*.rs" -o -name "*.cpp" -o -name "*.hpp" -o -name "*.h" -o -name "*.py" -o -name "*.ts" -o -name "*.go" \) ! -path "*/target/*" ! -path "*/.git/*" ! -path "*/node_modules/*" | head -60`
 
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
+Benchmark 持久化约定：!`cat ~/.claude/skills/shared/bench-data.md`
 
 目标：$ARGUMENTS
 

@@ -18,6 +18,7 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 性能工具可用性：!`command -v perf 2>/dev/null && echo "perf: yes" || echo "perf: no"; command -v hyperfine 2>/dev/null && echo "hyperfine: yes" || echo "hyperfine: no"; command -v valgrind 2>/dev/null && echo "valgrind: yes" || echo "valgrind: no"; command -v flamegraph 2>/dev/null && echo "flamegraph: yes" || echo "flamegraph: no"`
 
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
+Benchmark 持久化约定：!`cat ~/.claude/skills/shared/bench-data.md`
 
 目标：$ARGUMENTS
 
