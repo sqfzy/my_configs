@@ -67,7 +67,7 @@ git rev-parse HEAD 2>&1
 **运行完整构建和测试，建立基线**：
 
 ```
-若用户提供了构建/测试/benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与 benchmark 命令；若项目无测试或 benchmark 则跳过对应步骤。
+若用户提供了构建/测试/benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与 benchmark 命令；若项目无测试或 benchmark 则跳过对应步骤。**执行 benchmark 后必须按 bench-data 约定持久化**到 `.bench/`（来源标注：`/migrate 基线`）。
 ```
 
 - ✅ 全部通过 → 记录基线，继续
@@ -264,7 +264,7 @@ for each step in 迁移计划:
 若 Phase 0 记录了 benchmark 基线，重新运行并对比：
 
 ```
-若用户提供了 benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行 benchmark 命令；若无 benchmark 则跳过。
+若用户提供了 benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行 benchmark 命令；若无 benchmark 则跳过。**执行后必须按 bench-data 约定持久化**到 `.bench/`（来源标注：`/migrate 验证`）。
 ```
 
 - 无退化 → 继续

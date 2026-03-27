@@ -103,7 +103,7 @@ Benchmark 持久化约定：!`cat ~/.claude/skills/shared/bench-data.md`
 
 ### 1.1 运行 Benchmark
 
-**必须在 release / 优化模式下运行**——debug 模式的数据无意义。根据构建命令获取策略确定并执行 benchmark 命令，结果 tee 到 `.discuss/bench-run.txt`。
+**必须在 release / 优化模式下运行**——debug 模式的数据无意义。根据构建命令获取策略确定并执行 benchmark 命令。**执行后立即按 bench-data 约定持久化**：原始输出写入 `.bench/YYYYMMDD-HHMMSS.txt`，摘要追加到 `.bench/HISTORY.md`。
 
 ### 1.2 解析结果
 
@@ -272,7 +272,7 @@ mkdir -p .discuss
 
 #### 3.3.2 性能测量
 
-以 release/优化模式运行 benchmark，对比上一轮结果：
+以 release/优化模式运行 benchmark，**按 bench-data 约定持久化后**，对比上一轮结果：
 
 ```
 ## 第 N 轮结果
@@ -335,7 +335,7 @@ mkdir -p .discuss
 ### 完整 Benchmark
 
 ```
-根据构建命令获取策略，确定并执行 benchmark 命令，结果 tee 到 .discuss/bench-after.txt。
+根据构建命令获取策略，确定并执行 benchmark 命令。**按 bench-data 约定持久化**到 `.bench/`。
 ```
 
 ### 正确性回归

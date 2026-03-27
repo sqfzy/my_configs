@@ -83,7 +83,7 @@ Benchmark 持久化约定：!`cat ~/.claude/skills/shared/bench-data.md`
 ### 1.1 建立基线
 
 ```
-若用户提供了构建/测试/benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与 benchmark 命令；若项目无测试或 benchmark 则跳过对应步骤。
+若用户提供了构建/测试/benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与 benchmark 命令；若项目无测试或 benchmark 则跳过对应步骤。执行 benchmark 后必须按 bench-data 约定持久化到 .bench/（来源标注：/improve 基线）。
 ```
 
 - ✅ 通过 → 记录测试数量，继续
@@ -308,7 +308,7 @@ D(编排) → Validator, Serializer, B
 **构建 + 测试**：
 
 ```
-若用户提供了构建/测试/benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与 benchmark 命令；若项目无测试或 benchmark 则跳过对应步骤。
+若用户提供了构建/测试/benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与 benchmark 命令；若项目无测试或 benchmark 则跳过对应步骤。执行 benchmark 后必须按 bench-data 约定持久化到 .bench/（来源标注：/improve R<N>）。
 ```
 
 **接口契约检查**：

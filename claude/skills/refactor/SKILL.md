@@ -103,7 +103,7 @@ find . -name "bench_*.py" -o -name "*_bench.py" 2>/dev/null | head -10
 
 **若存在与重构目标相关的 benchmark**：
 ```
-若用户提供了 benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行 benchmark 命令，结果 tee 到 .discuss/bench-baseline.txt；若无 benchmark 则跳过。
+若用户提供了 benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行 benchmark 命令。**按 bench-data 约定持久化**到 `.bench/`（来源标注：`/refactor 基线`）。若无 benchmark 则跳过。
 ```
 
 记录基线数据，Phase 4 将用于对比。若无相关 benchmark 则跳过，注明"无 benchmark 覆盖"。
@@ -361,7 +361,7 @@ for each step in 重构步骤:
 **若 Phase 0 记录了 benchmark 基线**，重新运行相同的 benchmark：
 
 ```
-若用户提供了 benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行 benchmark 命令，结果 tee 到 .discuss/bench-after.txt；若无 benchmark 则跳过。
+若用户提供了 benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行 benchmark 命令。**按 bench-data 约定持久化**到 `.bench/`（来源标注：`/refactor 验证`）。若无 benchmark 则跳过。
 ```
 
 对比基线数据：
