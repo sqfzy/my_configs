@@ -1,8 +1,6 @@
 ---
 name: create-agent
-description: Interactive creation of custom Claude Code subagent definitions — guides through name, description, tools, model, hooks, memory, and system prompt, then writes the agent markdown file.
-TRIGGER when: user asks to create a new agent, subagent, or custom agent definition, or says "create agent", "new agent", "make an agent".
-DO NOT TRIGGER when: user is asking about how agents work (use documentation), or wants to edit an existing agent file directly.
+description: "Interactive creation of custom Claude Code subagent definitions — guides through name, description, tools, model, hooks, memory, and system prompt, then writes the agent markdown file. TRIGGER when: user asks to create a new agent, subagent, or custom agent definition, or says \"create agent\", \"new agent\", \"make an agent\". DO NOT TRIGGER when: user is asking about how agents work (use documentation), or wants to edit an existing agent file directly."
 argument-hint: "[name] [scope: user|project] [target: <path>] [auto]"
 allowed-tools: Bash(ls:*), Bash(cat:*), Bash(find:*), Bash(date:*)
 ---

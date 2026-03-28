@@ -1,8 +1,6 @@
 ---
 name: bench
-description: "Performance analysis and optimization — run benchmarks (baseline), identify hot paths (profile), compare before/after (compare), or run target-driven iterative optimization with correctness guarantees (optimize). Auto-saves reports to .artifacts/"
-TRIGGER when: user asks to profile, benchmark, optimize performance, investigate slowness/latency, compare before/after performance, or make code faster.
-DO NOT TRIGGER when: user mentions "performance" casually in feature requirements, or is writing benchmarks as part of /feature or /test.
+description: "Performance analysis and optimization — run benchmarks (baseline), identify hot paths (profile), compare before/after (compare), or run target-driven iterative optimization with correctness guarantees (optimize). Auto-saves reports to .artifacts/ TRIGGER when: user asks to profile, benchmark, optimize performance, investigate slowness/latency, compare before/after performance, or make code faster. DO NOT TRIGGER when: user mentions \"performance\" casually in feature requirements, or is writing benchmarks as part of /feature or /test."
 argument-hint: "<target or intent> [mode: profile|compare|optimize|baseline] [goal: <metric>] [max-rounds: N] [iterations: N] [no-commit] [auto]"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(date:*), Bash(mkdir:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*), Bash(perf:*), Bash(hyperfine:*), Bash(valgrind:*), Bash(flamegraph:*)
 ---
@@ -383,11 +381,7 @@ chore: remove optimization instrumentation
 
 ## Phase 6: 报告
 
-```bash
-mkdir -p .artifacts
-```
-
-写入 `.artifacts/bench-YYYYMMDD-HHMMSS.md`。
+按产物存储约定输出报告。
 
 ### baseline / profile 模式报告
 
@@ -517,8 +511,6 @@ mkdir -p .artifacts
 - <是否建议用 /bench baseline 定期监控>
 - <是否有架构层面的优化需要 /discuss 或 /refactor breaking>
 ```
-
-写入完成后输出：`✓ 报告已保存至 .artifacts/bench-YYYYMMDD-HHMMSS.md`
 
 ---
 

@@ -1,8 +1,6 @@
 ---
 name: refactor
-description: Targeted structural refactoring — restructures code while preserving behavior by default. With [breaking] mode, supports destructive design-level refactoring (API reshape, architecture restructure, core abstraction replacement) with migration strategy and checkpoint commits. Auto-saves refactoring report to .artifacts/
-TRIGGER when: user asks to refactor, extract function/module, inline, rename, split, merge, or move code; user wants to redesign internal architecture, reshape APIs, or replace core abstractions (use [breaking] mode).
-DO NOT TRIGGER when: user is upgrading dependencies, changing language editions, or switching frameworks (use /migrate); user wants broad quality improvement (use /improve); user is fixing a specific bug (use /fix).
+description: "Targeted structural refactoring — restructures code while preserving behavior by default. With [breaking] mode, supports destructive design-level refactoring (API reshape, architecture restructure, core abstraction replacement) with migration strategy and checkpoint commits. Auto-saves refactoring report to .artifacts/ TRIGGER when: user asks to refactor, extract function/module, inline, rename, split, merge, or move code; user wants to redesign internal architecture, reshape APIs, or replace core abstractions (use [breaking] mode). DO NOT TRIGGER when: user is upgrading dependencies, changing language editions, or switching frameworks (use /migrate); user wants broad quality improvement (use /improve); user is fixing a specific bug (use /fix)."
 argument-hint: "<refactoring intent> [target: <file or module>] [breaking] [no-commit] [dry-run] [auto]"
 allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---
@@ -448,7 +446,7 @@ git commit -m "<generated message>"
 
 ## Phase 6: 重构报告
 
-将以下报告写入 `.artifacts/refactor-YYYYMMDD-HHMMSS.md`：
+按产物存储约定输出以下报告：
 
 ```markdown
 # Refactor Report
@@ -504,9 +502,6 @@ After:
 - <是否暴露了需要 /improve 跟进的质量问题>
 - <重构是否揭示了缺失的测试场景>
 ```
-
-写入完成后输出：
-`✓ 重构报告已保存至 .artifacts/refactor-YYYYMMDD-HHMMSS.md`
 
 ---
 

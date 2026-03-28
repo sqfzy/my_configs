@@ -1,9 +1,7 @@
 ---
 name: doc
-description: Generate or update project documentation — API docs, README, CHANGELOG, inline doc comments, and onboarding guides. Reads actual code to produce accurate documentation rather than inventing descriptions. Auto-saves doc generation report to .artifacts/
-TRIGGER when: user asks to write/update/generate documentation, README, CHANGELOG, API docs, or inline doc comments.
-DO NOT TRIGGER when: user asks to write code comments as part of implementation (that's normal coding), or update CHANGELOG as part of /ship.
-argument-hint: "<target> [type: api|readme|changelog|onboard|inline|all] [update] [auto]"
+description: "Generate or update project documentation — API docs, README, CHANGELOG, inline doc comments, onboarding guides, and comprehensive project summaries. Reads actual code to produce accurate documentation rather than inventing descriptions. Auto-saves doc generation report to .artifacts/ TRIGGER when: user asks to write/update/generate documentation, README, CHANGELOG, API docs, inline doc comments, or project summary/overview/architecture overview; user asks \"what does this project do\". DO NOT TRIGGER when: user asks to write code comments as part of implementation (that's normal coding), or update CHANGELOG as part of /ship; user asks about a specific file or function (just read it directly)."
+argument-hint: "<target> [type: api|readme|changelog|onboard|inline|summary|all] [update] [auto]"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(date:*), Bash(mkdir:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---
 
@@ -34,11 +32,11 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 
 - **目标**（可选）：指定文件、模块或整个项目；未指定则覆盖整个项目
 - `[type]`：文档类型，可逗号分隔多个
-  - `api`：公共 API 的文档注释（`///`、`/** */`、docstring）
+  - `api`：源文件注释——公共 API 的文档注释（`///`、`/** */`、docstring）+ 函数体内非显然逻辑的行内注释，一次扫描全覆盖
   - `readme`：生成或更新 README.md
   - `changelog`：从 git 历史生成 CHANGELOG 条目
   - `onboard`：新人上手指南（架构概览 + 开发环境搭建 + 常见任务指南）
-  - `inline`：为代码中缺失注释的非显然逻辑补充 inline 注释
+  - `summary`：生成全面的项目概览文档 `summary.md`（架构、模块图、数据流、关键组件、依赖关系）
   - `all`：以上全部
 - `[update]`：更新已有文档而非从头生成（保留人工编写的内容，仅补充/修正过时部分）
 - `[auto]`：无人值守模式——type 未指定时自动执行建议的优先项，不暂停询问
@@ -79,9 +77,9 @@ grep -A1 "def " src/**/*.py 2>/dev/null | grep -c '"""' 2>/dev/null
 |----------|------|------|
 | README.md | ✅ 存在 / ❌ 缺失 / ⚠️ 过时 | <细节> |
 | CHANGELOG.md | ✅ / ❌ / ⚠️ | <细节> |
-| API 文档注释 | 覆盖率约 X% | <无注释的公共函数数量> |
-| Inline 注释 | <密度评估> | <复杂逻辑缺注释的位置> |
+| 源文件注释（API + 行内） | 覆盖率约 X% | <无注释的公共函数数量、缺注释的非显然逻辑数量> |
 | 上手指南 | ✅ / ❌ | <细节> |
+| summary.md | ✅ 存在 / ❌ 缺失 / ⚠️ 过时 | <是否与当前代码结构匹配> |
 
 建议优先补充：<type 列表>
 ```
@@ -92,11 +90,11 @@ grep -A1 "def " src/**/*.py 2>/dev/null | grep -c '"""' 2>/dev/null
 
 ---
 
-## Type: api — API 文档注释
+## Type: api — 源文件注释（文档注释 + 行内注释）
 
 ### 读取阶段
 
-逐一阅读所有公共接口：
+**文档注释扫描**——逐一阅读所有公共接口：
 
 **Rust**：
 - 所有 `pub fn`、`pub struct`、`pub enum`、`pub trait`、`pub type`
@@ -110,6 +108,20 @@ grep -A1 "def " src/**/*.py 2>/dev/null | grep -c '"""' 2>/dev/null
 - 所有 `def`（非 `_` 前缀）和 `class`
 - 检查是否已有 docstring（`"""`）
 
+**行内注释扫描**——同时检查函数体内缺少注释的非显然逻辑：
+
+- 复杂条件判断（3+ 个条件的 if/match）
+- 非直觉的算法步骤
+- Magic number / 硬编码常量
+- Unsafe 块
+- 绕过直觉的性能优化
+- 错误处理中的非显然决策（为什么吞掉某个错误？为什么 retry？）
+
+**不添加行内注释的地方**：
+- 自解释的代码（`let count = items.len()`）
+- 已有准确注释的代码
+- 简单的 getter/setter
+
 ### 生成规则
 
 **必须包含**：
@@ -122,6 +134,12 @@ grep -A1 "def " src/**/*.py 2>/dev/null | grep -c '"""' 2>/dev/null
 - 用法示例（`# Examples`）——仅对核心 API
 - 安全性注释（`# Safety`）——Rust unsafe 函数必须有
 - 性能说明——若存在非显然的性能特征
+
+**行内注释原则**——注释解释 **why**，不解释 **what**：
+- ✅ "Retry up to 3 times because the upstream API occasionally returns transient 503 errors during deployment windows."
+- ❌ "Loop 3 times"
+- ✅ "Using relaxed ordering here because we only need eventual visibility of the counter value."
+- ❌ "Fetch and add 1 to counter"
 
 **风格**：
 
@@ -370,45 +388,137 @@ git log <last_tag>..HEAD --format="%H %s" 2>&1
 
 ---
 
-## Type: inline — 行内注释
+## Type: summary — 项目概览文档
 
-### 读取阶段
+### 输出文件
 
-扫描目标代码，识别**缺少注释的非显然逻辑**：
+`<target>/summary.md`（项目根目录或 target 指定路径）。这是项目文档的一部分（和 README 同级），不是 `.artifacts/` 产物。
 
-- 复杂条件判断（3+ 个条件的 if/match）
-- 非直觉的算法步骤
-- Magic number / 硬编码常量
-- Unsafe 块
-- 绕过直觉的性能优化
-- 错误处理中的非显然决策（为什么吞掉某个错误？为什么 retry？）
+### 输出结构
 
-**不添加注释的地方**：
-- 自解释的代码（`let count = items.len()`）
-- 已有准确注释的代码
-- 简单的 getter/setter
+````markdown
+# Project: <name>
 
-### 生成规则
+> <one-sentence description>
 
-注释解释 **why**，不解释 **what**：
+**Language**: ... | **Build**: ... | **License**: ... (if found)
 
-```rust
-// ✅ Good: 解释意图
-// Retry up to 3 times because the upstream API occasionally returns
-// transient 503 errors during deployment windows.
-for _ in 0..3 {
+---
 
-// ❌ Bad: 重复代码
-// Loop 3 times
-for _ in 0..3 {
+## Table of Contents
+1. [Overview](#overview)
+2. [Architecture](#architecture)
+3. [Module Map](#module-map)
+4. [Data Flow](#data-flow)
+5. [Key Components](#key-components)
+6. [Entry Points & APIs](#entry-points--apis)
+7. [Dependencies](#dependencies)
+8. [Testing](#testing)
+
+---
+
+## Overview
+
+<2–4 paragraphs: what the project does, who uses it, how it fits together at the highest level>
+
+---
+
+## Architecture
+
+<Explain the architectural style: layered? pipeline? actor model? plugin-based?>
+
+### Component Diagram
+
+```
+<ASCII diagram showing major components and their relationships, width ≤ 80 chars>
 ```
 
-```cpp
-// ✅ Good: 解释非显然决策
-// Using relaxed ordering here because we only need eventual visibility
-// of the counter value — no other memory operations depend on it.
-counter.fetch_add(1, std::memory_order_relaxed);
+---
+
+## Module Map
+
+| Module / File | Responsibility | Key Types | Depends On |
+|---|---|---|---|
+| ... | ... | ... | ... |
+
+---
+
+## Data Flow
+
+<Describe the main data path in prose.>
+
+### Flow Diagram
+
 ```
+<ASCII diagram showing data flow from input to output>
+```
+
+---
+
+## Key Components
+
+### `<ComponentName>`
+
+**File**: `src/...`
+**Purpose**: ...
+**Interface**:
+```
+<key public function signatures>
+```
+**Notes**: non-obvious design decisions, caveats, gotchas
+
+_(Repeat for 5–10 most important components)_
+
+---
+
+## Entry Points & APIs
+
+| Entrypoint | Type | Description |
+|---|---|---|
+| ... | ... | ... |
+
+---
+
+## Dependencies
+
+### Internal (module graph)
+
+```
+<ASCII dependency graph>
+```
+
+### External
+
+| Crate / Package | Version | Purpose |
+|---|---|---|
+| ... | ... | ... |
+
+---
+
+## Testing
+
+| Test Suite | Location | Coverage Focus |
+|---|---|---|
+| ... | ... | ... |
+
+Key test scenarios:
+- ...
+````
+
+### 质量准则
+
+- **具体性**：命名实际文件、类型、函数，不写泛泛描述
+- **ASCII 图准确性**：只画代码中实际存在的边，不发明关系；宽度 ≤ 80 字符
+- **覆盖范围**：Key Components 覆盖 5–10 个最重要的部分，而非每个文件
+- **诚实的空白**：若模块不透明（生成代码、二进制、不可读），如实说明
+- **语言特性**：Rust 注明 unsafe 块和 FFI 边界；C++ 注明模板实例化复杂度
+- **可扫描性**：不熟悉项目的开发者应能在 5 分钟内理解整体结构
+
+### 注意事项
+
+- 文件扫描时跳过 `target/`、`build/`、`.git/`、`node_modules/`、`__pycache__/`、`.cache/`、`dist/` 等生成目录
+- 生成的 benchmark 使用有代表性的输入
+- **update 模式**：对比现有 summary.md 与当前代码，仅更新变化的部分（新增模块、移除模块、接口变更）
 
 ---
 
@@ -421,11 +531,11 @@ counter.fetch_add(1, std::memory_order_relaxed);
 3. 写入文件
 
 **文件位置**：
-- `api`：直接修改源文件（添加文档注释）
+- `api`：直接修改源文件（添加文档注释 + 行内注释）
 - `readme`：项目根 `README.md`
 - `changelog`：项目根 `CHANGELOG.md`
 - `onboard`：`docs/ONBOARDING.md`
-- `inline`：直接修改源文件（添加注释）
+- `summary`：`<target>/summary.md`（项目根或指定路径）
 
 ---
 
@@ -453,11 +563,7 @@ counter.fetch_add(1, std::memory_order_relaxed);
 
 ## Phase 3: 文档报告
 
-```bash
-mkdir -p .artifacts
-```
-
-写入 `.artifacts/doc-YYYYMMDD-HHMMSS.md`：
+按产物存储约定输出以下报告：
 
 ```markdown
 # Documentation Report
@@ -489,9 +595,6 @@ mkdir -p .artifacts
 - <仍缺文档的公共接口>
 - <建议定期运行 /doc update 保持文档同步>
 ```
-
-写入完成后输出：
-`✓ 文档报告已保存至 .artifacts/doc-YYYYMMDD-HHMMSS.md`
 
 ---
 

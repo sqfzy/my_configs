@@ -1,8 +1,6 @@
 ---
 name: feature
-description: End-to-end feature development from scratch — clarifies requirements, designs architecture, implements with tests, verifies, and commits.
-TRIGGER when: user asks to implement a new feature, add a new module/component, or build non-trivial new functionality from scratch.
-DO NOT TRIGGER when: user is fixing a bug (use /fix), refactoring existing code (use /refactor), or requirements are highly ambiguous (use /design).
+description: "End-to-end feature development from scratch — clarifies requirements, designs architecture, implements with tests, verifies, and commits. TRIGGER when: user asks to implement a new feature, add a new module/component, or build non-trivial new functionality from scratch. DO NOT TRIGGER when: user is fixing a bug (use /fix), refactoring existing code (use /refactor), or requirements are highly ambiguous (use /design)."
 argument-hint: "<feature description> [no-commit] [no-tests] [target: <path>] [auto]"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(head:*), Bash(mkdir:*), Bash(date:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---

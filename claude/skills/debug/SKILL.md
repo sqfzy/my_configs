@@ -1,8 +1,6 @@
 ---
 name: debug
-description: Standalone root cause tracer — captures error, classifies, traces root cause, verifies hypotheses, and outputs a structured debug report. Does NOT implement fixes, add tests, or commit. Use when you want to understand WHY something is broken before deciding how to fix it.
-TRIGGER when: user wants to understand why something is broken; user pastes an error and asks what causes it; user asks to trace or diagnose a bug without fixing it; user wants root cause analysis only.
-DO NOT TRIGGER when: user wants the bug actually fixed (use /fix); user wants to add tests (use /test); user is building new features (use /feature); user wants a design-level multi-perspective discussion (use /discuss).
+description: "Standalone root cause tracer — captures error, classifies, traces root cause, verifies hypotheses, and outputs a structured debug report. Does NOT implement fixes, add tests, or commit. Use when you want to understand WHY something is broken before deciding how to fix it. TRIGGER when: user wants to understand why something is broken; user pastes an error and asks what causes it; user asks to trace or diagnose a bug without fixing it; user wants root cause analysis only. DO NOT TRIGGER when: user wants the bug actually fixed (use /fix); user wants to add tests (use /test); user is building new features (use /feature); user wants a design-level multi-perspective discussion (use /discuss)."
 argument-hint: "[error text | file: <path> | run] [target: <file>] [auto]"
 allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---
@@ -110,10 +108,7 @@ allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep
 
 **若 `[target: <path>]` 已指定**：后续所有分析优先围绕该文件/模块展开，但不排除根因位于其依赖中的可能。
 
-记录开始时间：
-```bash
-mkdir -p .artifacts
-```
+记录开始时间。
 
 ---
 
@@ -206,7 +201,7 @@ mkdir -p .artifacts
 
 ## Phase 5: 调试报告
 
-将完整报告写入 `.artifacts/debug-YYYYMMDD-HHMMSS.md`：
+按产物存储约定输出以下报告：
 
 ```markdown
 # Debug Report
@@ -254,9 +249,6 @@ mkdir -p .artifacts
 - <是否有类似模式在其他地方存在，可能存在同类 bug>
 - <是否暴露了设计缺陷，建议 /discuss 跟进>
 ```
-
-写入完成后输出：
-`✓ 调试报告已保存至 .artifacts/debug-YYYYMMDD-HHMMSS.md`
 
 ---
 

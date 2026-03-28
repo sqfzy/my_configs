@@ -71,12 +71,23 @@
 
 所有产生报告或数据文件的 skill：`/discuss`、`/review`、`/refactor`、`/improve`、`/fix`、`/evolve`、`/migrate`、`/ship`、`/debug`、`/test`、`/doc`、`/design`、`/retro`、`/bench`
 
-### 在 skill 中引用
+### 标准输出流程
 
-标准措辞：
-```
-按产物存储约定（shared/artifacts.md）将报告写入 .artifacts/ 并追加 INDEX.md 记录。
-```
+每个 skill 完成后，按以下流程输出产物（skill 本身**不需要**重复描述这些步骤，只需声明"按产物存储约定输出"）：
+
+1. `mkdir -p .artifacts`
+2. 将报告写入 `.artifacts/<skill>-YYYYMMDD-HHMMSS.md`（时间戳为 skill 执行开始时间）
+3. 向 `.artifacts/INDEX.md` 追加一行记录（若 INDEX.md 不存在则先创建表头）
+4. 输出确认消息：`✓ 报告已保存至 .artifacts/<filename>`
+
+**Skill 内不应重复定义**：
+- 不写 `mkdir -p .artifacts`（约定已定义）
+- 不写文件命名规则（约定已定义）
+- 不写 INDEX.md 追加逻辑（约定已定义）
+- 不写输出确认消息格式（约定已定义）
+
+**Skill 应该定义的**：
+- 报告的内容结构（各 skill 的报告模板不同，这是 skill 特有的）
 
 ### .gitignore 建议
 

@@ -1,8 +1,6 @@
 ---
 name: migrate
-description: Guided migration and upgrade — dependency major version bumps, API breaking change adaptation, language edition upgrades, and build system migrations. Preserves compatibility through incremental steps with rollback points. Auto-saves migration report to .artifacts/
-TRIGGER when: user asks to upgrade a dependency, bump a major version, migrate an API, switch build systems, or adapt to breaking changes from a library/framework update.
-DO NOT TRIGGER when: user is adding a new dependency (use /feature), or making internal design changes unrelated to external API/version changes (use /refactor or /refactor breaking for destructive internal redesign).
+description: "Guided migration and upgrade — dependency major version bumps, API breaking change adaptation, language edition upgrades, and build system migrations. Preserves compatibility through incremental steps with rollback points. Auto-saves migration report to .artifacts/ TRIGGER when: user asks to upgrade a dependency, bump a major version, migrate an API, switch build systems, or adapt to breaking changes from a library/framework update. DO NOT TRIGGER when: user is adding a new dependency (use /feature), or making internal design changes unrelated to external API/version changes (use /refactor or /refactor breaking for destructive internal redesign)."
 argument-hint: "<migration target> [strategy: incremental|big-bang] [dry-run] [auto]"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(date:*), Bash(mkdir:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*), Bash(sed:*)
 ---
@@ -310,11 +308,7 @@ git commit -m "chore: remove migration scaffolding"
 
 ## Phase 5: 迁移报告
 
-```bash
-mkdir -p .artifacts
-```
-
-写入 `.artifacts/migrate-YYYYMMDD-HHMMSS.md`：
+按产物存储约定输出以下报告：
 
 ```markdown
 # Migration Report
@@ -362,9 +356,6 @@ mkdir -p .artifacts
 - <是否建议用 /improve 对迁移后的代码做深度打磨>
 - <是否有其他依赖也需要升级>
 ```
-
-写入完成后输出：
-`✓ 迁移报告已保存至 .artifacts/migrate-YYYYMMDD-HHMMSS.md`
 
 ---
 

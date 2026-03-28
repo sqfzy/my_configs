@@ -1,8 +1,6 @@
 ---
 name: review
-description: Structured code review — analyzes a diff, PR, branch, or specific files and produces actionable review feedback organized by severity. Read-only by default; does not modify code unless explicitly asked. Auto-saves review report to .artifacts/
-TRIGGER when: user asks to review code, a diff, a PR, or a branch; user says "review this" or "check my changes".
-DO NOT TRIGGER when: review is part of /ship pipeline, or user wants code modified (use /fix, /refactor, or /improve).
+description: "Structured code review — analyzes a diff, PR, branch, or specific files and produces actionable review feedback organized by severity. Read-only by default; does not modify code unless explicitly asked. Auto-saves review report to .artifacts/ TRIGGER when: user asks to review code, a diff, a PR, or a branch; user says \"review this\" or \"check my changes\". DO NOT TRIGGER when: review is part of /ship pipeline, or user wants code modified (use /fix, /refactor, or /improve)."
 argument-hint: "<diff source> [severity: critical|all] [focus: security|perf|correctness|style|all]"
 allowed-tools: Bash(git:*), Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(date:*), Bash(mkdir:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---
@@ -264,11 +262,7 @@ git diff <source> --numstat 2>&1
 
 ## Step 5: 保存报告
 
-```bash
-mkdir -p .artifacts
-```
-
-将完整报告写入 `.artifacts/review-YYYYMMDD-HHMMSS.md`：
+按产物存储约定输出以下报告：
 
 ```markdown
 # Code Review Report
@@ -301,9 +295,6 @@ mkdir -p .artifacts
 <git diff --stat 输出>
 \```
 ```
-
-写入完成后输出：
-`✓ Review 报告已保存至 .artifacts/review-YYYYMMDD-HHMMSS.md`
 
 ---
 

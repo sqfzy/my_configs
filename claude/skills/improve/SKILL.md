@@ -1,8 +1,6 @@
 ---
 name: improve
-description: Structured code quality improvement cycle — reviews current state, iteratively improves through adversarial discussion, and captures lessons learned. Auto-saves improve report to .artifacts/
-TRIGGER when: user asks to clean up tech debt, polish code quality, improve a module that works but feels messy, or do periodic code health checks.
-DO NOT TRIGGER when: user is fixing a specific bug (use /fix), restructuring without behavior change (use /refactor), or preparing to release (use /ship).
+description: "Structured code quality improvement cycle — reviews current state, iteratively improves through adversarial discussion, and captures lessons learned. Auto-saves improve report to .artifacts/ TRIGGER when: user asks to clean up tech debt, polish code quality, improve a module that works but feels messy, or do periodic code health checks. DO NOT TRIGGER when: user is fixing a specific bug (use /fix), restructuring without behavior change (use /refactor), or preparing to release (use /ship)."
 argument-hint: "<target: file or module> [iter: N] [depth: quick|full] [auto]"
 allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---
@@ -399,7 +397,7 @@ D(编排) → Validator, Serializer, B
 
 ## Improve 报告
 
-将完整报告写入 `.artifacts/improve-YYYYMMDD-HHMMSS.md`：
+按产物存储约定输出以下报告：
 
 ```markdown
 # Improve Report
@@ -461,8 +459,6 @@ D(编排) → Validator, Serializer, B
 标签：<语言> <技术领域> <问题类型> <关键词>
 ```
 
-写入完成后输出：
-`✓ Improve 报告已保存至 .artifacts/improve-YYYYMMDD-HHMMSS.md`
 ---
 
 ## depth: quick 模式

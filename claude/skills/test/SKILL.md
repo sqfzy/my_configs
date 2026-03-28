@@ -1,8 +1,6 @@
 ---
 name: test
-description: Analyze test coverage gaps and generate targeted tests — boundary conditions, error paths, property-based tests, and fuzzing. Auto-saves test report to .artifacts/
-TRIGGER when: user asks to add/supplement tests, improve test coverage, find untested code paths, or generate edge-case/fuzz/property tests for existing code.
-DO NOT TRIGGER when: tests are being written as part of /feature or /fix workflow, or user is running existing tests (just run them directly).
+description: "Analyze test coverage gaps and generate targeted tests — boundary conditions, error paths, property-based tests, and fuzzing. Auto-saves test report to .artifacts/ TRIGGER when: user asks to add/supplement tests, improve test coverage, find untested code paths, or generate edge-case/fuzz/property tests for existing code. DO NOT TRIGGER when: tests are being written as part of /feature or /fix workflow, or user is running existing tests (just run them directly)."
 argument-hint: "<target file or module> [mode: gaps|edge|fuzz|prop] [no-run]"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(date:*), Bash(mkdir:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---
@@ -284,11 +282,7 @@ Go：    <module>_test.go（同包）
 
 ## Phase 4: 测试报告
 
-```bash
-mkdir -p .artifacts
-```
-
-将以下报告写入 `.artifacts/test-YYYYMMDD-HHMMSS.md`：
+按产物存储约定输出以下报告：
 
 ```markdown
 # Test Report
@@ -336,9 +330,6 @@ mkdir -p .artifacts
 - <是否建议增加 fuzz / prop 测试>
 - <是否建议用 /improve 进行更深度的质量改善>
 ```
-
-写入完成后输出：
-`✓ 测试报告已保存至 .artifacts/test-YYYYMMDD-HHMMSS.md`
 
 ---
 

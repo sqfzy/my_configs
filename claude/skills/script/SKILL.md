@@ -1,8 +1,6 @@
 ---
 name: script
-description: Generate robust, observable, fool-proof scripts for any purpose. Emphasizes error handling, user guidance, environment adaptability, and idempotent execution. No silent failures, no hardcoding, no surprises.
-TRIGGER when: user asks to create/generate a script, automation, setup wizard, deployment script, or any standalone executable script.
-DO NOT TRIGGER when: user is writing application code that happens to include shell commands, or writing a one-liner in the terminal.
+description: "Generate robust, observable, fool-proof scripts for any purpose. Emphasizes error handling, user guidance, environment adaptability, and idempotent execution. No silent failures, no hardcoding, no surprises. TRIGGER when: user asks to create/generate a script, automation, setup wizard, deployment script, or any standalone executable script. DO NOT TRIGGER when: user is writing application code that happens to include shell commands, or writing a one-liner in the terminal."
 argument-hint: "[target: <path>] [lang: bash|nu|python|powershell] [name: <script-name>] [purpose: <what the script does>]"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(head:*), Bash(uname:*), Bash(which:*), Bash(date:*)
 ---

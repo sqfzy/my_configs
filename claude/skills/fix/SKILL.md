@@ -1,8 +1,6 @@
 ---
 name: fix
-description: End-to-end bug fix workflow — traces root cause, implements fix, adds regression test, and commits with proper message. Combines /debug → /test → /git into a single disciplined pipeline where no step can be skipped. Auto-saves fix report to .artifacts/
-TRIGGER when: user reports a bug, error, crash, panic, test failure, or unexpected behavior and wants it fixed; user pastes error output/stack trace and asks to resolve it.
-DO NOT TRIGGER when: user only asks what caused an error without wanting a fix, or is building new functionality (use /feature).
+description: "End-to-end bug fix workflow — traces root cause, implements fix, adds regression test, and commits with proper message. Combines /debug → /test → /git into a single disciplined pipeline where no step can be skipped. Auto-saves fix report to .artifacts/ TRIGGER when: user reports a bug, error, crash, panic, test failure, or unexpected behavior and wants it fixed; user pastes error output/stack trace and asks to resolve it. DO NOT TRIGGER when: user only asks what caused an error without wanting a fix, or is building new functionality (use /feature)."
 argument-hint: "[error text | file: <path> | run] [target: <file>] [no-commit] [auto]"
 allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---
@@ -98,10 +96,7 @@ allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep
 ```
 终止。
 
-记录开始时间：
-```bash
-mkdir -p .artifacts
-```
+记录开始时间。
 
 ### 1.1 错误分类
 
@@ -331,7 +326,7 @@ git commit -m "<confirmed message>"
 
 ## Phase 4: 修复报告
 
-将完整报告写入 `.artifacts/fix-YYYYMMDD-HHMMSS.md`：
+按产物存储约定输出以下报告：
 
 ```markdown
 # Fix Report
@@ -388,9 +383,6 @@ git commit -m "<confirmed message>"
 - <是否暴露了缺失的测试覆盖，建议 /test 补充>
 - <是否暴露了设计缺陷，建议 /improve 跟进>
 ```
-
-写入完成后输出：
-`✓ 修复报告已保存至 .artifacts/fix-YYYYMMDD-HHMMSS.md`
 
 ---
 

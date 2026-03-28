@@ -1,8 +1,6 @@
 ---
 name: evolve
-description: Project evolution engine — autonomously analyzes project maturity, discovers missing features, uncovers implicit requirements, and drives iterative growth through prioritized discuss → design → implement cycles. Auto-saves evolution report to .artifacts/
-TRIGGER when: user says the project is immature/incomplete and wants to grow it, asks "what's missing", "what should I build next", or wants autonomous feature discovery and implementation.
-DO NOT TRIGGER when: user has a specific feature in mind (use /feature or /design), is fixing bugs (use /fix), or improving existing code quality (use /improve).
+description: "Project evolution engine — autonomously analyzes project maturity, discovers missing features, uncovers implicit requirements, and drives iterative growth through prioritized discuss → design → implement cycles. Auto-saves evolution report to .artifacts/ TRIGGER when: user says the project is immature/incomplete and wants to grow it, asks \"what's missing\", \"what should I build next\", or wants autonomous feature discovery and implementation. DO NOT TRIGGER when: user has a specific feature in mind (use /feature or /design), is fixing bugs (use /fix), or improving existing code quality (use /improve)."
 argument-hint: "[target: <module or domain>] [rounds: N] [implement] [auto]"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(date:*), Bash(mkdir:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---
@@ -338,7 +336,7 @@ feat(<scope>): <简述>
 
 ## Phase 4: 演进报告
 
-将完整报告写入 `.artifacts/evolve-YYYYMMDD-HHMMSS.md`：
+按产物存储约定输出以下报告：
 
 ```markdown
 # Evolve Report
@@ -388,9 +386,6 @@ feat(<scope>): <简述>
 ## 索引标签
 标签：<语言> <技术领域> <功能域> <关键词>
 ```
-
-写入完成后输出：
-`✓ Evolve 报告已保存至 .artifacts/evolve-YYYYMMDD-HHMMSS.md`
 
 ---
 

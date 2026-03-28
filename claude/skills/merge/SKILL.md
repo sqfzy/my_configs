@@ -1,8 +1,6 @@
 ---
 name: merge
-description: "Two modes: (1) sync — merge upstream into your branch, all conflicts favor upstream; (2) port — selectively transplant features from an independent library into a target codebase with adaptation. Full safety net: backup, preview, build verification, rollback."
-TRIGGER when: user wants to sync with upstream, merge company code, port features from one codebase to another, or transplant code between independent repositories.
-DO NOT TRIGGER when: user is merging their own feature branches (use git directly), or resolving a specific merge conflict (assist directly).
+description: "Two modes: (1) sync — merge upstream into your branch, all conflicts favor upstream; (2) port — selectively transplant features from an independent library into a target codebase with adaptation. Full safety net: backup, preview, build verification, rollback. TRIGGER when: user wants to sync with upstream, merge company code, port features from one codebase to another, or transplant code between independent repositories. DO NOT TRIGGER when: user is merging their own feature branches (use git directly), or resolving a specific merge conflict (assist directly)."
 argument-hint: "<upstream-ref> [dry-run] [auto] | port <source-path> [files: <glob>] [dry-run] [auto]"
 allowed-tools: Bash(git:*), Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(date:*), Bash(mkdir:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---
@@ -87,8 +85,7 @@ git merge -X theirs <upstream-ref> --no-edit 2>&1
 
 ## Sync Phase 5: 报告
 
-写入 `.artifacts/merge-YYYYMMDD-HHMMSS.md`：
-- 合并结果、被覆盖的个人改动、保留的个人改进、需手动审查的文件、验证结果、回滚命令
+按产物存储约定输出报告，内容包括：合并结果、被覆盖的个人改动、保留的个人改进、需手动审查的文件、验证结果、回滚命令。
 
 ---
 
@@ -207,7 +204,7 @@ for each 功能单元 in 移植计划:
 
 ## Port Phase 5: 报告
 
-写入 `.artifacts/merge-port-YYYYMMDD-HHMMSS.md`：
+按产物存储约定输出以下报告：
 
 ```markdown
 # Port Report
@@ -237,8 +234,6 @@ for each 功能单元 in 移植计划:
 - 合入主分支：git checkout main && git merge port/<name>
 - 回滚：git checkout <原分支> && git branch -D port/<name>
 ```
-
-输出：`✓ 移植完成，报告已保存至 .artifacts/merge-port-YYYYMMDD-HHMMSS.md`
 
 ---
 

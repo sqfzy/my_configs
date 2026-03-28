@@ -1,8 +1,6 @@
 ---
 name: repeat
-description: Repeat a prompt or skill command on an adaptive schedule — runs until a time limit expires, with exponential backoff when no progress is detected. Useful for iterative improvement loops, continuous monitoring, or sustained multi-skill workflows.
-TRIGGER when: user wants to repeatedly execute a prompt or skill for a sustained period; user says "keep running X for 30 minutes", "repeat X until 6pm", "loop X for 2 hours".
-DO NOT TRIGGER when: user wants a one-shot execution of a skill (just run it directly); user wants a permanent cron schedule (use /schedule).
+description: "Repeat a prompt or skill command on an adaptive schedule — runs until a time limit expires, with exponential backoff when no progress is detected. Useful for iterative improvement loops, continuous monitoring, or sustained multi-skill workflows. TRIGGER when: user wants to repeatedly execute a prompt or skill for a sustained period; user says \"keep running X for 30 minutes\", \"repeat X until 6pm\", \"loop X for 2 hours\". DO NOT TRIGGER when: user wants a one-shot execution of a skill (just run it directly); user wants a permanent cron schedule (use /schedule)."
 argument-hint: "<prompt or /skill command> [duration: <time>] [until: <HH:MM>] [cooldown: <seconds>]"
 allowed-tools: Bash(date:*), Bash(git:*), Bash(sleep:*), Bash(mkdir:*)
 ---

@@ -1,8 +1,6 @@
 ---
 name: ship
-description: Pre-release quality gate — runs structured code review, fills test coverage gaps, checks performance baselines, updates documentation, and commits/tags. A disciplined release checklist that blocks shipping until every step passes. Auto-saves ship report to .artifacts/
-TRIGGER when: user says ready to ship/release/publish, asks for pre-release checks, or wants to tag a version.
-DO NOT TRIGGER when: user just wants a code review (use /review), or wants to commit without release ceremony (use /git).
+description: "Pre-release quality gate — runs structured code review, fills test coverage gaps, checks performance baselines, updates documentation, and commits/tags. A disciplined release checklist that blocks shipping until every step passes. Auto-saves ship report to .artifacts/ TRIGGER when: user says ready to ship/release/publish, asks for pre-release checks, or wants to tag a version. DO NOT TRIGGER when: user just wants a code review (use /review), or wants to commit without release ceremony (use /git)."
 argument-hint: "<diff source> [skip: bench|doc] [no-push] [tag: <version>] [auto]"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(date:*), Bash(mkdir:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*), Bash(sed:*)
 ---
@@ -380,11 +378,7 @@ push 失败时输出具体错误和建议。
 
 ## Ship 报告
 
-```bash
-mkdir -p .artifacts
-```
-
-写入 `.artifacts/ship-YYYYMMDD-HHMMSS.md`：
+按产物存储约定输出以下报告：
 
 ```markdown
 # Ship Report
@@ -430,9 +424,6 @@ mkdir -p .artifacts
 - <测试覆盖仍有盲区的模块>
 - <性能值得进一步优化的 benchmark>
 ```
-
-写入完成后输出：
-`✓ Ship 报告已保存至 .artifacts/ship-YYYYMMDD-HHMMSS.md`
 
 ---
 
