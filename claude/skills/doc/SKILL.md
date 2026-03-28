@@ -1,6 +1,6 @@
 ---
 name: doc
-description: Generate or update project documentation — API docs, README, CHANGELOG, inline doc comments, and onboarding guides. Reads actual code to produce accurate documentation rather than inventing descriptions. Auto-saves doc generation report to .discuss/
+description: Generate or update project documentation — API docs, README, CHANGELOG, inline doc comments, and onboarding guides. Reads actual code to produce accurate documentation rather than inventing descriptions. Auto-saves doc generation report to .artifacts/
 TRIGGER when: user asks to write/update/generate documentation, README, CHANGELOG, API docs, or inline doc comments.
 DO NOT TRIGGER when: user asks to write code comments as part of implementation (that's normal coding), or update CHANGELOG as part of /ship.
 argument-hint: "<target> [type: api|readme|changelog|onboard|inline|all] [update] [auto]"
@@ -16,6 +16,7 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 现有文档：!`find . -maxdepth 3 \( -name "README*" -o -name "CHANGELOG*" -o -name "*.md" -o -name "docs" -type d \) ! -path "*/.git/*" ! -path "*/target/*" ! -path "*/node_modules/*" 2>/dev/null | head -20`
 
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
+产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
 
 目标：$ARGUMENTS
 
@@ -453,10 +454,10 @@ counter.fetch_add(1, std::memory_order_relaxed);
 ## Phase 3: 文档报告
 
 ```bash
-mkdir -p .discuss
+mkdir -p .artifacts
 ```
 
-写入 `.discuss/doc-YYYYMMDD-HHMMSS.md`：
+写入 `.artifacts/doc-YYYYMMDD-HHMMSS.md`：
 
 ```markdown
 # Documentation Report
@@ -490,7 +491,7 @@ mkdir -p .discuss
 ```
 
 写入完成后输出：
-`✓ 文档报告已保存至 .discuss/doc-YYYYMMDD-HHMMSS.md`
+`✓ 文档报告已保存至 .artifacts/doc-YYYYMMDD-HHMMSS.md`
 
 ---
 

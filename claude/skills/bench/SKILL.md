@@ -1,6 +1,6 @@
 ---
 name: bench
-description: "Performance analysis and optimization — run benchmarks (baseline), identify hot paths (profile), compare before/after (compare), or run target-driven iterative optimization with correctness guarantees (optimize). Auto-saves reports to .discuss/"
+description: "Performance analysis and optimization — run benchmarks (baseline), identify hot paths (profile), compare before/after (compare), or run target-driven iterative optimization with correctness guarantees (optimize). Auto-saves reports to .artifacts/"
 TRIGGER when: user asks to profile, benchmark, optimize performance, investigate slowness/latency, compare before/after performance, or make code faster.
 DO NOT TRIGGER when: user mentions "performance" casually in feature requirements, or is writing benchmarks as part of /feature or /test.
 argument-hint: "<target or intent> [mode: profile|compare|optimize|baseline] [goal: <metric>] [max-rounds: N] [iterations: N] [no-commit] [auto]"
@@ -18,7 +18,7 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 性能工具可用性：!`command -v perf 2>/dev/null && echo "perf: yes" || echo "perf: no"; command -v hyperfine 2>/dev/null && echo "hyperfine: yes" || echo "hyperfine: no"; command -v valgrind 2>/dev/null && echo "valgrind: yes" || echo "valgrind: no"; command -v flamegraph 2>/dev/null && echo "flamegraph: yes" || echo "flamegraph: no"`
 
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
-Benchmark 持久化约定：!`cat ~/.claude/skills/shared/bench-data.md`
+产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
 
 目标：$ARGUMENTS
 
@@ -103,7 +103,7 @@ Benchmark 持久化约定：!`cat ~/.claude/skills/shared/bench-data.md`
 
 ### 1.1 运行 Benchmark
 
-**必须在 release / 优化模式下运行**——debug 模式的数据无意义。根据构建命令获取策略确定并执行 benchmark 命令。**执行后立即按 bench-data 约定持久化**：原始输出写入 `.bench/YYYYMMDD-HHMMSS.txt`，摘要追加到 `.bench/HISTORY.md`。
+**必须在 release / 优化模式下运行**——debug 模式的数据无意义。根据构建命令获取策略确定并执行 benchmark 命令。**执行后立即按 bench-data 约定持久化**：原始输出写入 `.artifacts/bench-data-YYYYMMDD-HHMMSS.txt`，摘要追加到 `.artifacts/INDEX.md`。
 
 ### 1.2 解析结果
 
@@ -117,7 +117,7 @@ Benchmark 持久化约定：!`cat ~/.claude/skills/shared/bench-data.md`
 | <name>    | <X> ns     | <X> ns        | ±X%    | <X>/s  | <X> allocs |
 ```
 
-**若 mode 为 `baseline`**：保存数据到 `.discuss/bench-baseline-YYYYMMDD-HHMMSS.txt`，输出摘要后终止。
+**若 mode 为 `baseline`**：保存数据到 `.artifacts/bench-data-YYYYMMDD-HHMMSS.txt`，输出摘要后终止。
 
 **若 mode 为 `optimize`**：额外记录目标确认：
 
@@ -136,7 +136,7 @@ Benchmark 持久化约定：!`cat ~/.claude/skills/shared/bench-data.md`
 ```
 
 ```bash
-mkdir -p .discuss
+mkdir -p .artifacts
 ```
 
 ---
@@ -148,8 +148,8 @@ mkdir -p .discuss
 根据可用工具选择剖析方式，优先级：perf > flamegraph > valgrind/callgrind > 手动打点。
 
 - 以 release 模式编译后执行剖析
-- 若可行，生成火焰图保存到 `.discuss/flamegraph.svg`
-- 剖析产物（callgrind.out、massif.out 等）保存到 `.discuss/`
+- 若可行，生成火焰图保存到 `.artifacts/flamegraph.svg`
+- 剖析产物（callgrind.out、massif.out 等）保存到 `.artifacts/`
 
 ### 2.2 内存剖析（若目标涉及内存）
 
@@ -335,7 +335,7 @@ mkdir -p .discuss
 ### 完整 Benchmark
 
 ```
-根据构建命令获取策略，确定并执行 benchmark 命令。**按 bench-data 约定持久化**到 `.bench/`。
+根据构建命令获取策略，确定并执行 benchmark 命令。**按 bench-data 约定持久化**到 `.artifacts/`。
 ```
 
 ### 正确性回归
@@ -384,10 +384,10 @@ chore: remove optimization instrumentation
 ## Phase 6: 报告
 
 ```bash
-mkdir -p .discuss
+mkdir -p .artifacts
 ```
 
-写入 `.discuss/bench-YYYYMMDD-HHMMSS.md`。
+写入 `.artifacts/bench-YYYYMMDD-HHMMSS.md`。
 
 ### baseline / profile 模式报告
 
@@ -425,7 +425,7 @@ mkdir -p .discuss
 | ... | ... | ... | ... |
 
 ### 火焰图
-<若生成了火焰图：.discuss/flamegraph.svg>
+<若生成了火焰图：.artifacts/flamegraph.svg>
 
 ## 后续建议
 - <优化建议但不实施>
@@ -518,7 +518,7 @@ mkdir -p .discuss
 - <是否有架构层面的优化需要 /discuss 或 /refactor breaking>
 ```
 
-写入完成后输出：`✓ 报告已保存至 .discuss/bench-YYYYMMDD-HHMMSS.md`
+写入完成后输出：`✓ 报告已保存至 .artifacts/bench-YYYYMMDD-HHMMSS.md`
 
 ---
 
@@ -530,7 +530,7 @@ mkdir -p .discuss
 
 | 输入 | 行为 |
 |------|------|
-| 无额外参数 | 对比最近保存的基线（`.discuss/bench-baseline-*.txt`）与当前 |
+| 无额外参数 | 对比最近保存的基线（`.artifacts/bench-data-*.txt`）与当前 |
 | `<commit-hash>` | checkout 该 commit 跑 benchmark，对比当前 |
 | `<branch>` | checkout 该分支跑 benchmark，对比当前 |
 

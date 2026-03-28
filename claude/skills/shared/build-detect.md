@@ -48,4 +48,4 @@
 - 始终以 release/优化模式运行 Benchmark（debug 模式数据无意义）
 - 构建失败时输出完整错误信息，不静默吞掉
 - 若检测到多个构建文件（如 Cargo.toml + Makefile），优先使用语言原生工具（cargo > make）
-- 命令执行结果应 tee 到 `.discuss/` 中供后续引用（仅在需要对比时）
+- 命令执行结果应 tee 到 `.artifacts/` 中供后续引用（仅在需要对比时）

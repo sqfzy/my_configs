@@ -1,6 +1,6 @@
 ---
 name: test
-description: Analyze test coverage gaps and generate targeted tests — boundary conditions, error paths, property-based tests, and fuzzing. Auto-saves test report to .discuss/
+description: Analyze test coverage gaps and generate targeted tests — boundary conditions, error paths, property-based tests, and fuzzing. Auto-saves test report to .artifacts/
 TRIGGER when: user asks to add/supplement tests, improve test coverage, find untested code paths, or generate edge-case/fuzz/property tests for existing code.
 DO NOT TRIGGER when: tests are being written as part of /feature or /fix workflow, or user is running existing tests (just run them directly).
 argument-hint: "<target file or module> [mode: gaps|edge|fuzz|prop] [no-run]"
@@ -16,6 +16,7 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 现有测试文件：!`find . -type f \( -name "*_test.rs" -o -name "*_test.cpp" -o -name "test_*.py" -o -name "*.test.ts" -o -name "*_test.go" \) ! -path "*/target/*" ! -path "*/.git/*" ! -path "*/node_modules/*" | head -30`
 
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
+产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
 
 目标：$ARGUMENTS
 
@@ -284,10 +285,10 @@ Go：    <module>_test.go（同包）
 ## Phase 4: 测试报告
 
 ```bash
-mkdir -p .discuss
+mkdir -p .artifacts
 ```
 
-将以下报告写入 `.discuss/test-YYYYMMDD-HHMMSS.md`：
+将以下报告写入 `.artifacts/test-YYYYMMDD-HHMMSS.md`：
 
 ```markdown
 # Test Report
@@ -337,7 +338,7 @@ mkdir -p .discuss
 ```
 
 写入完成后输出：
-`✓ 测试报告已保存至 .discuss/test-YYYYMMDD-HHMMSS.md`
+`✓ 测试报告已保存至 .artifacts/test-YYYYMMDD-HHMMSS.md`
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: migrate
-description: Guided migration and upgrade — dependency major version bumps, API breaking change adaptation, language edition upgrades, and build system migrations. Preserves compatibility through incremental steps with rollback points. Auto-saves migration report to .discuss/
+description: Guided migration and upgrade — dependency major version bumps, API breaking change adaptation, language edition upgrades, and build system migrations. Preserves compatibility through incremental steps with rollback points. Auto-saves migration report to .artifacts/
 TRIGGER when: user asks to upgrade a dependency, bump a major version, migrate an API, switch build systems, or adapt to breaking changes from a library/framework update.
 DO NOT TRIGGER when: user is adding a new dependency (use /feature), or making internal design changes unrelated to external API/version changes (use /refactor or /refactor breaking for destructive internal redesign).
 argument-hint: "<migration target> [strategy: incremental|big-bang] [dry-run] [auto]"
@@ -16,7 +16,7 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 项目文件概览：!`find . -type f \( -name "*.rs" -o -name "*.cpp" -o -name "*.hpp" -o -name "*.h" -o -name "*.py" -o -name "*.ts" -o -name "*.go" \) ! -path "*/target/*" ! -path "*/.git/*" ! -path "*/node_modules/*" | head -60`
 
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
-Benchmark 持久化约定：!`cat ~/.claude/skills/shared/bench-data.md`
+产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
 
 目标：$ARGUMENTS
 
@@ -53,7 +53,7 @@ Benchmark 持久化约定：!`cat ~/.claude/skills/shared/bench-data.md`
 记录迁移前的完整状态：
 
 ```bash
-mkdir -p .discuss
+mkdir -p .artifacts
 
 # 依赖版本锁定
 cat Cargo.lock 2>/dev/null | head -100       # Rust
@@ -67,7 +67,7 @@ git rev-parse HEAD 2>&1
 **运行完整构建和测试，建立基线**：
 
 ```
-若用户提供了构建/测试/benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与 benchmark 命令；若项目无测试或 benchmark 则跳过对应步骤。**执行 benchmark 后必须按 bench-data 约定持久化**到 `.bench/`（来源标注：`/migrate 基线`）。
+若用户提供了构建/测试/benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与 benchmark 命令；若项目无测试或 benchmark 则跳过对应步骤。**执行 benchmark 后必须按 bench-data 约定持久化**到 `.artifacts/`（来源标注：`/migrate 基线`）。
 ```
 
 - ✅ 全部通过 → 记录基线，继续
@@ -264,7 +264,7 @@ for each step in 迁移计划:
 若 Phase 0 记录了 benchmark 基线，重新运行并对比：
 
 ```
-若用户提供了 benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行 benchmark 命令；若无 benchmark 则跳过。**执行后必须按 bench-data 约定持久化**到 `.bench/`（来源标注：`/migrate 验证`）。
+若用户提供了 benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行 benchmark 命令；若无 benchmark 则跳过。**执行后必须按 bench-data 约定持久化**到 `.artifacts/`（来源标注：`/migrate 验证`）。
 ```
 
 - 无退化 → 继续
@@ -311,10 +311,10 @@ git commit -m "chore: remove migration scaffolding"
 ## Phase 5: 迁移报告
 
 ```bash
-mkdir -p .discuss
+mkdir -p .artifacts
 ```
 
-写入 `.discuss/migrate-YYYYMMDD-HHMMSS.md`：
+写入 `.artifacts/migrate-YYYYMMDD-HHMMSS.md`：
 
 ```markdown
 # Migration Report
@@ -364,7 +364,7 @@ mkdir -p .discuss
 ```
 
 写入完成后输出：
-`✓ 迁移报告已保存至 .discuss/migrate-YYYYMMDD-HHMMSS.md`
+`✓ 迁移报告已保存至 .artifacts/migrate-YYYYMMDD-HHMMSS.md`
 
 ---
 

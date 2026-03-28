@@ -1,6 +1,6 @@
 ---
 name: refactor
-description: Targeted structural refactoring — restructures code while preserving behavior by default. With [breaking] mode, supports destructive design-level refactoring (API reshape, architecture restructure, core abstraction replacement) with migration strategy and checkpoint commits. Auto-saves refactoring report to .discuss/
+description: Targeted structural refactoring — restructures code while preserving behavior by default. With [breaking] mode, supports destructive design-level refactoring (API reshape, architecture restructure, core abstraction replacement) with migration strategy and checkpoint commits. Auto-saves refactoring report to .artifacts/
 TRIGGER when: user asks to refactor, extract function/module, inline, rename, split, merge, or move code; user wants to redesign internal architecture, reshape APIs, or replace core abstractions (use [breaking] mode).
 DO NOT TRIGGER when: user is upgrading dependencies, changing language editions, or switching frameworks (use /migrate); user wants broad quality improvement (use /improve); user is fixing a specific bug (use /fix).
 argument-hint: "<refactoring intent> [target: <file or module>] [breaking] [no-commit] [dry-run] [auto]"
@@ -16,7 +16,7 @@ allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep
 构建配置：!`find . -maxdepth 2 -name "xmake.lua" -o -name "Cargo.toml" -o -name "pyproject.toml" -o -name "package.json" -o -name "go.mod" -o -name "CMakeLists.txt" 2>/dev/null | head -10`
 
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
-Benchmark 持久化约定：!`cat ~/.claude/skills/shared/bench-data.md`
+产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
 
 意图：$ARGUMENTS
 
@@ -103,7 +103,7 @@ find . -name "bench_*.py" -o -name "*_bench.py" 2>/dev/null | head -10
 
 **若存在与重构目标相关的 benchmark**：
 ```
-若用户提供了 benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行 benchmark 命令。**按 bench-data 约定持久化**到 `.bench/`（来源标注：`/refactor 基线`）。若无 benchmark 则跳过。
+若用户提供了 benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行 benchmark 命令。**按 bench-data 约定持久化**到 `.artifacts/`（来源标注：`/refactor 基线`）。若无 benchmark 则跳过。
 ```
 
 记录基线数据，Phase 4 将用于对比。若无相关 benchmark 则跳过，注明"无 benchmark 覆盖"。
@@ -111,7 +111,7 @@ find . -name "bench_*.py" -o -name "*_bench.py" 2>/dev/null | head -10
 ### 0.3 记录当前状态
 
 ```bash
-mkdir -p .discuss
+mkdir -p .artifacts
 git stash list 2>&1  # 确认没有未保存的 stash 干扰
 ```
 
@@ -361,7 +361,7 @@ for each step in 重构步骤:
 **若 Phase 0 记录了 benchmark 基线**，重新运行相同的 benchmark：
 
 ```
-若用户提供了 benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行 benchmark 命令。**按 bench-data 约定持久化**到 `.bench/`（来源标注：`/refactor 验证`）。若无 benchmark 则跳过。
+若用户提供了 benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行 benchmark 命令。**按 bench-data 约定持久化**到 `.artifacts/`（来源标注：`/refactor 验证`）。若无 benchmark 则跳过。
 ```
 
 对比基线数据：
@@ -448,7 +448,7 @@ git commit -m "<generated message>"
 
 ## Phase 6: 重构报告
 
-将以下报告写入 `.discuss/refactor-YYYYMMDD-HHMMSS.md`：
+将以下报告写入 `.artifacts/refactor-YYYYMMDD-HHMMSS.md`：
 
 ```markdown
 # Refactor Report
@@ -506,7 +506,7 @@ After:
 ```
 
 写入完成后输出：
-`✓ 重构报告已保存至 .discuss/refactor-YYYYMMDD-HHMMSS.md`
+`✓ 重构报告已保存至 .artifacts/refactor-YYYYMMDD-HHMMSS.md`
 
 ---
 

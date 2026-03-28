@@ -1,6 +1,6 @@
 ---
 name: ship
-description: Pre-release quality gate — runs structured code review, fills test coverage gaps, checks performance baselines, updates documentation, and commits/tags. A disciplined release checklist that blocks shipping until every step passes. Auto-saves ship report to .discuss/
+description: Pre-release quality gate — runs structured code review, fills test coverage gaps, checks performance baselines, updates documentation, and commits/tags. A disciplined release checklist that blocks shipping until every step passes. Auto-saves ship report to .artifacts/
 TRIGGER when: user says ready to ship/release/publish, asks for pre-release checks, or wants to tag a version.
 DO NOT TRIGGER when: user just wants a code review (use /review), or wants to commit without release ceremony (use /git).
 argument-hint: "<diff source> [skip: bench|doc] [no-push] [tag: <version>] [auto]"
@@ -18,7 +18,7 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 现有 benchmark：!`find . -type f \( -path "*/benches/*" -o -name "bench_*.py" -o -name "*_bench.go" -o -name "*.bench.ts" \) ! -path "*/target/*" ! -path "*/.git/*" ! -path "*/node_modules/*" 2>/dev/null | head -10`
 
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
-Benchmark 持久化约定：!`cat ~/.claude/skills/shared/bench-data.md`
+产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
 
 目标：$ARGUMENTS
 
@@ -151,7 +151,7 @@ git diff <source> --numstat 2>&1
 
 **Critical 或 Major 存在时阻断**——不继续后续 Gate。输出问题清单后暂停，等待用户修复后重新运行。
 
-**`auto` 模式**：不暂停，直接终止并将审查报告保存到 `.discuss/`。退出码非零，便于脚本检测失败。
+**`auto` 模式**：不暂停，直接终止并将审查报告保存到 `.artifacts/`。退出码非零，便于脚本检测失败。
 
 ✅ 无 Critical 且无 Major → 继续 Gate 2。Minor 和 Nit 记录到最终报告，不阻断。
 
@@ -216,7 +216,7 @@ git diff <source> --numstat 2>&1
 
 ```bash
 # 查找最近的基线文件
-ls -t .discuss/bench-baseline-*.txt 2>/dev/null | head -1
+ls -t .artifacts/bench-data-*.txt 2>/dev/null | head -1
 ```
 
 - **有已保存的基线** → 使用该基线
@@ -231,7 +231,7 @@ ls -t .discuss/bench-baseline-*.txt 2>/dev/null | head -1
 
 ### 3.2 运行当前 benchmark
 
-若用户提供了 benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行 benchmark 命令，结果 tee 到 .discuss/bench-ship.txt；若无 benchmark 则跳过。
+若用户提供了 benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行 benchmark 命令，结果 tee 到 .artifacts/bench-data-ship.txt；若无 benchmark 则跳过。
 
 ### 3.3 对比
 
@@ -381,10 +381,10 @@ push 失败时输出具体错误和建议。
 ## Ship 报告
 
 ```bash
-mkdir -p .discuss
+mkdir -p .artifacts
 ```
 
-写入 `.discuss/ship-YYYYMMDD-HHMMSS.md`：
+写入 `.artifacts/ship-YYYYMMDD-HHMMSS.md`：
 
 ```markdown
 # Ship Report
@@ -432,7 +432,7 @@ mkdir -p .discuss
 ```
 
 写入完成后输出：
-`✓ Ship 报告已保存至 .discuss/ship-YYYYMMDD-HHMMSS.md`
+`✓ Ship 报告已保存至 .artifacts/ship-YYYYMMDD-HHMMSS.md`
 
 ---
 

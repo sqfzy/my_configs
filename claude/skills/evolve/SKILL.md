@@ -1,6 +1,6 @@
 ---
 name: evolve
-description: Project evolution engine — autonomously analyzes project maturity, discovers missing features, uncovers implicit requirements, and drives iterative growth through prioritized discuss → design → implement cycles. Auto-saves evolution report to .discuss/
+description: Project evolution engine — autonomously analyzes project maturity, discovers missing features, uncovers implicit requirements, and drives iterative growth through prioritized discuss → design → implement cycles. Auto-saves evolution report to .artifacts/
 TRIGGER when: user says the project is immature/incomplete and wants to grow it, asks "what's missing", "what should I build next", or wants autonomous feature discovery and implementation.
 DO NOT TRIGGER when: user has a specific feature in mind (use /feature or /design), is fixing bugs (use /fix), or improving existing code quality (use /improve).
 argument-hint: "[target: <module or domain>] [rounds: N] [implement] [auto]"
@@ -14,12 +14,13 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 当前分支：!`git branch --show-current 2>&1`
 项目文件概览：!`find . -type f \( -name "*.rs" -o -name "*.cpp" -o -name "*.hpp" -o -name "*.h" -o -name "*.py" -o -name "*.ts" -o -name "*.go" \) ! -path "*/target/*" ! -path "*/.git/*" ! -path "*/node_modules/*" | head -80`
 构建配置：!`find . -maxdepth 2 -name "xmake.lua" -o -name "Cargo.toml" -o -name "pyproject.toml" -o -name "package.json" -o -name "go.mod" -o -name "CMakeLists.txt" 2>/dev/null | head -10`
-现有文档：!`find . -maxdepth 3 \( -name "README*" -o -name "CHANGELOG*" -o -name "*.md" \) ! -path "*/.git/*" ! -path "*/target/*" ! -path "*/node_modules/*" ! -path "*/.discuss/*" 2>/dev/null | head -20`
+现有文档：!`find . -maxdepth 3 \( -name "README*" -o -name "CHANGELOG*" -o -name "*.md" \) ! -path "*/.git/*" ! -path "*/target/*" ! -path "*/node_modules/*" ! -path "*/.artifacts/*" 2>/dev/null | head -20`
 现有测试：!`find . -type f \( -name "*_test.rs" -o -name "*_test.cpp" -o -name "test_*.py" -o -name "*.test.ts" -o -name "*_test.go" -o -path "*/tests/*" \) ! -path "*/target/*" ! -path "*/.git/*" ! -path "*/node_modules/*" | head -30`
 近期提交历史：!`git log --oneline -20 2>&1`
 公开接口/导出：!`grep -rn "^pub " --include="*.rs" . 2>/dev/null | head -30; grep -rn "^export " --include="*.ts" . 2>/dev/null | head -30; grep -rn "^def [^_]" --include="*.py" . 2>/dev/null | head -30`
 
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
+产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
 
 参数：$ARGUMENTS
 
@@ -162,18 +163,45 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 - 错误路径未被测试
 - 并发/竞态场景未被测试（如果有并发）
 
+**代码质量**（信号检测，不深入分析——深度改进由 `/improve` 执行）：
+- 超长函数（>100 行）或深嵌套（>4 层）
+- 明显的重复代码块
+- 过时或失效的 TODO/FIXME/HACK 注释
+- 模块职责不清晰、耦合过紧
+
+**性能**（信号检测——深度优化由 `/bench optimize` 执行）：
+- 热路径上的 O(n²) 或更差复杂度
+- 循环内频繁分配（clone、to_string、临时容器）
+- 公开接口缺少 benchmark 覆盖
+- 已知的 I/O 瓶颈（同步阻塞、无缓冲）
+
+**文档完整性**（信号检测——文档生成由 `/doc` 执行）：
+- README 与当前代码不符或过于简略
+- 公开 API 缺少文档注释
+- CHANGELOG 未更新（有新功能提交但无对应条目）
+- 缺少使用示例或快速入门指南
+
 ### 2.2 缺口清单
 
 ```
 ## 缺口清单
 
-| 序号 | 维度 | 缺口描述 | 影响 | 复杂度 |
-|------|------|----------|------|--------|
-| 1 | 功能完备性 | 缺少 X 功能 | 用户无法完成 Y 场景 | 中 |
-| 2 | 健壮性 | Z 接口无错误处理 | 异常输入导致 panic | 低 |
-| 3 | API | 缺少 list 操作 | 无法枚举已有资源 | 低 |
-| ... | ... | ... | ... | ... |
+| 序号 | 维度 | 缺口描述 | 影响 | 复杂度 | 推荐 Skill |
+|------|------|----------|------|--------|------------|
+| 1 | 功能完备性 | 缺少 X 功能 | 用户无法完成 Y 场景 | 中 | evolve 自行实现 |
+| 2 | 健壮性 | Z 接口无错误处理 | 异常输入导致 panic | 低 | evolve 自行实现 |
+| 3 | 代码质量 | 模块 A 职责混乱 | 可维护性差 | 中 | /improve |
+| 4 | 性能 | 解析器缺少 benchmark | 性能退化不可感知 | 低 | /bench |
+| 5 | 文档 | README 过时 | 新用户无法上手 | 低 | /doc |
+| ... | ... | ... | ... | ... | ... |
 ```
+
+**推荐 Skill 规则**：
+- 功能完备性、API 与接口、健壮性、可观测性、可用性 → `evolve 自行实现`（现有 Phase 3 逻辑）
+- 测试缺口 → `/test`
+- 代码质量 → `/improve`（轻度）或 `/refactor`（架构级）
+- 性能 → `/bench optimize`（有瓶颈需优化时）或 `/bench`（缺 benchmark 覆盖时）
+- 文档完整性 → `/doc`
 
 ### 2.3 多角色对抗排序
 
@@ -216,7 +244,19 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 
 ## Phase 3: 迭代推进
 
-按优先级逐个推进。每个缺口经历：**需求细化 → 方案设计 → 实现 → 验证 → 提交**。
+按优先级逐个推进。根据缺口的"推荐 Skill"列决定推进方式：
+
+- **`evolve 自行实现`**：走下方 3.1–3.5 的完整流程（需求细化→方案设计→实现→验证→提交）
+- **委派给其他 skill**：直接调用对应 skill 并传入缺口描述作为参数，由该 skill 按自身流程完成。调用时自动追加 `auto` 参数。例如：
+  - 代码质量缺口 → 执行 `/improve target: <相关模块> auto iter: 1`
+  - 测试缺口 → 执行 `/test <缺口描述>`
+  - 性能缺口 → 执行 `/bench optimize <目标> auto max-rounds: 3`
+  - 文档缺口 → 执行 `/doc <缺口描述>`
+  - 架构缺口 → 执行 `/refactor <意图> auto`
+
+委派的 skill 完成后，evolve 记录结果并继续下一个缺口。
+
+以下 3.1–3.5 仅适用于 `evolve 自行实现` 的缺口。
 
 ### 3.1 需求细化
 
@@ -298,7 +338,7 @@ feat(<scope>): <简述>
 
 ## Phase 4: 演进报告
 
-将完整报告写入 `.discuss/evolve-YYYYMMDD-HHMMSS.md`：
+将完整报告写入 `.artifacts/evolve-YYYYMMDD-HHMMSS.md`：
 
 ```markdown
 # Evolve Report
@@ -350,7 +390,7 @@ feat(<scope>): <简述>
 ```
 
 写入完成后输出：
-`✓ Evolve 报告已保存至 .discuss/evolve-YYYYMMDD-HHMMSS.md`
+`✓ Evolve 报告已保存至 .artifacts/evolve-YYYYMMDD-HHMMSS.md`
 
 ---
 

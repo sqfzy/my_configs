@@ -1,6 +1,6 @@
 ---
 name: design
-description: Design-first feature development — deeply discusses requirements and technical approach through adversarial multi-role debate before writing any code. Combines /discuss depth with /feature execution. Auto-saves design report to .discuss/
+description: Design-first feature development — deeply discusses requirements and technical approach through adversarial multi-role debate before writing any code. Combines /discuss depth with /feature execution. Auto-saves design report to .artifacts/
 TRIGGER when: user describes a feature with ambiguous requirements, multiple viable approaches, or explicitly asks to discuss/design before coding; user says "how should we build X" or "what's the best approach for X".
 DO NOT TRIGGER when: requirements are clear and user wants to start coding (use /feature), or user only wants a discussion without implementation (use /discuss).
 argument-hint: "<requirement description> [no-commit] [target: <path>] [rounds: N] [roles: N] [auto]"
@@ -16,6 +16,7 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(head:*), Bash(mkdir:*), Bash(date
 构建配置：!`find . -maxdepth 2 -name "xmake.lua" -o -name "Cargo.toml" -o -name "pyproject.toml" -o -name "package.json" -o -name "go.mod" -o -name "CMakeLists.txt" 2>/dev/null | head -10`
 
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
+产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
 
 需求：$ARGUMENTS
 
@@ -387,10 +388,10 @@ git commit -m "<confirmed message>"
 ## Phase 6: 设计报告
 
 ```bash
-mkdir -p .discuss
+mkdir -p .artifacts
 ```
 
-写入 `.discuss/design-YYYYMMDD-HHMMSS.md`：
+写入 `.artifacts/design-YYYYMMDD-HHMMSS.md`：
 
 ```markdown
 # Design Report
@@ -437,7 +438,7 @@ mkdir -p .discuss
 ```
 
 写入完成后输出：
-`✓ 设计报告已保存至 .discuss/design-YYYYMMDD-HHMMSS.md`
+`✓ 设计报告已保存至 .artifacts/design-YYYYMMDD-HHMMSS.md`
 
 ---
 

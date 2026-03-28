@@ -1,6 +1,6 @@
 ---
 name: review
-description: Structured code review — analyzes a diff, PR, branch, or specific files and produces actionable review feedback organized by severity. Read-only by default; does not modify code unless explicitly asked. Auto-saves review report to .discuss/
+description: Structured code review — analyzes a diff, PR, branch, or specific files and produces actionable review feedback organized by severity. Read-only by default; does not modify code unless explicitly asked. Auto-saves review report to .artifacts/
 TRIGGER when: user asks to review code, a diff, a PR, or a branch; user says "review this" or "check my changes".
 DO NOT TRIGGER when: review is part of /ship pipeline, or user wants code modified (use /fix, /refactor, or /improve).
 argument-hint: "<diff source> [severity: critical|all] [focus: security|perf|correctness|style|all]"
@@ -15,6 +15,7 @@ allowed-tools: Bash(git:*), Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*
 最近 5 次提交：!`git log --oneline -5 2>&1`
 
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
+产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
 
 输入：$ARGUMENTS
 
@@ -264,10 +265,10 @@ git diff <source> --numstat 2>&1
 ## Step 5: 保存报告
 
 ```bash
-mkdir -p .discuss
+mkdir -p .artifacts
 ```
 
-将完整报告写入 `.discuss/review-YYYYMMDD-HHMMSS.md`：
+将完整报告写入 `.artifacts/review-YYYYMMDD-HHMMSS.md`：
 
 ```markdown
 # Code Review Report
@@ -302,7 +303,7 @@ mkdir -p .discuss
 ```
 
 写入完成后输出：
-`✓ Review 报告已保存至 .discuss/review-YYYYMMDD-HHMMSS.md`
+`✓ Review 报告已保存至 .artifacts/review-YYYYMMDD-HHMMSS.md`
 
 ---
 

@@ -104,7 +104,7 @@ loop:
 - `git diff --stat` 显示有文件变更（新增、修改、删除）
 - 有新的 git commit 产生
 - skill 输出中包含明确的改动指示（如"已修复"、"已提交"、"已优化"、"已生成"）
-- `.discuss/` 中有新文件产生
+- `.artifacts/` 中有新文件产生
 
 **无进度的信号**：
 - `git diff --stat` 为空且无新 commit

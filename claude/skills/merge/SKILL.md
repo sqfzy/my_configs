@@ -87,7 +87,7 @@ git merge -X theirs <upstream-ref> --no-edit 2>&1
 
 ## Sync Phase 5: 报告
 
-写入 `.discuss/merge-YYYYMMDD-HHMMSS.md`：
+写入 `.artifacts/merge-YYYYMMDD-HHMMSS.md`：
 - 合并结果、被覆盖的个人改动、保留的个人改进、需手动审查的文件、验证结果、回滚命令
 
 ---
@@ -207,7 +207,7 @@ for each 功能单元 in 移植计划:
 
 ## Port Phase 5: 报告
 
-写入 `.discuss/merge-port-YYYYMMDD-HHMMSS.md`：
+写入 `.artifacts/merge-port-YYYYMMDD-HHMMSS.md`：
 
 ```markdown
 # Port Report
@@ -238,7 +238,7 @@ for each 功能单元 in 移植计划:
 - 回滚：git checkout <原分支> && git branch -D port/<name>
 ```
 
-输出：`✓ 移植完成，报告已保存至 .discuss/merge-port-YYYYMMDD-HHMMSS.md`
+输出：`✓ 移植完成，报告已保存至 .artifacts/merge-port-YYYYMMDD-HHMMSS.md`
 
 ---
 

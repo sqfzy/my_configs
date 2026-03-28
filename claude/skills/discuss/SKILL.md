@@ -1,6 +1,6 @@
 ---
 name: discuss
-description: Structured adversarial multi-role discussion that converges on a well-tested solution. Auto-saves results to .discuss/
+description: Structured adversarial multi-role discussion that converges on a well-tested solution. Auto-saves results to .artifacts/
 TRIGGER when: user asks to weigh tradeoffs, compare approaches, debate a technical decision, or wants structured pros/cons analysis before choosing a direction.
 DO NOT TRIGGER when: user wants discussion followed by implementation (use /design), or has already decided and wants to start coding.
 argument-hint: <topic> [rounds: N] [roles: N]
@@ -11,6 +11,7 @@ allowed-tools: Bash(mkdir:*), Bash(date:*)
 
 当前时间：!`date '+%Y-%m-%d %H:%M:%S'`
 当前目录：!`pwd`
+产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
 
 议题：$ARGUMENTS
 
@@ -97,8 +98,8 @@ allowed-tools: Bash(mkdir:*), Bash(date:*)
 
 讨论全部完成后，执行：
 
-1. 用 Bash 创建目录（若不存在）：`mkdir -p .discuss`
-2. 生成文件名：`.discuss/discuss-YYYYMMDD-HHMMSS.md`（使用讨论开始时的时间戳）
+1. 用 Bash 创建目录（若不存在）：`mkdir -p .artifacts`
+2. 生成文件名：`.artifacts/discuss-YYYYMMDD-HHMMSS.md`（使用讨论开始时的时间戳）
 3. 写入以下结构：
 
 ```markdown
@@ -120,7 +121,7 @@ allowed-tools: Bash(mkdir:*), Bash(date:*)
 <完整讨论内容，包含所有轮次发言和最终方案>
 ```
 
-4. 写入完成后告知用户：`✓ 讨论已保存至 .discuss/discuss-YYYYMMDD-HHMMSS.md`
+4. 写入完成后告知用户：`✓ 讨论已保存至 .artifacts/discuss-YYYYMMDD-HHMMSS.md`
 
 ---
 

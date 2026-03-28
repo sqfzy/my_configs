@@ -1,6 +1,6 @@
 ---
 name: improve
-description: Structured code quality improvement cycle — reviews current state, iteratively improves through adversarial discussion, and captures lessons learned. Auto-saves improve report to .discuss/
+description: Structured code quality improvement cycle — reviews current state, iteratively improves through adversarial discussion, and captures lessons learned. Auto-saves improve report to .artifacts/
 TRIGGER when: user asks to clean up tech debt, polish code quality, improve a module that works but feels messy, or do periodic code health checks.
 DO NOT TRIGGER when: user is fixing a specific bug (use /fix), restructuring without behavior change (use /refactor), or preparing to release (use /ship).
 argument-hint: "<target: file or module> [iter: N] [depth: quick|full] [auto]"
@@ -19,7 +19,7 @@ allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep
 现有 benchmark：!`find . -type f \( -path "*/benches/*" -o -name "bench_*.py" -o -name "*_bench.go" \) ! -path "*/target/*" ! -path "*/.git/*" ! -path "*/node_modules/*" 2>/dev/null | head -10`
 
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
-Benchmark 持久化约定：!`cat ~/.claude/skills/shared/bench-data.md`
+产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
 
 目标：$ARGUMENTS
 
@@ -83,7 +83,7 @@ Benchmark 持久化约定：!`cat ~/.claude/skills/shared/bench-data.md`
 ### 1.1 建立基线
 
 ```
-若用户提供了构建/测试/benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与 benchmark 命令；若项目无测试或 benchmark 则跳过对应步骤。执行 benchmark 后必须按 bench-data 约定持久化到 .bench/（来源标注：/improve 基线）。
+若用户提供了构建/测试/benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与 benchmark 命令；若项目无测试或 benchmark 则跳过对应步骤。执行 benchmark 后必须按 bench-data 约定持久化到 `.artifacts/`（来源标注：`/improve 基线`）。
 ```
 
 - ✅ 通过 → 记录测试数量，继续
@@ -308,7 +308,7 @@ D(编排) → Validator, Serializer, B
 **构建 + 测试**：
 
 ```
-若用户提供了构建/测试/benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与 benchmark 命令；若项目无测试或 benchmark 则跳过对应步骤。执行 benchmark 后必须按 bench-data 约定持久化到 .bench/（来源标注：/improve R<N>）。
+若用户提供了构建/测试/benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与 benchmark 命令；若项目无测试或 benchmark 则跳过对应步骤。执行 benchmark 后必须按 bench-data 约定持久化到 `.artifacts/`（来源标注：`/improve R<N>`）。
 ```
 
 **接口契约检查**：
@@ -399,7 +399,7 @@ D(编排) → Validator, Serializer, B
 
 ## Improve 报告
 
-将完整报告写入 `.discuss/improve-YYYYMMDD-HHMMSS.md`：
+将完整报告写入 `.artifacts/improve-YYYYMMDD-HHMMSS.md`：
 
 ```markdown
 # Improve Report
@@ -462,7 +462,7 @@ D(编排) → Validator, Serializer, B
 ```
 
 写入完成后输出：
-`✓ Improve 报告已保存至 .discuss/improve-YYYYMMDD-HHMMSS.md`
+`✓ Improve 报告已保存至 .artifacts/improve-YYYYMMDD-HHMMSS.md`
 ---
 
 ## depth: quick 模式

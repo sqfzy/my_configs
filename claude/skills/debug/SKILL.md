@@ -15,6 +15,8 @@ allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep
 项目文件概览：!`find . -type f \( -name "*.rs" -o -name "*.cpp" -o -name "*.hpp" -o -name "*.h" -o -name "*.py" -o -name "*.ts" -o -name "*.go" \) ! -path "*/target/*" ! -path "*/.git/*" ! -path "*/node_modules/*" | head -60`
 构建配置：!`find . -maxdepth 2 -name "xmake.lua" -o -name "Cargo.toml" -o -name "pyproject.toml" -o -name "package.json" -o -name "go.mod" -o -name "CMakeLists.txt" 2>/dev/null | head -10`
 
+产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
+
 输入：$ARGUMENTS
 
 ---
@@ -88,7 +90,7 @@ allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep
                    ▼
 ┌──────────────────────────────────────────────────┐
 │  Phase 5: 调试报告                                │
-│  生成结构化报告 → 保存至 .discuss/ → 建议后续     │
+│  生成结构化报告 → 保存至 .artifacts/ → 建议后续     │
 └──────────────────────────────────────────────────┘
 ```
 
@@ -110,7 +112,7 @@ allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep
 
 记录开始时间：
 ```bash
-mkdir -p .discuss
+mkdir -p .artifacts
 ```
 
 ---
@@ -204,7 +206,7 @@ mkdir -p .discuss
 
 ## Phase 5: 调试报告
 
-将完整报告写入 `.discuss/debug-YYYYMMDD-HHMMSS.md`：
+将完整报告写入 `.artifacts/debug-YYYYMMDD-HHMMSS.md`：
 
 ```markdown
 # Debug Report
@@ -254,7 +256,7 @@ mkdir -p .discuss
 ```
 
 写入完成后输出：
-`✓ 调试报告已保存至 .discuss/debug-YYYYMMDD-HHMMSS.md`
+`✓ 调试报告已保存至 .artifacts/debug-YYYYMMDD-HHMMSS.md`
 
 ---
 

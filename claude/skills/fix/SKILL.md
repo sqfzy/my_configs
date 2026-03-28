@@ -1,6 +1,6 @@
 ---
 name: fix
-description: End-to-end bug fix workflow — traces root cause, implements fix, adds regression test, and commits with proper message. Combines /debug → /test → /git into a single disciplined pipeline where no step can be skipped. Auto-saves fix report to .discuss/
+description: End-to-end bug fix workflow — traces root cause, implements fix, adds regression test, and commits with proper message. Combines /debug → /test → /git into a single disciplined pipeline where no step can be skipped. Auto-saves fix report to .artifacts/
 TRIGGER when: user reports a bug, error, crash, panic, test failure, or unexpected behavior and wants it fixed; user pastes error output/stack trace and asks to resolve it.
 DO NOT TRIGGER when: user only asks what caused an error without wanting a fix, or is building new functionality (use /feature).
 argument-hint: "[error text | file: <path> | run] [target: <file>] [no-commit] [auto]"
@@ -17,6 +17,7 @@ allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep
 现有测试文件：!`find . -type f \( -name "*_test.rs" -o -name "*_test.cpp" -o -name "test_*.py" -o -name "*.test.ts" -o -name "*_test.go" \) ! -path "*/target/*" ! -path "*/.git/*" ! -path "*/node_modules/*" | head -20`
 
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
+产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
 
 输入：$ARGUMENTS
 
@@ -99,7 +100,7 @@ allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep
 
 记录开始时间：
 ```bash
-mkdir -p .discuss
+mkdir -p .artifacts
 ```
 
 ### 1.1 错误分类
@@ -330,7 +331,7 @@ git commit -m "<confirmed message>"
 
 ## Phase 4: 修复报告
 
-将完整报告写入 `.discuss/fix-YYYYMMDD-HHMMSS.md`：
+将完整报告写入 `.artifacts/fix-YYYYMMDD-HHMMSS.md`：
 
 ```markdown
 # Fix Report
@@ -389,7 +390,7 @@ git commit -m "<confirmed message>"
 ```
 
 写入完成后输出：
-`✓ 修复报告已保存至 .discuss/fix-YYYYMMDD-HHMMSS.md`
+`✓ 修复报告已保存至 .artifacts/fix-YYYYMMDD-HHMMSS.md`
 
 ---
 
@@ -408,7 +409,7 @@ git commit -m "<confirmed message>"
   - 使用 /discuss 对根因假设进行多角色对抗分析
 ```
 
-终止，不进入 Phase 2。已有的分析记录仍保存到 `.discuss/`。
+终止，不进入 Phase 2。已有的分析记录仍保存到 `.artifacts/`。
 
 ### 修复引入了无法解决的回归
 
