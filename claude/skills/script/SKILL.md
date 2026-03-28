@@ -161,6 +161,14 @@ fi
 - `signal.SIGTERM` 用 `try/except` 保护（Windows 不支持）
 - 路径操作用 `pathlib`，不硬编码路径分隔符
 
+**Nushell 脚本规则：**
+
+- 使用 `nu` 的结构化数据处理（tables, records），不要用 grep/sed/awk 的文本处理思维
+- 错误处理用 `try/catch` 块，不用 `|| exit 1` 模式
+- 环境变量用 `$env.VAR` 访问，不用 `$VAR`
+- 路径操作用 `path join`、`path expand` 等内置命令
+- 支持 `--help` 通过定义带类型标注的 `def main` 参数自动生成
+
 **跨语言规则：**
 
 - 自动检测运行环境并适应：

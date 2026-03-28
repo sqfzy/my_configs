@@ -308,7 +308,7 @@ for each step in 重构步骤:
        - 测试失败但不在变更清单中 → 视为 bug，修复代码而非测试
        - 三次修复仍失败 → 暂停，告知用户（auto 模式：回滚到上一个检查点并终止）
     5. 编译+测试通过 → 提交检查点：
-       git add -A && git commit -m "refactor(<scope>): step N — <描述>"
+       git add <本次改动的具体文件> && git commit -m "refactor(<scope>): step N — <描述>"
 ```
 
 **语言特定注意事项**：
@@ -435,9 +435,10 @@ refactor!(<scope>): <subject>
 BREAKING CHANGE: <逐条列出行为变更清单中的每项变更及其影响>
 ```
 
+**禁止使用 `git add -A` 或 `git add .`——必须逐文件 add，避免暴露 .env、credentials 等敏感文件或意外的大文件。**
+
 ```bash
-git add -A
-git commit -m "<generated message>"
+git add <本次改动的具体文件> && git commit -m "<generated message>"
 ```
 
 输出：`✅ 已提交 <short-hash>: <subject>`

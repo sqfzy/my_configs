@@ -571,7 +571,7 @@ Key test scenarios:
 ## 概况
 - 时间：<开始时间>
 - 耗时：<X 分 Y 秒>
-- 类型：<api / readme / changelog / onboard / inline>
+- 类型：<api / readme / changelog / onboard / summary>
 - 模式：<新建 / 更新>
 
 ## 变更摘要

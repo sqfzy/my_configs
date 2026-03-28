@@ -1,7 +1,7 @@
 ---
 name: merge
 description: "Two modes: (1) sync — merge upstream into your branch, all conflicts favor upstream; (2) port — selectively transplant features from an independent library into a target codebase with adaptation. Full safety net: backup, preview, build verification, rollback. TRIGGER when: user wants to sync with upstream, merge company code, port features from one codebase to another, or transplant code between independent repositories. DO NOT TRIGGER when: user is merging their own feature branches (use git directly), or resolving a specific merge conflict (assist directly)."
-argument-hint: "<upstream-ref> [dry-run] [auto] | port <source-path> [files: <glob>] [dry-run] [auto]"
+argument-hint: "<upstream-ref> [dry-run] [auto] [review-conflicts] | port <source-path> [files: <glob>] [dry-run] [auto]"
 allowed-tools: Bash(git:*), Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(date:*), Bash(mkdir:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---
 
@@ -39,6 +39,7 @@ Remotes：!`git remote -v 2>&1`
 - `<upstream-ref>`（必填）：分支名、remote/分支、tag、commit hash
 - `[dry-run]`：只预览，不实际合并
 - `[auto]`：跳过确认
+- `[review-conflicts]`：在冲突审查步骤暂停，允许用户选择性保留部分本地改动后再执行 theirs 合并。未设置时自动以 upstream 为准合并，但仍输出被覆盖改动的摘要
 
 ## Sync Phase 1: 准备
 
@@ -64,10 +65,70 @@ git log --oneline HEAD...<upstream-ref> | head -30
 
 **暂停确认**（dry-run 则终止，auto 则跳过）。
 
-## Sync Phase 3: 执行
+## Sync Phase 3: 冲突审查
+
+在执行最终合并之前，先探测哪些本地改动会被覆盖：
 
 ```bash
 git fetch <remote> 2>&1  # 确保最新
+
+# 3a. 尝试不带 -X theirs 的合并，探测冲突
+git merge --no-commit --no-ff <upstream-ref> 2>&1
+```
+
+若合并无冲突 → 直接进入 Phase 3b 提交合并，无需审查。
+
+若存在冲突：
+
+1. **列出所有冲突文件**：
+
+```bash
+git diff --name-only --diff-filter=U
+```
+
+2. **逐文件展示本地将被覆盖的改动**：
+
+对每个冲突文件，输出本地版本与 upstream 版本的差异摘要，明确标注哪些本地修改会丢失：
+
+```bash
+for f in $(git diff --name-only --diff-filter=U); do
+    echo "=== $f ==="
+    echo "--- 本地改动（将被覆盖）---"
+    git diff HEAD -- "$f" | head -60
+    echo ""
+done
+```
+
+3. **`[review-conflicts]` 交互审查**（仅当设置了 `review-conflicts` 参数时）：
+
+暂停并逐文件询问用户：
+```
+冲突文件：src/config.rs
+  本地改动摘要：<改动描述>
+  选择：
+    [t] 使用 upstream 版本（theirs）
+    [o] 保留本地版本（ours）
+    [m] 手动编辑合并
+```
+
+对用户选择保留的文件，记录到保留列表；其余文件仍以 upstream 为准。
+
+4. **无 `[review-conflicts]` 时的默认行为**：
+
+输出被覆盖改动摘要后，自动继续——所有冲突以 upstream 为准。
+
+5. **中止探测合并，执行最终合并**：
+
+```bash
+# 中止探测合并
+git merge --abort 2>&1
+
+# 执行最终合并
+# 若有 review-conflicts 且用户选择保留了部分文件：
+#   git merge --no-commit --no-ff -X theirs <upstream-ref>
+#   git checkout HEAD -- <用户保留的文件列表>
+#   git commit --no-edit
+# 否则：
 git merge -X theirs <upstream-ref> --no-edit 2>&1
 ```
 
@@ -85,7 +146,39 @@ git merge -X theirs <upstream-ref> --no-edit 2>&1
 
 ## Sync Phase 5: 报告
 
-按产物存储约定输出报告，内容包括：合并结果、被覆盖的个人改动、保留的个人改进、需手动审查的文件、验证结果、回滚命令。
+按产物存储约定输出以下报告：
+
+```markdown
+# Sync Report
+
+## 概况
+- 时间：<时间>
+- Upstream ref：<upstream-ref>
+- 当前分支：<branch>
+- 合并 Commit：<merge-commit-hash>
+- 备份分支：backup/merge-<timestamp>
+
+## 冲突文件
+| 文件 | 冲突类型 | 处理方式 |
+|------|---------|---------|
+| <file> | 双侧修改 | upstream 覆盖 / 保留本地（review-conflicts） |
+
+## 被覆盖的本地改动
+| 文件 | 本地改动摘要 | 影响行数 |
+|------|-------------|---------|
+| <file> | <改动描述> | +N / -M |
+
+## 保留的个人改进
+- 非冲突文件中的个人改动（自动保留）
+
+## 验证结果
+- 构建：✅ / ❌
+- 测试：✅ / ❌ / ⏭️
+
+## 后续操作
+- 审查被覆盖改动：若需恢复，参考备份分支 backup/merge-<timestamp>
+- 回滚：git reset --hard <rollback-hash>
+```
 
 ---
 

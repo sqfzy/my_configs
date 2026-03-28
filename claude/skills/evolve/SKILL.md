@@ -1,6 +1,6 @@
 ---
 name: evolve
-description: "Project evolution engine — autonomously analyzes project maturity, discovers missing features, uncovers implicit requirements, and drives iterative growth through prioritized discuss → design → implement cycles. Auto-saves evolution report to .artifacts/ TRIGGER when: user says the project is immature/incomplete and wants to grow it, asks \"what's missing\", \"what should I build next\", or wants autonomous feature discovery and implementation. DO NOT TRIGGER when: user has a specific feature in mind (use /feature or /design), is fixing bugs (use /fix), or improving existing code quality (use /improve)."
+description: "Project evolution engine — autonomously analyzes project maturity, discovers missing features, uncovers implicit requirements, and drives iterative growth through prioritized discuss → design → implement cycles. Auto-saves evolution report to .artifacts/ TRIGGER when: user says the project is immature/incomplete and wants to grow it, asks \"what's missing\", \"what should I build next\", or wants autonomous feature discovery and implementation. DO NOT TRIGGER when: user has a specific feature in mind (use /design), is fixing bugs (use /fix), or improving existing code quality (use /improve)."
 argument-hint: "[target: <module or domain>] [rounds: N] [implement] [auto]"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(date:*), Bash(mkdir:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---
@@ -26,7 +26,7 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 
 ## 核心理念
 
-`/feature` 是"告诉我做什么，我来做"。`/evolve` 是"让我看看这个项目还缺什么，我们一起决定怎么长"。
+`/design` 是"告诉我做什么，我来做"。`/evolve` 是"让我看看这个项目还缺什么，我们一起决定怎么长"。
 
 项目早期最大的问题不是实现质量，而是**不知道还缺什么**。需求藏在代码的空白处——没有错误处理的路径、没有暴露的能力、没有覆盖的用例、硬编码的假设、缺失的配置化。
 
@@ -42,7 +42,7 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 
 - `[target: <module or domain>]`：聚焦特定模块或功能域；未指定则分析整个项目
 - `[rounds: N]`：进入实现模式时，最多推进 N 个功能点；未指定则持续推进直到用户停止
-- `[implement]`：进入实现阶段（Phase 3）。**默认仅执行 Phase 1–2（发现 + 排序）**，输出优先级清单后停止。用户确认后可追加 `implement` 或逐个用 `/feature` 实现
+- `[implement]`：进入实现阶段（Phase 3）。**默认仅执行 Phase 1–2（发现 + 排序）**，输出优先级清单后停止。用户确认后可追加 `implement` 或逐个用 `/design` 实现
 - `[auto]`：无人值守模式——跳过所有交互确认，自动推进
 
 ---
@@ -234,7 +234,7 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 
 **`auto` 模式**：跳过确认，按排序结果直接推进。
 
-**默认行为**：到此结束，输出报告。提示用户可追加 `implement` 进入 Phase 3，或逐个用 `/feature` 实现。
+**默认行为**：到此结束，输出报告。提示用户可追加 `implement` 进入 Phase 3，或逐个用 `/design` 实现。
 
 **`implement` 模式**：继续进入 Phase 3。
 

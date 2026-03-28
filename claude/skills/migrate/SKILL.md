@@ -1,6 +1,6 @@
 ---
 name: migrate
-description: "Guided migration and upgrade — dependency major version bumps, API breaking change adaptation, language edition upgrades, and build system migrations. Preserves compatibility through incremental steps with rollback points. Auto-saves migration report to .artifacts/ TRIGGER when: user asks to upgrade a dependency, bump a major version, migrate an API, switch build systems, or adapt to breaking changes from a library/framework update. DO NOT TRIGGER when: user is adding a new dependency (use /feature), or making internal design changes unrelated to external API/version changes (use /refactor or /refactor breaking for destructive internal redesign)."
+description: "Guided migration and upgrade — dependency major version bumps, API breaking change adaptation, language edition upgrades, and build system migrations. Preserves compatibility through incremental steps with rollback points. Auto-saves migration report to .artifacts/ TRIGGER when: user asks to upgrade a dependency, bump a major version, migrate an API, switch build systems, or adapt to breaking changes from a library/framework update. DO NOT TRIGGER when: user is adding a new dependency (use /design), or making internal design changes unrelated to external API/version changes (use /refactor or /refactor breaking for destructive internal redesign)."
 argument-hint: "<migration target> [strategy: incremental|big-bang] [dry-run] [auto]"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(date:*), Bash(mkdir:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*), Bash(sed:*)
 ---
@@ -223,7 +223,7 @@ for each step in 迁移计划:
           - 新版本 bug → 记录，评估是否继续
           - 三次修复仍失败 → 暂停，告知用户（`auto` 模式：自动回滚到上一个成功的 commit 并终止）
     6. 提交：
-       git add -A && git commit -m "<预设的 commit message>"
+       git add <本次改动的具体文件> && git commit -m "<预设的 commit message>"
 ```
 
 **每步提交**，确保每个 commit 都是可构建、可测试的状态。这样出问题时可以精确 `git bisect`。
@@ -299,9 +299,10 @@ python examples/<name>.py 2>&1
 
 ### 提交清理
 
+**禁止使用 `git add -A` 或 `git add .`——必须逐文件 add，避免暴露 .env、credentials 等敏感文件或意外的大文件。**
+
 ```bash
-git add -A
-git commit -m "chore: remove migration scaffolding"
+git add <本次改动的具体文件> && git commit -m "chore: remove migration scaffolding"
 ```
 
 ---

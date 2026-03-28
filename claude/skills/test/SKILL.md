@@ -1,6 +1,6 @@
 ---
 name: test
-description: "Analyze test coverage gaps and generate targeted tests — boundary conditions, error paths, property-based tests, and fuzzing. Auto-saves test report to .artifacts/ TRIGGER when: user asks to add/supplement tests, improve test coverage, find untested code paths, or generate edge-case/fuzz/property tests for existing code. DO NOT TRIGGER when: tests are being written as part of /feature or /fix workflow, or user is running existing tests (just run them directly)."
+description: "Analyze test coverage gaps and generate targeted tests — boundary conditions, error paths, property-based tests, and fuzzing. Auto-saves test report to .artifacts/ TRIGGER when: user asks to add/supplement tests, improve test coverage, find untested code paths, or generate edge-case/fuzz/property tests for existing code. DO NOT TRIGGER when: tests are being written as part of /design or /fix workflow, or user is running existing tests (just run them directly)."
 argument-hint: "<target file or module> [mode: gaps|edge|fuzz|prop] [no-run]"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(date:*), Bash(mkdir:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---

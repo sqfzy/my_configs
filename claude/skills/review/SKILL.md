@@ -1,7 +1,7 @@
 ---
 name: review
-description: "Structured code review — analyzes a diff, PR, branch, or specific files and produces actionable review feedback organized by severity. Read-only by default; does not modify code unless explicitly asked. Auto-saves review report to .artifacts/ TRIGGER when: user asks to review code, a diff, a PR, or a branch; user says \"review this\" or \"check my changes\". DO NOT TRIGGER when: review is part of /ship pipeline, or user wants code modified (use /fix, /refactor, or /improve)."
-argument-hint: "<diff source> [severity: critical|all] [focus: security|perf|correctness|style|all]"
+description: "Structured code review — analyzes a diff, PR, branch, or specific files and produces actionable review feedback organized by severity. Read-only by default; does not modify code unless explicitly asked. Auto-saves review report to .artifacts/ TRIGGER when: user asks to review code, a diff, a PR, or a branch; user says \"review this\" or \"check my changes\". DO NOT TRIGGER when: user wants code modified (use /fix, /refactor, or /improve). NOTE: /ship delegates its Gate 1 to /review auto — this is expected."
+argument-hint: "<diff source> [severity: critical|all] [focus: security|perf|correctness|style|all] [auto]"
 allowed-tools: Bash(git:*), Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(date:*), Bash(mkdir:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---
 
@@ -55,6 +55,7 @@ Review 是**只读操作**——输出的是给人看的反馈，不是直接改
 |------|------|--------|
 | `severity: critical` | 仅输出 critical 和 major 级别 | `all` |
 | `focus: <领域>` | 聚焦特定审查维度（可逗号分隔多个） | `all` |
+| `[auto]` | 无人值守模式——跳过交互确认，直接完成审查并保存报告 | — |
 
 ---
 

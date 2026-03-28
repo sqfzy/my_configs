@@ -1,6 +1,6 @@
 ---
 name: git
-description: "Intelligent git workflow — stages changes, generates Conventional Commits messages, writes changelog entries, and optionally drafts a PR description. Auto-detects what needs to be done based on repo state. TRIGGER when: user asks to commit, stage changes, write a commit message, push, or create a PR description. DO NOT TRIGGER when: commit is part of another workflow like /fix, /feature, or /ship (they handle git internally)."
+description: "Intelligent git workflow — stages changes, generates Conventional Commits messages, writes changelog entries, and optionally drafts a PR description. Auto-detects what needs to be done based on repo state. TRIGGER when: user asks to commit, stage changes, write a commit message, push, or create a PR description. DO NOT TRIGGER when: commit is part of another workflow like /fix, /design, or /ship (they handle git internally)."
 argument-hint: "[msg: <hint>] [scope: <scope>] [pr] [push] [all] [auto]"
 allowed-tools: Bash(git:*), Bash(date:*), Bash(mkdir:*)
 ---

@@ -1,6 +1,6 @@
 ---
 name: fix
-description: "End-to-end bug fix workflow — traces root cause, implements fix, adds regression test, and commits with proper message. Combines /debug → /test → /git into a single disciplined pipeline where no step can be skipped. Auto-saves fix report to .artifacts/ TRIGGER when: user reports a bug, error, crash, panic, test failure, or unexpected behavior and wants it fixed; user pastes error output/stack trace and asks to resolve it. DO NOT TRIGGER when: user only asks what caused an error without wanting a fix, or is building new functionality (use /feature)."
+description: "End-to-end bug fix workflow — traces root cause, implements fix, adds regression test, and commits with proper message. Combines /debug → /test → /git into a single disciplined pipeline where no step can be skipped. Auto-saves fix report to .artifacts/ TRIGGER when: user reports a bug, error, crash, panic, test failure, or unexpected behavior and wants it fixed; user pastes error output/stack trace and asks to resolve it. DO NOT TRIGGER when: user only asks what caused an error without wanting a fix, or is building new functionality (use /design)."
 argument-hint: "[error text | file: <path> | run] [target: <file>] [no-commit] [auto]"
 allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---
@@ -304,9 +304,10 @@ fix(parser): return error on empty input instead of panicking
 
 ### 3.2 执行提交
 
+**禁止使用 `git add -A` 或 `git add .`——必须逐文件 add，避免暴露 .env、credentials 等敏感文件或意外的大文件。**
+
 ```bash
-git add -A
-git commit -m "<confirmed message>"
+git add <本次改动的具体文件> && git commit -m "<confirmed message>"
 ```
 
 输出：`✅ 已提交 <short-hash>: <subject>`

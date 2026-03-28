@@ -1,6 +1,6 @@
 ---
 name: debug
-description: "Standalone root cause tracer — captures error, classifies, traces root cause, verifies hypotheses, and outputs a structured debug report. Does NOT implement fixes, add tests, or commit. Use when you want to understand WHY something is broken before deciding how to fix it. TRIGGER when: user wants to understand why something is broken; user pastes an error and asks what causes it; user asks to trace or diagnose a bug without fixing it; user wants root cause analysis only. DO NOT TRIGGER when: user wants the bug actually fixed (use /fix); user wants to add tests (use /test); user is building new features (use /feature); user wants a design-level multi-perspective discussion (use /discuss)."
+description: "Standalone root cause tracer — captures error, classifies, traces root cause, verifies hypotheses, and outputs a structured debug report. Does NOT implement fixes, add tests, or commit. Use when you want to understand WHY something is broken before deciding how to fix it. TRIGGER when: user wants to understand why something is broken; user pastes an error and asks what causes it; user asks to trace or diagnose a bug without fixing it; user wants root cause analysis only. DO NOT TRIGGER when: user wants the bug actually fixed (use /fix); user wants to add tests (use /test); user is building new features (use /design); user wants a design-level multi-perspective discussion (use /discuss)."
 argument-hint: "[error text | file: <path> | run] [target: <file>] [auto]"
 allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---
@@ -49,7 +49,7 @@ allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep
 | 参数 | 说明 |
 |------|------|
 | `[target: <path>]` | 将根因分析聚焦到指定文件或模块 |
-| `[auto]` | 无人值守模式——跳过所有确认提示，自动完成全流程 |
+| `[auto]` | 无人值守模式——跳过所有确认提示，自动完成全流程。自动选择最可能的假设进行验证，不暂停询问用户 |
 
 ---
 

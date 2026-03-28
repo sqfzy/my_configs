@@ -26,6 +26,7 @@
 | 文档报告 | `doc-20260328-110000.md` | |
 | 设计报告 | `design-20260328-120000.md` | |
 | 复盘报告 | `retro-20260328-130000.md` | |
+| 合并报告 | `merge-20260328-140000.md` | sync 或 port 模式的合并/移植报告 |
 | Benchmark 报告 | `bench-20260328-140000.md` | |
 | Benchmark 原始数据 | `bench-data-20260328-140000.txt` | benchmark 工具的完整原始输出 |
 | 火焰图 | `flamegraph-20260328-140000.svg` | |
@@ -69,7 +70,7 @@
 
 ### 适用 Skill
 
-所有产生报告或数据文件的 skill：`/discuss`、`/review`、`/refactor`、`/improve`、`/fix`、`/evolve`、`/migrate`、`/ship`、`/debug`、`/test`、`/doc`、`/design`、`/retro`、`/bench`
+所有产生报告或数据文件的 skill：`/discuss`、`/review`、`/refactor`、`/improve`、`/fix`、`/evolve`、`/migrate`、`/ship`、`/debug`、`/test`、`/doc`、`/design`、`/retro`、`/bench`、`/merge`
 
 ### 标准输出流程
 
