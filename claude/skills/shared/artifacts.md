@@ -62,6 +62,17 @@
 除通用规则外，benchmark 数据有额外要求：
 
 - 原始输出使用 `tee` 捕获，不做裁剪，保存为 `bench-data-YYYYMMDD-HHMMSS.txt`
+- 原始数据文件**头部必须包含复现上下文注释**（`#` 开头），然后是工具原始输出：
+  ```
+  # Reproduced: YYYY-MM-DD HH:MM
+  # Commit: <hash> (clean/dirty)
+  # Compiler: <version>
+  # Build: <完整构建命令>
+  # Bench: <完整 benchmark 命令>
+  # Profile: <编译配置摘要>
+  # ---
+  <benchmark tool raw output>
+  ```
 - INDEX.md 中 benchmark 行额外记录关键指标（Mean、变化百分比）：
   ```
   | 2026-03-28 14:00 | /bench optimize R3 | parse_token: 89ns (-35%) | b7c8d9e | bench-data-20260328-140000.txt |

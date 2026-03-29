@@ -39,6 +39,23 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 
 ---
 
+## 可复现原则
+
+> **benchmark 产物必须包含足够信息让任何人能重新执行并得到可比较的结果。**
+
+每次 benchmark 执行必须记录：
+- **实际执行的完整命令**（构建命令 + benchmark 命令，可直接复制粘贴重跑）
+- **编译器/工具链版本**（`rustc --version`、`g++ --version`、`go version` 等）
+- **编译配置**（优化级别、关键标志、profile 设置如 LTO/codegen-units）
+- **代码状态**（commit hash + 工作区是否干净）
+- **运行环境**（OS、CPU 型号/核心数、内存）
+
+这些信息必须同时出现在：
+1. benchmark 报告的"环境与复现"部分
+2. 原始数据文件（`bench-data-*.txt`）的头部注释
+
+---
+
 ## Phase 0: 环境与 Benchmark 盘点
 
 ### 0.1 检测现有 Benchmark
@@ -395,10 +412,24 @@ chore: remove optimization instrumentation
 - 目标：<描述>
 - 分支：<branch>
 
-## 环境
-- OS：<uname>
-- CPU：<model, cores>
+## 环境与复现
+
+### 运行环境
+- OS：<uname -sr>
+- CPU：<model, cores/threads>
+- 内存：<total RAM>
+- 编译器：<rustc --version / g++ --version / go version>
 - 可用工具：<perf / hyperfine / valgrind / flamegraph>
+
+### 编译配置
+<相关的 profile/编译标志，如 [profile.bench] 内容或 xmake 优化选项>
+
+### 复现命令
+\```bash
+# Commit: <hash> (worktree: clean / dirty)
+<实际执行的完整构建命令>
+<实际执行的完整 benchmark 命令>
+\```
 
 ## 基线数据
 
@@ -441,10 +472,24 @@ chore: remove optimization instrumentation
 - 优化轮数：N 轮（有效 M 轮，回滚 K 轮）
 - 分支：<branch>
 
-## 环境
-- OS：<uname>
-- CPU：<model, cores>
+## 环境与复现
+
+### 运行环境
+- OS：<uname -sr>
+- CPU：<model, cores/threads>
+- 内存：<total RAM>
+- 编译器：<rustc --version / g++ --version / go version>
 - 可用工具：<perf / hyperfine / valgrind / flamegraph>
+
+### 编译配置
+<相关的 profile/编译标志，如 [profile.bench] 内容或 xmake 优化选项>
+
+### 复现命令
+\```bash
+# Commit: <hash> (worktree: clean / dirty)
+<实际执行的完整构建命令>
+<实际执行的完整 benchmark 命令>
+\```
 
 ## 性能对比
 
