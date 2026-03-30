@@ -1,7 +1,7 @@
 ---
 name: review
-description: "Structured code review — analyzes a diff, PR, branch, or specific files and produces actionable review feedback organized by severity. Read-only by default; does not modify code unless explicitly asked. Auto-saves review report to .artifacts/ TRIGGER when: user asks to review code, a diff, a PR, or a branch; user says \"review this\" or \"check my changes\". DO NOT TRIGGER when: user wants code modified (use /fix, /refactor, or /improve). NOTE: /ship delegates its Gate 1 to /review auto — this is expected."
-argument-hint: "<diff source> [severity: critical|all] [focus: security|perf|correctness|style|all] [auto]"
+description: "Structured code review — analyzes a diff, PR, branch, or specific files and produces actionable review feedback organized by severity. With audit mode, performs full-project code audit identifying architectural issues, pattern inconsistencies, and technical debt. Read-only by default; does not modify code unless explicitly asked. Auto-saves review report to .artifacts/ TRIGGER when: user asks to review code, a diff, a PR, a branch, or audit the entire codebase; user says \"review this\", \"check my changes\", \"audit the code\", \"find technical debt\". DO NOT TRIGGER when: user wants code modified (use /fix, /refactor, or /improve). NOTE: /ship delegates its Gate 1 to /review auto — this is expected."
+argument-hint: "<diff source | audit [target: <module>]> [severity: critical|all] [focus: security|perf|correctness|style|all] [auto]"
 allowed-tools: Bash(git:*), Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(date:*), Bash(mkdir:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---
 
@@ -47,6 +47,7 @@ Review 是**只读操作**——输出的是给人看的反馈，不是直接改
 | **工作区** | `working` 或 `wip` | `git diff` |
 | **两个 ref 之间** | `<ref1>..<ref2>` | `git diff <ref1>..<ref2>` |
 | **指定文件** | `file: <path>` 或文件路径 | 对该文件做全量审查（非 diff 模式） |
+| **全量审计** | `audit` 或 `audit target: <module>` | 全项目代码审计，不依赖 diff，识别架构问题/技术债/模式不一致 |
 | **无参数** | 空 | 自动选择：暂存区有内容则 review 暂存区，否则 review 工作区变更 |
 
 ### 可选参数
@@ -257,6 +258,108 @@ git diff <source> --numstat 2>&1
 ```
 ## 亮点
 - `<file>:<line>`：<具体描述好在哪里>
+```
+
+---
+
+## mode: audit — 全量代码审计
+
+当输入为 `audit` 时，执行全项目代码审计（不依赖 diff）。可用 `target: <module>` 缩小范围到指定模块。
+
+### 与常规 review 的区别
+
+| | 常规 review | audit |
+|---|---|---|
+| 输入 | diff / staged / file | 整个项目或指定模块 |
+| 视角 | 变更是否引入问题 | 项目整体是否有问题 |
+| 维度 | 6 个（正确性/安全/性能/可观测性/测试/设计） | 6 + 3 个额外全局维度 |
+| 产出 | review 报告（按 severity 排序） | 技术债清单（按 severity 排序 + 推荐 skill） |
+
+### 额外审计维度（在现有 6 维度基础上新增）
+
+**架构一致性**：
+- 模块职责是否清晰、是否有职责混乱的"上帝模块"
+- 依赖方向是否合理（是否存在底层模块反向依赖上层）
+- 是否存在循环依赖
+- 抽象层级是否一致（是否有模块混合了高层策略和低层实现细节）
+
+**模式一致性**：
+- 错误处理模式是否全项目统一（如有的用 Result 有的用 panic，有的用 exception 有的用 error code）
+- 日志风格是否一致（级别使用、上下文信息、格式）
+- 命名约定是否一致（同类概念的命名是否统一）
+- 并发/异步模式是否一致
+
+**技术债识别**：
+- TODO / FIXME / HACK / WORKAROUND 注释（特别是过时的、长期未清理的）
+- 已废弃的 API 使用（deprecated 标注的函数/类型仍被调用）
+- 已知的临时方案（"先这样，以后再改"的代码）
+- 过时的依赖版本或模式
+
+### 审计流程
+
+1. **全量阅读**：按模块逐一阅读代码，建立全项目心智模型。大项目时按 `target` 分模块审计
+2. **逐维度扫描**：对 9 个维度逐一检查，记录发现的问题
+3. **跨文件关联**：检查模块间的交互——接口一致性、依赖合理性、错误传播链
+4. **构建/测试/lint**：运行完整验证，捕获编译器和 linter 的发现
+5. **生成技术债清单**
+
+### 产出格式——技术债清单
+
+```
+## 技术债清单
+
+| 序号 | 严重度 | 维度 | 描述 | 位置 | 影响范围 | 推荐 Skill |
+|------|--------|------|------|------|----------|------------|
+| 1 | 🔴 Critical | 架构 | 模块 A/B 循环依赖 | src/a.rs ↔ src/b.rs | 全局 | /refactor breaking |
+| 2 | 🟡 Major | 一致性 | 错误处理模式不统一 | 12 个文件 | 广泛 | /improve |
+| 3 | 🟡 Major | 技术债 | deprecated API 仍有 8 处调用 | 散布 | 中等 | /migrate |
+| 4 | 🔵 Minor | 技术债 | 5 处 TODO 未清理 | 散布 | 局部 | /refactor |
+| ... | ... | ... | ... | ... | ... | ... |
+```
+
+**推荐 Skill 规则**：
+- 架构问题（循环依赖、模块职责重组）→ `/refactor breaking`
+- 模式不一致（错误处理、日志风格统一）→ `/improve`
+- 废弃 API 迁移 → `/migrate`
+- 局部技术债清理 → `/refactor`
+- 测试缺口 → `/test`
+
+### 审计报告
+
+按产物存储约定输出，使用以下结构（替代常规 review 报告）：
+
+```markdown
+# Code Audit Report
+
+## 概况
+- 时间：<开始时间>
+- 耗时：<X 分 Y 秒>
+- 审计范围：<整个项目 / target 模块>
+- 代码规模：<文件数、行数>
+
+## 项目健康度摘要
+- 🔴 Critical：N 项
+- 🟡 Major：N 项
+- 🔵 Minor：N 项
+- 整体评估：<一句话>
+
+## 技术债清单
+<上述表格>
+
+## 架构评估
+<模块划分、依赖方向、抽象层级的整体评价>
+
+## 推荐行动计划
+<按优先级排序的修复建议，标注推荐 skill 和预估工作量>
+
+1. [Critical] <描述> → `/refactor breaking`
+2. [Major] <描述> → `/improve`
+3. ...
+
+## 后续建议
+- 建议用 /discuss 讨论技术债优先级
+- 高优先级项可用 /refactor breaking 逐个修复
+- 修复后用 /review audit 重新审计验证
 ```
 
 ---
