@@ -31,6 +31,7 @@
 | Benchmark 原始数据 | `bench-data-20260328-140000.txt` | benchmark 工具的完整原始输出 |
 | 火焰图 | `flamegraph-20260328-140000.svg` | |
 | 剖析数据 | `callgrind-20260328-140000.out` | valgrind/perf 等产物 |
+| 重构跟踪 | `refactor-tracker-<name>.md` | 渐进式重构的跨会话迁移状态跟踪（持久化，非一次性产物） |
 
 时间戳使用该 skill 执行开始时的时间。
 
