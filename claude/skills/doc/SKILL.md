@@ -1,7 +1,7 @@
 ---
 name: doc
 description: "Generate or update project documentation — API docs, README, CHANGELOG, inline doc comments, onboarding guides, and comprehensive project summaries. Reads actual code to produce accurate documentation rather than inventing descriptions. Auto-saves doc generation report to .artifacts/ TRIGGER when: user asks to write/update/generate documentation, README, CHANGELOG, API docs, inline doc comments, or project summary/overview/architecture overview; user asks \"what does this project do\". DO NOT TRIGGER when: user asks to write code comments as part of implementation (that's normal coding), or update CHANGELOG as part of /ship; user asks about a specific file or function (just read it directly)."
-argument-hint: "<target> [type: api|readme|changelog|onboard|inline|summary|all] [update] [auto]"
+argument-hint: "<target> [type: api|readme|changelog|onboard|summary|all] [auto]"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(date:*), Bash(mkdir:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---
 
@@ -38,8 +38,9 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
   - `onboard`：新人上手指南（架构概览 + 开发环境搭建 + 常见任务指南）
   - `summary`：生成全面的项目概览文档 `summary.md`（架构、模块图、数据流、关键组件、依赖关系）
   - `all`：以上全部
-- `[update]`：更新已有文档而非从头生成（保留人工编写的内容，仅补充/修正过时部分）
 - `[auto]`：无人值守模式——type 未指定时自动执行建议的优先项，不暂停询问
+
+**始终从头生成**：不做增量更新。若目标文档已存在，直接删除后重新生成。这避免了过时内容残留——从代码重新生成的文档永远是准确的。
 
 ### 模式自动推断
 
@@ -198,7 +199,6 @@ def parse_config(input: str) -> Config:
     """
 ```
 
-**update 模式**：若已有文档注释，对比代码和注释——若签名或行为已变但注释未更新，修正注释；若注释准确则不碰。
 
 ### 验证
 
@@ -272,7 +272,6 @@ def parse_config(input: str) -> Config:
 <从 LICENSE 文件或 Cargo.toml/pyproject.toml 提取>
 ```
 
-**update 模式**：保留现有 README 的自定义段落（如 Contributing、Acknowledgments），仅更新技术性段落（安装步骤、项目结构、命令）。
 
 ---
 
@@ -314,7 +313,6 @@ git log <last_tag>..HEAD --format="%H %s" 2>&1
 - 合并相关 commit（3 个关于同一功能的 commit 合为一条）
 - `BREAKING CHANGE` 在条目前加 ⚠️ 标记
 
-**update 模式**：追加到现有 CHANGELOG.md 的 `[Unreleased]` 段落，不修改已发布版本的条目。
 
 ---
 
@@ -535,7 +533,6 @@ Key test scenarios:
 
 - 文件扫描时跳过 `target/`、`build/`、`.git/`、`node_modules/`、`__pycache__/`、`.cache/`、`dist/` 等生成目录
 - 生成的 benchmark 使用有代表性的输入
-- **update 模式**：对比现有 summary.md 与当前代码，仅更新变化的部分（新增模块、移除模块、接口变更）
 
 ---
 
@@ -610,7 +607,7 @@ Key test scenarios:
 
 ## 后续建议
 - <仍缺文档的公共接口>
-- <建议定期运行 /doc update 保持文档同步>
+- <建议定期运行 /doc 保持文档同步>
 ```
 
 ---

@@ -29,7 +29,7 @@ allowed-tools: Bash(git:*), Bash(date:*), Bash(mkdir:*)
 | `pr` | 额外生成 PR 描述（Markdown 格式，输出到终端） |
 | `push` | commit 完成后自动执行 `git push` |
 | `all` | 自动 `git add -A` 暂存所有变更，再提交 |
-| `auto` | 无人值守模式——自动选择候选 1 的 commit message，不暂停询问 |
+| `auto` | 无人值守模式——直接使用生成的 commit message，不暂停询问 |
 
 **状态检查**：根据 `git status` 结果判断当前情况：
 
@@ -89,28 +89,21 @@ allowed-tools: Bash(git:*), Bash(date:*), Bash(mkdir:*)
   - 破坏性变更：`BREAKING CHANGE: <描述>`
   - 关联 issue（若能从 branch 名或 diff 注释推断）：`Closes #N`
 
-### 输出候选方案
+### 输出 commit message
 
-生成 **2–3 个候选 message**，按推荐度排序：
+直接生成**最合适的一个** commit message，展示给用户确认：
 
 ```
-── 候选 1（推荐）──────────────────────────────
 feat(parser): add incremental parsing for large inputs
 
 Batch processing previously loaded entire input into memory before
 parsing, causing OOM on files >1GB. Switch to streaming tokenizer
 with configurable chunk size.
-
-── 候选 2 ──────────────────────────────────────
-feat(parser): support streaming tokenization
-
-── 候选 3（最简）────────────────────────────────
-feat: add streaming parser
 ```
 
-询问用户：`使用候选 1？[1/2/3/e(自己输入)/回车默认1]`
+询问用户：`使用此 message？[y/e(自己输入)/回车默认y]`
 
-**`auto` 模式**：直接使用候选 1，不询问。
+**`auto` 模式**：直接使用，不询问。
 
 ---
 

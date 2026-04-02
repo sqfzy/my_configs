@@ -52,7 +52,7 @@ Plan 感知：!`cat ~/.claude/skills/shared/plan-aware.md`
 |------|------|
 | `[target: <path>]` | 将根因分析聚焦到指定文件或模块 |
 | `[no-commit]` | 完成后不自动提交 |
-| `[auto]` | 无人值守模式——自动选择候选 1 的 commit message，不暂停询问 |
+| `[auto]` | 无人值守模式——直接使用生成的 commit message，不暂停询问 |
 
 ---
 
@@ -284,10 +284,9 @@ fix(<scope>): <subject，50 字符以内>
 
 **scope** 从修复涉及的模块/文件路径自动推断。
 
-生成 **2 个候选**：
+直接生成最合适的 commit message：
 
 ```
-── 候选 1（推荐）──────────────────────────────
 fix(parser): handle empty input without panic
 
 parse_input() called unwrap() on an empty string split, causing a
@@ -295,14 +294,11 @@ panic when the input contained no delimiters. Switch to
 split().next().unwrap_or_default() and return ParseError::EmptyInput.
 
 Adds regression test for empty and whitespace-only inputs.
-
-── 候选 2（最简）──────────────────────────────
-fix(parser): return error on empty input instead of panicking
 ```
 
-询问用户：`使用候选 1？[1/2/e(自己输入)/回车默认1]`
+询问用户：`使用此 message？[y/e(自己输入)/回车默认y]`
 
-**`auto` 模式**：直接使用候选 1，不询问。
+**`auto` 模式**：直接使用，不询问。
 
 ### 3.2 执行提交
 

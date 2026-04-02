@@ -59,7 +59,7 @@ Plan 感知：!`cat ~/.claude/skills/shared/plan-aware.md`
 | `[skip: doc]` | 跳过文档更新（仅内部重构、无公共接口变更时可用） |
 | `[no-push]` | 完成后不推送 |
 | `[tag: <version>]` | 提交后打 tag（如 `v1.2.0`） |
-| `[auto]` | 无人值守模式——Gate 1 阻断时自动终止（而非等待修复）；性能退化时自动终止；commit message 自动选择候选 1 |
+| `[auto]` | 无人值守模式——Gate 1 阻断时自动终止（而非等待修复）；性能退化时自动终止；直接使用生成的 commit message |
 
 ---
 
@@ -85,7 +85,7 @@ Plan 感知：!`cat ~/.claude/skills/shared/plan-aware.md`
 │  无退化 / 跳过     │  退化 ≥5%                    │
 │         ↓          │  → ⚠️ 暂停，用户决策          │
 │         ↓          └─────────────────────────────┘
-│  Gate 4: 文档同步（委托 /doc update auto）         │
+│  Gate 4: 文档同步（委托 /doc auto）         │
 │  调用 /doc → 审计 + 更新 → 提取结果               │
 ├──────────────────────────────────────────────────┤
 │  Gate 5: 提交与发布（← /git）                     │
@@ -241,7 +241,7 @@ ls -t .artifacts/bench-data-*.txt 2>/dev/null | head -1
 
 ### 4.1 执行文档更新
 
-执行 `/doc update auto`，对当前变更进行文档审计和更新。
+执行 `/doc auto`，对当前变更进行文档审计和更新。
 
 `/doc` 将按其自身方法论完成：文档现状审计（README、CHANGELOG、API 注释覆盖率）→ 按需更新受变更影响的文档（CHANGELOG、API 文档注释、README）→ 文档测试验证 → 生成文档报告。
 

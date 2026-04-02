@@ -390,7 +390,7 @@ feat(<scope>): <subject>
 
 **禁止使用 `git add -A` 或 `git add .`——必须逐文件 add。**
 
-deep 模式额外生成 2 个候选 commit message（详细版 + 最简版），询问用户选择。`auto` 模式使用详细版。
+直接生成最合适的 commit message，询问用户确认。`auto` 模式直接使用。
 
 ### 6.3 报告
 
