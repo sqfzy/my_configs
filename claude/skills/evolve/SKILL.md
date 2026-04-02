@@ -19,6 +19,8 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
 产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
+Plan 感知：!`cat ~/.claude/skills/shared/plan-aware.md`
+现有计划：!`find . -name "plan.md" -o -name "*.plan.md" 2>/dev/null | grep -v node_modules | grep -v target | grep -v .git | head -10 || echo "(无)"`
 
 参数：$ARGUMENTS
 

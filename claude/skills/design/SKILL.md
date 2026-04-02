@@ -15,6 +15,8 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(head:*), Bash(mkdir:*), Bash(date
 
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
 产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
+Plan 感知：!`cat ~/.claude/skills/shared/plan-aware.md`
+现有计划：!`find . -name "plan.md" -o -name "*.plan.md" 2>/dev/null | grep -v node_modules | grep -v target | grep -v .git | head -10 || echo "(无)"`
 
 需求：$ARGUMENTS
 
@@ -63,6 +65,10 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(head:*), Bash(mkdir:*), Bash(date
 
 ## Phase 1: 需求理解 & 边界澄清
 
+### 1.0 检测已有计划
+
+按 Plan 感知约定执行——若存在 plan.md，读取已确定的决策作为约束，Phase 1.2 的需求分析直接从 plan.md 提取，跳过大部分需求澄清问题。
+
 ### 1.1 理解现有代码库
 
 在理解需求之前，先阅读项目关键文件，建立上下文：
@@ -72,7 +78,29 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(head:*), Bash(mkdir:*), Bash(date
 
 ### 1.2 需求分析
 
-对用户的需求描述进行拆解，明确以下内容并输出：
+**若存在 plan.md**：从 plan.md 提取核心目标、功能边界、架构约束、编码规范，仅补充以下 plan 未覆盖的任务级细节：
+
+```
+## 需求理解（基于 plan.md）
+
+### 来源：<plan.md 路径>
+
+### 输入 / 输出
+- 输入：<数据类型、来源、约束>
+- 输出：<数据类型、格式、副作用>
+
+### 边界条件 & 错误情况
+- <空输入 / 超大输入 / 并发访问 / 权限不足 / ...>
+
+### 与现有代码的集成点
+- <需要修改或扩展的现有接口>
+- <需要新增的模块或文件>
+
+### 不确定点（需用户确认）
+- [ ] <问题1>
+```
+
+**若不存在 plan.md**：完整拆解需求：
 
 ```
 ## 需求理解
@@ -127,7 +155,22 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(head:*), Bash(mkdir:*), Bash(date
 
 #### 2.1 方案设计
 
-输出设计文档：
+**若存在 plan.md**：从 plan.md 继承架构设计、接口设计、编码规范，仅补充本次任务的实现细节：
+
+```
+## 设计方案（基于 plan.md）
+
+### 新增 / 修改的文件
+  <path>  —  <职责>
+
+### 实现策略
+<分步骤描述实现顺序>
+
+### 本次设计决策（plan.md 未覆盖的）
+- 决策1：<选择了X而非Y，原因是...>
+```
+
+**若不存在 plan.md**：完整输出设计文档：
 
 ```
 ## 设计方案
