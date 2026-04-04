@@ -32,7 +32,7 @@ allowed-tools: Bash(date:*), Bash(git:*), Bash(sleep:*), Bash(mkdir:*)
 
 > **只有用户指定的结束条件才能终止循环。禁止以任何理由自行终止。此规则同时适用于主循环（`until`）和 subagent 循环（`batch-until`）。**
 
-不得因为"觉得已经够好了"、"看起来没什么可做的"而擅自停止。主循环只在 `until` 条件满足或用户叫停时终止；subagent 只在 `batch-until` 条件满足、`until` 条件满足、或上下文耗尽时退出。
+不得因为"觉得已经够好了"、"看起来没什么可做的"而擅自停止。**不得在轮次之间暂停等待用户确认**——未到终止条件时必须立即开始下一轮。主循环只在 `until` 条件满足或用户叫停时终止；subagent 只在 `batch-until` 条件满足、`until` 条件满足、或上下文耗尽时退出。
 
 ---
 
@@ -40,18 +40,26 @@ allowed-tools: Bash(date:*), Bash(git:*), Bash(sleep:*), Bash(mkdir:*)
 
 ### 直接执行模式（无 batch-until）
 
-主循环自身直接执行 prompt，每轮结束后检查 `until` 条件：
+主循环自身直接执行 prompt，每轮结束后检查 `until` 条件。**不暂停、不询问、不等待确认——未到终止条件时自动进入下一轮**：
 
 ```
 轮次 = 0
+连续无效轮 = 0
+cooldown = 30s
 
 loop:
     轮次 += 1
-    直接执行 prompt（auto 模式）
+    直接执行 prompt（auto 模式，不暂停等待确认）
+    判断本轮是否有效（有 commit = 有效，无改动 = 无效）
+    有效 → 连续无效轮 = 0，cooldown = 30s
+    无效 → 连续无效轮 += 1，cooldown = min(cooldown × 2, 10m)
     记录本轮结果（commit hash、diff-stat、摘要）
     输出本轮报告给用户
     检查 until 条件 → 满足则进入结束总结
-    → 不满足则继续下一轮
+    → 不满足：
+        输出 ⏳ 冷却 {cooldown} 后开始第 {轮次+1} 轮...
+        sleep(cooldown)
+        开始下一轮（禁止暂停等待确认）
 ```
 
 ### Subagent 模式（指定 batch-until）
@@ -60,6 +68,7 @@ loop:
 
 ```
 批次 = 0
+cooldown = 30s
 
 loop:
     批次 += 1
@@ -67,9 +76,33 @@ loop:
     subagent 返回 →
       主循环将 subagent 的每轮报告原样输出给用户（subagent 结果对用户不可见，必须转发）
       DONE → 进入结束总结
-      BATCH_DONE → 检查主循环条件，未满足则派发新 subagent
-      CONTINUE → 检查主循环条件，未满足则派发新 subagent
+      BATCH_DONE / CONTINUE → 检查主循环条件，未满足则：
+          输出 ⏳ 冷却 {cooldown} 后派发下一批次...
+          sleep(cooldown)
+          派发新 subagent
 ```
+
+### Cooldown 与退避策略
+
+每轮结束后固定冷却，连续无效轮时指数退避：
+
+```
+初始 cooldown ： 30s
+退避策略     ： 连续无效轮时 cooldown × 2
+上限         ： 10 分钟
+重置         ： 一旦出现有效轮，cooldown 回到 30s
+
+示例：
+  第 1 轮 有效 → cooldown 30s
+  第 2 轮 无效 → cooldown 60s
+  第 3 轮 无效 → cooldown 2m
+  第 4 轮 无效 → cooldown 4m
+  第 5 轮 无效 → cooldown 8m
+  第 6 轮 无效 → cooldown 10m（触顶）
+  第 7 轮 有效 → cooldown 30s（重置）
+```
+
+冷却期间输出提示：`⏳ 冷却 Xs 后开始第 N 轮...`（退避时额外标注：`⏳ 冷却 Xs（退避：连续 M 轮无效）后开始第 N 轮...`）
 
 ---
 

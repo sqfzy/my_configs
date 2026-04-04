@@ -16,7 +16,9 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(head:*), Bash(mkdir:*), Bash(date
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
 产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
 Plan 感知：!`cat ~/.claude/skills/shared/plan-aware.md`
-现有计划：!`find . -name "*.plan.md" 2>/dev/null | grep -v node_modules | grep -v target | grep -v .git | grep -v .artifacts | head -10 || echo "(无)"`
+现有计划：!`find .artifacts -name "plan-*.md" 2>/dev/null | head -10 || echo "(无)"`
+
+Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
 需求：$ARGUMENTS
 
@@ -310,9 +312,9 @@ Plan 感知：!`cat ~/.claude/skills/shared/plan-aware.md`
 
 除非指定 `no-tests`，先写测试，再写实现。
 
-### 3.0 Benchmark 基线（若存在）
+### 3.0 Benchmark 基线
 
-检测并记录现有 benchmark 基线。若存在 benchmark，运行并按 bench-data 约定持久化。
+按 Bench 感知约定执行基线检查。
 
 ### 3.1 测试用例设计
 

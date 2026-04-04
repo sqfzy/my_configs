@@ -16,7 +16,9 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
 产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
 Plan 感知：!`cat ~/.claude/skills/shared/plan-aware.md`
-现有计划：!`find . -name "*.plan.md" 2>/dev/null | grep -v node_modules | grep -v target | grep -v .git | grep -v .artifacts | head -10 || echo "(无)"`
+现有计划：!`find .artifacts -name "plan-*.md" 2>/dev/null | head -10 || echo "(无)"`
+
+Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
 目标：$ARGUMENTS
 
@@ -64,19 +66,10 @@ cat package-lock.json 2>/dev/null | head -100 # Node
 git rev-parse HEAD 2>&1
 ```
 
-**运行完整构建和测试，建立基线**：
-
-```
-若用户提供了构建/测试/benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与 benchmark 命令；若项目无测试或 benchmark 则跳过对应步骤。**执行 benchmark 后必须按 bench-data 约定持久化**到 `.artifacts/`（来源标注：`/migrate 基线`）。
-```
+**运行完整构建和测试，建立基线**。按 Bench 感知约定执行基线检查。
 
 - ✅ 全部通过 → 记录基线，继续
-- ❌ 基线失败 → 终止：
-  ```
-  ❌ 迁移前基线未通过。请先修复现有问题再开始迁移。
-  ```
-
-**若存在 benchmark**，运行并记录基线。
+- ❌ 基线失败 → 终止：`❌ 迁移前基线未通过。请先修复现有问题再开始迁移。`
 
 ### 0.2 迁移目标研究
 
@@ -271,19 +264,7 @@ for each step in 迁移计划:
 
 ### Benchmark 回归
 
-若 Phase 0 记录了 benchmark 基线，重新运行并对比：
-
-```
-若用户提供了 benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行 benchmark 命令；若无 benchmark 则跳过。**执行后必须按 bench-data 约定持久化**到 `.artifacts/`（来源标注：`/migrate 验证`）。
-```
-
-- 无退化 → 继续
-- 退化 ≥5% → 分析原因，告知用户：
-  ```
-  ⚠️ 迁移后 benchmark 退化：
-  - <benchmark>：<基线> → <当前>（退化 X%）
-  可能原因：<分析>
-  ```
+按 Bench 感知约定执行回归对比。
 
 ### 功能验证
 

@@ -19,7 +19,9 @@ allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
 产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
 Plan 感知：!`cat ~/.claude/skills/shared/plan-aware.md`
-现有计划：!`find . -name "*.plan.md" 2>/dev/null | grep -v node_modules | grep -v target | grep -v .git | grep -v .artifacts | head -10 || echo "(无)"`
+现有计划：!`find .artifacts -name "plan-*.md" 2>/dev/null | head -10 || echo "(无)"`
+
+Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
 目标：$ARGUMENTS
 
@@ -82,14 +84,12 @@ Plan 感知：!`cat ~/.claude/skills/shared/plan-aware.md`
 
 ### 1.1 建立基线
 
-```
-若用户提供了构建/测试/benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与 benchmark 命令；若项目无测试或 benchmark 则跳过对应步骤。执行 benchmark 后必须按 bench-data 约定持久化到 `.artifacts/`（来源标注：`/improve 基线`）。
-```
+运行构建和测试，建立基线：
 
 - ✅ 通过 → 记录测试数量，继续
 - ❌ 失败 → 终止：`❌ 基线未通过。请先修复现有问题（/fix），再运行 /improve。`
 
-若存在与目标相关的 benchmark，运行并记录基线。
+按 Bench 感知约定执行基线检查。
 
 ### 1.2 架构建模
 
@@ -309,9 +309,7 @@ D(编排) → Validator, Serializer, B
 
 **构建 + 测试**：
 
-```
-若用户提供了构建/测试/benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行构建、测试与 benchmark 命令；若项目无测试或 benchmark 则跳过对应步骤。执行 benchmark 后必须按 bench-data 约定持久化到 `.artifacts/`（来源标注：`/improve R<N>`）。
-```
+运行构建和测试验证。按 Bench 感知约定执行回归对比。
 
 **接口契约检查**：
 

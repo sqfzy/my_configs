@@ -4,18 +4,18 @@
 
 ### 命名约定
 
-plan 文件统一使用 `<项目名>-<YYYYMMDD>.plan.md` 格式。已完成的 plan 归档至 `.artifacts/`。
+plan 文件统一使用 `plan-<项目名>-YYYYMMDD-HHMMSS.md` 格式，存入 `.artifacts/`，与所有 skill 产物一致。
 
 ### 检测逻辑
 
-启动时搜索项目中所有活跃的计划文件（排除 `.artifacts/` 中已归档的）：
+启动时搜索 `.artifacts/` 中所有活跃的计划文件：
 
 ```bash
-find . -name "*.plan.md" 2>/dev/null | grep -v node_modules | grep -v target | grep -v .git | grep -v .artifacts | head -10
+find .artifacts -name "plan-*.md" 2>/dev/null | head -10
 ```
 
 **若找到 plan 文件**：
-- 读取计划内容，**跳过状态为"已完成"的 plan**（若发现未归档的已完成 plan，自动移入 `.artifacts/`）
+- 读取计划内容，**跳过状态为"已完成"的 plan**
 - 提取活跃 plan 中已确定的决策（技术选型、架构设计、接口设计、编码规范等）
 - 将这些决策作为本次执行的**约束**——不重新讨论已确定的事项
 - 在 skill 内部的设计/讨论阶段，跳过 plan 已覆盖的维度

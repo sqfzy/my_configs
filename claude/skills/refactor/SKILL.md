@@ -16,7 +16,9 @@ allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
 产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
 Plan 感知：!`cat ~/.claude/skills/shared/plan-aware.md`
-现有计划：!`find . -name "*.plan.md" 2>/dev/null | grep -v node_modules | grep -v target | grep -v .git | grep -v .artifacts | head -10 || echo "(无)"`
+现有计划：!`find .artifacts -name "plan-*.md" 2>/dev/null | head -10 || echo "(无)"`
+
+Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
 意图：$ARGUMENTS
 
@@ -193,23 +195,7 @@ breaking 模式启动时，自动检查 `.artifacts/` 中是否存在 `refactor-
 
 ### 0.2 Benchmark 基线
 
-检测项目是否存在 benchmark：
-
-```bash
-# Rust
-find . -path "*/benches/*.rs" -o -name "*.rs" -exec grep -l "#\[bench\]" {} \; 2>/dev/null | head -10
-# C++
-find . -name "*.cpp" -exec grep -l "BENCHMARK" {} \; 2>/dev/null | head -10
-# Python
-find . -name "bench_*.py" -o -name "*_bench.py" 2>/dev/null | head -10
-```
-
-**若存在与重构目标相关的 benchmark**：
-```
-若用户提供了 benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行 benchmark 命令。**按 bench-data 约定持久化**到 `.artifacts/`（来源标注：`/refactor 基线`）。若无 benchmark 则跳过。
-```
-
-记录基线数据，Phase 4 将用于对比。若无相关 benchmark 则跳过，注明"无 benchmark 覆盖"。
+按 Bench 感知约定执行基线检查。
 
 ### 0.3 记录当前状态
 
@@ -471,27 +457,7 @@ for each step in 重构步骤:
 
 ### Benchmark 回归检查
 
-**若 Phase 0 记录了 benchmark 基线**，重新运行相同的 benchmark：
-
-```
-若用户提供了 benchmark 命令则优先使用；否则根据项目构建系统和配置，自行确定并执行 benchmark 命令。**按 bench-data 约定持久化**到 `.artifacts/`（来源标注：`/refactor 验证`）。若无 benchmark 则跳过。
-```
-
-对比基线数据：
-- **无显著退化（<5% 波动）** → 进入 Phase 5
-- **性能退化 ≥5%** → ⚠️ 暂停，输出对比结果，分析原因：
-  - 若退化源于新增的间接调用层 → 考虑内联优化或调整方案
-  - 若退化源于内存布局变化 → 评估是否可接受
-  - 告知用户：
-    ```
-    ⚠️ Benchmark 检测到性能退化：
-    - <benchmark_name>：基线 <X>ns → 当前 <Y>ns（退化 Z%）
-    是否接受此退化？[接受 / 优化后继续 / 回滚]
-    ```
-
-**`auto` 模式**：自动回滚引起退化的改动，在报告中记录，继续后续步骤。
-
-**若 Phase 0 无 benchmark 基线**，跳过此检查，在报告中注明"无 benchmark 覆盖，性能影响未验证"。
+按 Bench 感知约定执行回归对比。
 
 → 进入 Phase 5
 
