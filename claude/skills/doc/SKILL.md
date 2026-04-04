@@ -1,6 +1,6 @@
 ---
 name: doc
-description: "Generate or update project documentation — API docs, README, CHANGELOG, inline doc comments, onboarding guides, and comprehensive project summaries. Reads actual code to produce accurate documentation rather than inventing descriptions. Auto-saves doc generation report to .artifacts/ TRIGGER when: user asks to write/update/generate documentation, README, CHANGELOG, API docs, inline doc comments, or project summary/overview/architecture overview; user asks \"what does this project do\". DO NOT TRIGGER when: user asks to write code comments as part of implementation (that's normal coding), or update CHANGELOG as part of /ship; user asks about a specific file or function (just read it directly)."
+description: "Generate project documentation (always delete-and-regenerate, never incremental update) — API docs, README, CHANGELOG, inline doc comments, onboarding guides, and comprehensive project summaries. Reads actual code to produce accurate documentation rather than inventing descriptions. Auto-saves doc generation report to .artifacts/ TRIGGER when: user asks to write/update/generate documentation, README, CHANGELOG, API docs, inline doc comments, or project summary/overview/architecture overview; user asks \"what does this project do\". DO NOT TRIGGER when: user asks to write code comments as part of implementation (that's normal coding), or update CHANGELOG as part of /ship; user asks about a specific file or function (just read it directly)."
 argument-hint: "<target> [type: api|readme|changelog|onboard|summary|all] [auto]"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(date:*), Bash(mkdir:*), Bash(git:*), Bash(cargo:*), Bash(xmake:*), Bash(uv:*), Bash(python:*), Bash(npm:*), Bash(go:*)
 ---
@@ -40,7 +40,7 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
   - `all`：以上全部
 - `[auto]`：无人值守模式——type 未指定时自动执行建议的优先项，不暂停询问
 
-**始终从头生成**：不做增量更新。若目标文档已存在，直接删除后重新生成。这避免了过时内容残留——从代码重新生成的文档永远是准确的。
+**铁律：删除重写，禁止增量更新**。若目标文档已存在（例如 `README.md`、`summary.md`、`docs/ONBOARDING.md`），**必须先删除原文件，再从零生成**。不得在已有文件上做局部修改、追加段落、或"保留用户编写的部分"。可以阅读旧文档作为参考素材，但写入时必须是全新文件。理由：增量更新不可避免地留下过时内容，而从代码重新生成的文档永远是准确的。
 
 ### 模式自动推断
 
@@ -217,7 +217,7 @@ def parse_config(input: str) -> Config:
 阅读以下内容构建 README 素材：
 - 构建配置（`Cargo.toml` / `xmake.lua` / `pyproject.toml`）：项目名、版本、描述、依赖
 - 入口点（`main.*` / `lib.*`）：项目做什么
-- 现有 README（若有）：保留人工编写的内容
+- 现有 README（若有）：作为参考素材了解项目定位，但不保留原文
 - 现有构建和运行脚本：实际的命令
 
 ### 生成结构
@@ -540,9 +540,10 @@ Key test scenarios:
 
 根据选定的 type 执行生成。对每种 type：
 
-1. 阅读相关代码
-2. 生成/更新文档内容
-3. 写入文件
+1. **若目标文件已存在，先删除它**（`rm -f <file>`）——不可跳过此步
+2. 阅读旧文档（若先前存在）和相关代码作为素材
+3. 从零生成完整文档内容
+4. 写入全新文件
 
 **文件位置**：
 - `api`：直接修改源文件（添加文档注释 + 行内注释）
@@ -586,7 +587,7 @@ Key test scenarios:
 - 时间：<开始时间>
 - 耗时：<X 分 Y 秒>
 - 类型：<api / readme / changelog / onboard / summary>
-- 模式：<新建 / 更新>
+- 模式：全量生成（删除重写）
 
 ## 变更摘要
 
