@@ -22,14 +22,26 @@ Plan 感知：!`cat ~/.claude/skills/shared/plan-aware.md`
 
 ---
 
+## 核心理念
+
+> **风险驱动，而非覆盖率驱动。**
+
+Line coverage % 是欺骗性指标——一个项目可以做到 90% line coverage 但全是 getter/setter，而真正的危险代码（解析器、状态机、并发、边界条件）零覆盖。
+
+test skill 的第一步是**扫描识别危险代码**，按风险分级生成测试。低风险代码（trivial getter/wrapper）只生成 1 个 smoke test，不详细测试。报告使用四指标（危险代码覆盖率、错误路径覆盖率、断言具体性、mutation score）替代 line coverage 作为主要判定。
+
+---
+
 ## 参数解析
 
 - **目标**（必填）：指定要补充测试的文件、模块、或函数
 - `[mode]`：测试生成模式，可逗号分隔多个
-  - `gaps`（默认）：分析覆盖盲区，补充缺失的测试
+  - `gaps`（默认）：风险扫描 + 按风险分级补充测试
   - `edge`：专注边界条件和错误路径
   - `fuzz`：生成模糊测试 / 随机输入测试
   - `prop`：生成基于属性的测试（property-based testing）
+  - `mutation`：运行 mutation testing（需项目安装 `cargo-mutants`/`mutmut` 等）
+  - `coverage-only`：传统 line coverage 模式（不推荐，仅在用户显式要求时使用）
 - `[no-run]`：仅生成测试代码，不执行
 
 ### 模式自动推断
@@ -42,6 +54,7 @@ Plan 感知：!`cat ~/.claude/skills/shared/plan-aware.md`
 | "边界条件"、"极端情况"、"edge case" | edge |
 | "fuzz"、"模糊测试"、"随机输入" | fuzz |
 | "属性测试"、"property"、"不变量" | prop |
+| "mutation"、"变异测试" | mutation |
 
 - 多个关键词匹配多个模式时，按合理顺序组合执行
 - 无法推断时使用默认模式
@@ -49,7 +62,7 @@ Plan 感知：!`cat ~/.claude/skills/shared/plan-aware.md`
 
 ---
 
-## Phase 0: 现状分析
+## Phase 0: 风险扫描 + 现状分析
 
 ### 0.1 理解目标代码
 
@@ -61,7 +74,54 @@ Plan 感知：!`cat ~/.claude/skills/shared/plan-aware.md`
 - **外部依赖**：I/O 操作、网络调用、数据库访问、文件系统（影响测试策略）
 - **不变量**：函数文档或注释中隐含的约束（"输入必须非空"、"返回值 ≥ 0"）
 
-### 0.2 现有测试盘点
+### 0.2 危险代码扫描（必需）
+
+> **铁律**：必须先扫描识别危险代码，再基于清单生成测试。禁止按"完全无测试的函数"作为唯一标准。
+
+用以下 8 类信号扫描目标代码，产出**危险代码清单**：
+
+| 类别 | 识别信号 |
+|------|----------|
+| **解析器** | 函数名含 `parse/decode/deserialize/tokenize/lex`；接受 `&str`/`&[u8]`；内部有循环+分支；返回 `Result` |
+| **状态机** | `enum` + `match` + 状态转换函数；字段名含 `state/status/phase`；显式状态转换表 |
+| **边界条件** | 数值运算（加减乘除可能溢出）、索引访问、切片/字符串长度处理、空集合处理 |
+| **并发** | `Arc<Mutex>`、`RwLock`、`atomic::*`、`async/await`、`tokio::spawn`、`thread::spawn`、channel |
+| **错误恢复** | `Result` 链、`?` 密集（5+ 连续）、`catch_unwind`、retry/backoff 逻辑 |
+| **外部输入** | 接受 `&str`/`&[u8]`/`Vec<u8>` 且直接处理外部数据（非内部调用链起点） |
+| **资源管理** | 文件句柄、锁、网络连接、临时目录的获取/释放路径（尤其是错误路径的 cleanup） |
+| **时间相关** | `Duration`、`Instant`、`SystemTime`、超时、过期、TTL、时钟相关逻辑 |
+
+扫描命令示例（Rust）：
+
+```bash
+grep -rEn "fn (parse|decode|deserialize|tokenize|lex)" <target> 2>/dev/null
+grep -rn "Arc<Mutex\|RwLock\|atomic::" <target> 2>/dev/null
+grep -rn "unsafe\|catch_unwind" <target> 2>/dev/null
+```
+
+**危险代码清单**必须输出到报告，用户可审阅/修正：
+
+```
+## 🚨 危险代码清单
+
+| # | 函数 | 位置 | 危险类别 | 当前测试 |
+|---|------|------|----------|----------|
+| 1 | `parse_token()` | `lexer.rs:42` | 解析器 + 边界条件 | ❌ 无 |
+| 2 | `State::transition()` | `fsm.rs:87` | 状态机 | ⚠️ 仅 happy path |
+| 3 | `validate_input()` | `input.rs:120` | 外部输入 + 错误恢复 | ❌ 无 |
+| 4 | `with_lock()` | `pool.rs:55` | 并发 + 资源管理 | ❌ 无 |
+| ... | ... | ... | ... | ... |
+
+## 🟢 低危代码（仅生成 smoke test）
+
+| # | 函数 | 位置 | 类别 |
+|---|------|------|------|
+| 1 | `Config::name()` | `config.rs:15` | trivial getter |
+| 2 | `Pair::new()` | `pair.rs:8` | trivial constructor |
+| ... | ... | ... | ... |
+```
+
+### 0.3 现有测试盘点
 
 扫描已有的测试：
 
@@ -73,34 +133,26 @@ grep -rn "def test_" <target> 2>/dev/null           # Python
 grep -rn "func Test" <target> 2>/dev/null           # Go
 ```
 
-对每个已有测试，记录它覆盖了什么：
+对每个已有测试，记录：
 - 被测函数
 - 测试的输入类别（正常 / 边界 / 错误）
 - 是否验证了返回值和副作用
+- **断言质量**（见 Phase 2.4）：是具体断言还是 `is_ok()` 类空洞断言
 
-### 0.3 覆盖缺口识别
+### 0.4 错误路径清点
 
-将目标代码的所有路径与已有测试交叉对比，输出缺口报告：
+静态扫描目标代码中所有错误返回路径：
 
+```bash
+# Rust
+grep -nE "return Err\(|bail!|\.ok_or|Err\(|panic!\(" <target>
+# Python
+grep -nE "raise |throw " <target>
+# Go
+grep -nE "return .*err|return .*, err" <target>
 ```
-## 测试覆盖分析
 
-### 已覆盖
-| 函数 | 正常路径 | 边界条件 | 错误路径 |
-|------|----------|----------|----------|
-| `parse_input()` | ✅ | ❌ | ✅ |
-| `process_data()` | ✅ | ❌ | ❌ |
-
-### 未覆盖的函数
-- `validate_config()` — 完全没有测试
-- `handle_timeout()` — 完全没有测试
-
-### 识别的测试盲区
-1. `parse_input()` 未测试空字符串输入
-2. `process_data()` 未测试数据量超过 u32::MAX 的情况
-3. `process_data()` 的错误分支（第 87 行的 Err 路径）无覆盖
-4. ...
-```
+记录每个错误路径的**位置和错误变体**，后续用于计算"错误路径覆盖率"。
 
 ---
 
@@ -110,21 +162,41 @@ grep -rn "func Test" <target> 2>/dev/null           # Go
 
 ### mode: gaps（默认）
 
-为每个缺口设计测试：
+基于 Phase 0.2 的**危险代码清单**和 Phase 0.4 的错误路径清点，按风险分级设计测试：
 
 ```
-测试用例清单：
-  [ ] <函数名>_<场景描述>
+测试用例清单（按 Tier 分组）：
+
+## Tier 1 — 危险代码的核心行为 + 错误路径（优先级最高）
+  [ ] test_<函数名>_<场景描述>
+      目标：<危险代码清单中的第 N 项>
       输入：<具体值>
-      预期：<返回值 / 副作用 / 错误类型>
-      理由：<为什么需要这个测试>
+      预期：<具体返回值 / 具体错误变体>
+      理由：<对应哪个危险类别>
+
+## Tier 2 — 边界条件
+  [ ] test_<函数名>_<边界描述>
+      输入：<边界值>
+      预期：<具体行为>
+
+## Tier 3 — Happy path 补齐（仅在 Tier 1/2 完成后）
+  [ ] test_<函数名>_<正常场景>
+
+## Smoke — 低危代码（仅生成 1 个 smoke test）
+  [ ] smoke_<函数名>
+      仅调用一次，断言不 panic
+      名字前缀必须为 `smoke_`，方便统计时排除
 ```
 
-**优先级排序**：
-1. 完全无测试的公共函数
-2. 错误路径无覆盖的函数
-3. 边界条件缺失
-4. 正常路径的补充场景
+**分层原则**：
+- **Tier 1 是必需的**——危险代码清单中的每一项必须至少有一个核心行为测试和一个错误路径测试
+- **Tier 2 补齐边界**——数值溢出、空集合、极端长度等
+- **Tier 3 仅补齐缺失的 happy path**——不重复已有测试
+- **低危代码不生成详细测试**——每个低危函数仅生成 1 个 `smoke_<name>` 测试（防止隐藏逻辑漏测），不计入危险代码覆盖率
+
+**禁止**：
+- 为 trivial getter/setter/wrapper 生成详细的 unit test（浪费且误导覆盖率）
+- 生成只为"刷覆盖率"的测试（例如只调用不断言）
 
 ### mode: edge
 
@@ -258,6 +330,43 @@ Go：    <module>_test.go（同包）
 
 修复编译错误直到通过。
 
+### 2.4 断言质量门（必需）
+
+> **铁律**：生成的测试必须经过断言质量检查。空洞断言是"假测试"——能提升覆盖率却不保护正确性。
+
+**空洞断言黑名单**（禁止作为唯一断言）：
+
+| 模式 | 示例 | 问题 |
+|------|------|------|
+| 恒真 | `assert!(true)`, `assert!(1 == 1)` | 不测试任何东西 |
+| 仅存在性 | `assert!(result.is_ok())` | 不验证 Ok 内部值 |
+| 仅存在性 | `assert!(result.is_some())` | 不验证 Some 内部值 |
+| 仅非空 | `assert!(!vec.is_empty())` | 不验证内容 |
+| 仅不 panic | 只调用函数无 assert | 只保证不 panic |
+| 仅 is_err | `assert!(result.is_err())` | 不验证具体错误变体 |
+
+**合法替代**：
+
+| 空洞断言 | 合法替代 |
+|----------|----------|
+| `result.is_ok()` | `assert_eq!(result.unwrap(), expected)` 或 配合另一个具体断言 |
+| `result.is_err()` | `assert_matches!(result, Err(ParseError::Empty))` |
+| `vec.is_empty()` | `assert_eq!(vec, expected_contents)` |
+
+**例外**（合法的空洞断言）：
+- **smoke test**：名字前缀 `smoke_` 的测试允许仅调用不断言（统计时单独归类）
+- **属性测试的不变量**：`assert_eq!(decode(encode(x)), x)` 这类不变量断言合法（它区分了正确和错误行为）
+- **`is_ok()` 配合另一个具体断言**：如先 `is_ok()` 再 `assert_eq!(result.unwrap().field, expected)`
+
+**执行方式**：
+
+对每个生成的测试做静态扫描，统计：
+- 具体断言数量
+- 空洞断言数量（分类：`is_ok`、`is_some`、`is_empty`、`true`/`false`、无断言）
+- 属性断言数量（合法）
+
+若存在空洞断言，必须修正或升级为具体断言后才能进入 Phase 3。
+
 ---
 
 ## Phase 3: 执行与修正
@@ -297,55 +406,228 @@ Go：    <module>_test.go（同包）
 
 ---
 
-## Phase 4: 测试报告
+## Phase 4: 测试报告（四指标）
+
+> **核心原则**：主要判定基于四指标（危险代码覆盖率、错误路径覆盖率、断言具体性、mutation score），line/branch coverage 保留但降级为参考指标。
 
 按产物存储约定输出以下报告：
 
-```markdown
+````markdown
 # Test Report
 
 ## 概况
 - 时间：<开始时间>
 - 耗时：<X 分 Y 秒>
 - 目标：<文件/模块>
-- 模式：<gaps / edge / fuzz / prop>
+- 模式：<gaps / edge / fuzz / prop / mutation>
 
-## 覆盖分析（改进前）
+---
 
-| 函数 | 正常路径 | 边界条件 | 错误路径 |
-|------|----------|----------|----------|
+## 🎯 质量报告（主指标）
+
+```
+┌─────────────────────────────────────────────────┐
+│  🎯 危险代码覆盖率 ：  12 / 15  (80%)            │
+│     未覆盖：parser.rs:87, state.rs:42,          │
+│              validator.rs:120                   │
+├─────────────────────────────────────────────────┤
+│  ⚠️  错误路径覆盖率 ：  23 / 28  (82%)           │
+│     未覆盖：5 个 Err 路径（见下方清单）           │
+├─────────────────────────────────────────────────┤
+│  📝 断言具体性     ：  34 / 37  (92%)           │
+│     空洞断言：3 处（见下方清单）                 │
+├─────────────────────────────────────────────────┤
+│  🧬 Mutation score ：  ⏭️ 未运行                 │
+│     （可用 /test mutation 运行）                 │
+└─────────────────────────────────────────────────┘
+```
+
+### 🚨 Phase 0 识别的危险代码清单
+
+<Phase 0.2 输出的完整清单，标注每项是否已被测试覆盖>
+
+### ⚠️ 未覆盖的错误路径
+
+| # | 位置 | 错误变体 | 建议测试 |
+|---|------|----------|----------|
+| 1 | `parser.rs:87` | `ParseError::EmptyInput` | `test_parse_empty_returns_err` |
 | ... | ... | ... | ... |
+
+### 📝 空洞断言清单
+
+| 测试 | 问题 | 修复建议 |
+|------|------|----------|
+| `test_parse_ok` | 仅 `result.is_ok()` | 补充 `assert_eq!(result.unwrap(), expected)` |
+| ... | ... | ... |
+
+---
+
+## ℹ️  参考指标（不作为主要判定）
+
+> Line/branch coverage 无法反映测试质量——高数值可能全是 getter 和 smoke test。仅作为参考。
+
+| 指标 | 数值 |
+|------|------|
+| Line coverage | 67% |
+| Branch coverage | 54% |
+
+---
 
 ## 新增测试
 
-| 测试名 | 类型 | 覆盖目标 | 结果 |
-|--------|------|----------|------|
-| `test_parse_empty_input_returns_error` | 边界 | `parse_input()` 空输入 | ✅ |
+### Tier 1（危险代码 + 错误路径）
+
+| 测试名 | 覆盖目标 | 断言类型 | 结果 |
+|--------|----------|----------|------|
+| `test_parse_empty_input_returns_error` | `parse_input()` 空输入 → `ParseError::Empty` | 具体错误变体 | ✅ |
 | ... | ... | ... | ... |
 
-## 覆盖分析（改进后）
+### Tier 2（边界条件）
 
-| 函数 | 正常路径 | 边界条件 | 错误路径 |
-|------|----------|----------|----------|
-| ... | ... | ... | ... |
+| 测试名 | 边界值 | 结果 |
+|--------|--------|------|
+| ... | ... | ... |
 
-## 发现的缺陷
-- 🐛 <描述>（建议 /debug 跟进）
+### Tier 3（Happy path）
 
-## 待确认的行为
-- ❓ <描述>
+| 测试名 | 场景 | 结果 |
+|--------|------|------|
+| ... | ... | ... |
+
+### Smoke tests（低危代码）
+
+> 单独统计，不计入危险代码覆盖率
+
+| 测试名 | 目标 | 结果 |
+|--------|------|------|
+| `smoke_config_name` | `Config::name()` | ✅ |
+| ... | ... | ... |
+
+---
+
+## 🐛 发现的缺陷
+
+| # | 描述 | 测试 | 预期 | 实际 | 建议 |
+|---|------|------|------|------|------|
+| 1 | <描述> | <测试名> | <预期> | <实际> | `/fix` |
+| ... | ... | ... | ... | ... | ... |
+
+## ❓ 待确认的行为
+
+| # | 函数 | 条件 | 当前行为 | 问题 |
+|---|------|------|----------|------|
+| ... | ... | ... | ... | ... |
+
+---
 
 ## 统计
-- 新增测试：N 个
-- 通过：N 个
-- 发现缺陷：N 个
-- 待确认：N 个
-- 全量回归：✅ 通过
+
+| 项 | 数量 |
+|----|------|
+| Tier 1 新增测试 | N |
+| Tier 2 新增测试 | M |
+| Tier 3 新增测试 | K |
+| Smoke tests | P |
+| 通过 | Q |
+| 发现缺陷 | R |
+| 待确认 | S |
+| 全量回归 | ✅ 通过 / ❌ 失败 |
+
+---
 
 ## 后续建议
-- <哪些函数仍需更多覆盖>
-- <是否建议增加 fuzz / prop 测试>
-- <是否建议用 /improve 进行更深度的质量改善>
+
+- <危险代码清单中仍未覆盖的项>
+- <是否建议运行 `/test mutation` 验证断言强度>
+- <是否建议 `/test fuzz` 对解析器增加模糊测试>
+- <是否暴露了设计缺陷，建议 `/improve` 跟进>
+````
+
+---
+
+## mode: mutation — 变异测试
+
+当 mode 为 `mutation` 时，对目标模块运行 mutation testing，验证测试套件的实际保护强度。
+
+### 前置条件
+
+检查项目是否安装了 mutation 工具：
+
+```bash
+# Rust
+command -v cargo-mutants 2>&1
+
+# Python
+command -v mutmut 2>&1
+
+# Go
+# go-mutesting
+```
+
+若未安装：
+```
+❌ mutation testing 需要安装对应工具：
+  Rust:   cargo install cargo-mutants
+  Python: pip install mutmut
+  Go:     go install github.com/zimmski/go-mutesting/cmd/go-mutesting@latest
+
+安装后重新运行 /test mutation <target>
+```
+终止。
+
+### 执行
+
+```bash
+# Rust
+cargo mutants --file <target> 2>&1
+
+# Python
+mutmut run --paths-to-mutate <target> 2>&1
+```
+
+运行结果会标识哪些 mutation 被测试捕获（killed）、哪些存活（survived，即测试没发现）。
+
+### 报告
+
+```markdown
+## 🧬 Mutation Testing Report
+
+- 工具：cargo-mutants / mutmut / go-mutesting
+- 目标：<target>
+- 总 mutation 数：N
+- 被捕获（killed）：M
+- 存活（survived）：K
+- **Mutation score**：M / N (X%)
+
+### 存活的 mutation（暴露测试不足）
+
+| # | 位置 | 变异描述 | 存活原因分析 |
+|---|------|----------|--------------|
+| 1 | `parser.rs:87` | `>` → `>=` | 未测试边界相等情况 |
+| 2 | `fsm.rs:42` | 删除 `state = State::Done` | 无测试验证最终状态 |
+| ... | ... | ... | ... |
+
+### 修复建议
+
+对每个存活的 mutation，建议添加针对性测试。
+```
+
+**判定标准**：
+- Mutation score ≥ 80% → 测试套件较强
+- Mutation score 50–80% → 存在明显盲区，需补充
+- Mutation score < 50% → 测试严重不足，大量"虚假覆盖"
+
+---
+
+## mode: coverage-only — 传统模式
+
+仅当用户显式要求时使用。跳过风险扫描和四指标，仅输出 line/branch coverage。
+
+**警告输出**：
+```
+⚠️  coverage-only 模式不推荐使用。
+   Line coverage 无法反映真实测试质量——高覆盖率可能全是 getter 和 smoke test。
+   建议改用默认的 gaps 模式（风险驱动 + 四指标）。
 ```
 
 ---
