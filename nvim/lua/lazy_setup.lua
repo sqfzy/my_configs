@@ -1,4 +1,4 @@
-require("lazy").setup({
+local specs = {
   {
     "AstroNvim/AstroNvim",
     version = "^5", -- Remove version tracking to elect for nightly AstroNvim
@@ -11,9 +11,14 @@ require("lazy").setup({
       update_notifications = true, -- Enable/disable notification about running `:Lazy update` twice to update pinned plugins
     },
   },
-  { import = "community" },
-  { import = "plugins" },
-} --[[@as LazySpec]], {
+}
+
+if not vim.env.NVIM_MINIMAL then
+  table.insert(specs, { import = "community" })
+  table.insert(specs, { import = "plugins" })
+end
+
+require("lazy").setup(specs --[[@as LazySpec]], {
   -- Configure any other `lazy.nvim` configuration options here
   install = { colorscheme = { "astrotheme", "habamax" } },
   ui = { backdrop = 100 },

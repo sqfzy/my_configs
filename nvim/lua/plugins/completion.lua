@@ -118,83 +118,83 @@ return { -- override nvim-cmp plugin
     end,
   },
 
-  {
-    "zbirenbaum/copilot.lua",
-    -- enabled = false,
-    cmd = "Copilot",
-    event = "User AstroFile",
-    opts = {
-      --   panel = {
-      --     enabled = false,
-      --     auto_refresh = false,
-      --     keymap = {
-      --       jump_prev = "[[",
-      --       jump_next = "]]",
-      --       accept = "<CR>",
-      --       refresh = "gr",
-      --       open = "<M-CR>",
-      --     },
-      --     layout = {
-      --       position = "bottom", -- | top | left | right
-      --       ratio = 0.4,
-      --     },
-      --   },
-
-      suggestion = {
-        enabled = true,
-        auto_trigger = true,
-        debounce = 75,
-        keymap = {
-          -- accept = "<A-m>",
-          accept = false, -- handled by completion engine
-          accept_word = false,
-          accept_line = false,
-          next = "<A-n>",
-          prev = "<A-p>",
-          -- dismiss = "<leader>cE",
-        },
-        -- keymap = {
-        -- 	accept = "<M-l>",
-        -- 	accept_word = false,
-        -- 	accept_line = false,
-        -- 	next = "<M-]>",
-        -- 	prev = "<M-[>",
-        -- 	dismiss = "<C-]>",
-        -- },
-      },
-      filetypes = {
-        yaml = true,
-        markdown = true,
-        help = false,
-        gitcommit = false,
-        gitrebase = false,
-        hgcommit = false,
-        svn = false,
-        cvs = false,
-        ["."] = true,
-      },
-      -- copilot_model = "gpt-4o-copilot",
-      -- copilot_node_command = "node",
-      -- server_opts_overrides = {},
-    },
-    specs = {
-      {
-        "AstroNvim/astrocore",
-        opts = {
-          options = {
-            g = {
-              ai_accept = function()
-                if require("copilot.suggestion").is_visible() then
-                  require("copilot.suggestion").accept()
-                  return true
-                end
-              end,
-            },
-          },
-        },
-      },
-    },
-  },
+  -- {
+  --   "zbirenbaum/copilot.lua",
+  --   -- enabled = false,
+  --   cmd = "Copilot",
+  --   event = "User AstroFile",
+  --   opts = {
+  --     --   panel = {
+  --     --     enabled = false,
+  --     --     auto_refresh = false,
+  --     --     keymap = {
+  --     --       jump_prev = "[[",
+  --     --       jump_next = "]]",
+  --     --       accept = "<CR>",
+  --     --       refresh = "gr",
+  --     --       open = "<M-CR>",
+  --     --     },
+  --     --     layout = {
+  --     --       position = "bottom", -- | top | left | right
+  --     --       ratio = 0.4,
+  --     --     },
+  --     --   },
+  --
+  --     suggestion = {
+  --       enabled = true,
+  --       auto_trigger = true,
+  --       debounce = 75,
+  --       keymap = {
+  --         -- accept = "<A-m>",
+  --         accept = false, -- handled by completion engine
+  --         accept_word = false,
+  --         accept_line = false,
+  --         next = "<A-n>",
+  --         prev = "<A-p>",
+  --         -- dismiss = "<leader>cE",
+  --       },
+  --       -- keymap = {
+  --       -- 	accept = "<M-l>",
+  --       -- 	accept_word = false,
+  --       -- 	accept_line = false,
+  --       -- 	next = "<M-]>",
+  --       -- 	prev = "<M-[>",
+  --       -- 	dismiss = "<C-]>",
+  --       -- },
+  --     },
+  --     filetypes = {
+  --       yaml = true,
+  --       markdown = true,
+  --       help = false,
+  --       gitcommit = false,
+  --       gitrebase = false,
+  --       hgcommit = false,
+  --       svn = false,
+  --       cvs = false,
+  --       ["."] = true,
+  --     },
+  --     -- copilot_model = "gpt-4o-copilot",
+  --     -- copilot_node_command = "node",
+  --     -- server_opts_overrides = {},
+  --   },
+  --   specs = {
+  --     {
+  --       "AstroNvim/astrocore",
+  --       opts = {
+  --         options = {
+  --           g = {
+  --             ai_accept = function()
+  --               if require("copilot.suggestion").is_visible() then
+  --                 require("copilot.suggestion").accept()
+  --                 return true
+  --               end
+  --             end,
+  --           },
+  --         },
+  --       },
+  --     },
+  --   },
+  -- },
   {
     "Exafunction/codeium.nvim",
     enabled = false,

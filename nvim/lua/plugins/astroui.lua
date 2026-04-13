@@ -102,6 +102,9 @@ local function choose_theme_by_time_from_all(scheme)
     time_of_day = "night"
   end
 
+  vim.opt.background = "dark"
+  time_of_day = "dusk"
+
   -- always dusk
   -- time_of_day = "dusk"
   -- vim.opt.background = "dark"
