@@ -13,7 +13,10 @@ local specs = {
   },
 }
 
-if not vim.env.NVIM_MINIMAL then
+if vim.env.NVIM_MINIMAL then
+  table.insert(specs, require "plugins.astrocore")
+  table.insert(specs, require "plugins.astroui")
+else
   table.insert(specs, { import = "community" })
   table.insert(specs, { import = "plugins" })
 end
