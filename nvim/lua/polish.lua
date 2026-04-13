@@ -2,6 +2,20 @@
 -- This is just pure lua so anything that doesn't
 -- fit in the normal config locations above can go here
 
+if vim.env.NVIM_MINIMAL then
+  vim.g.clipboard = {
+    name = "OSC 52",
+    copy = {
+      ["+"] = require("vim.ui.clipboard.osc52").copy "+",
+      ["*"] = require("vim.ui.clipboard.osc52").copy "*",
+    },
+    paste = {
+      ["+"] = require("vim.ui.clipboard.osc52").paste "+",
+      ["*"] = require("vim.ui.clipboard.osc52").paste "*",
+    },
+  }
+end
+
 vim.filetype.add {
   -- extension = {
   --   foo = "fooscript",
