@@ -1,7 +1,7 @@
 ---
 name: discuss
 description: "Structured adversarial multi-role discussion that converges on a well-tested solution. Auto-saves results to .artifacts/ TRIGGER when: user asks to weigh tradeoffs, compare approaches, debate a technical decision, or wants structured pros/cons analysis before choosing a direction. DO NOT TRIGGER when: user wants discussion followed by implementation (use /design), or has already decided and wants to start coding."
-argument-hint: <topic> [rounds: N] [roles: N]
+argument-hint: "<topic> [rounds: N] [roles: N]"
 allowed-tools: Bash(mkdir:*), Bash(date:*)
 ---
 

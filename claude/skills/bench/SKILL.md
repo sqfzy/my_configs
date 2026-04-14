@@ -160,7 +160,7 @@ Blueprint 感知：!`cat ~/.claude/skills/shared/blueprint-aware.md`
 
 ### 1.1 运行 Benchmark
 
-**必须在 release / 优化模式下运行**——debug 模式的数据无意义。根据构建命令获取策略确定并执行 benchmark 命令。**执行后立即按 bench-data 约定持久化**：原始输出写入 `.artifacts/bench-data-YYYYMMDD-HHMMSS.txt`，摘要追加到 `.artifacts/INDEX.md`。
+**必须在 release / 优化模式下运行**——debug 模式的数据无意义。根据构建命令获取策略确定并执行 benchmark 命令。**执行后立即按 bench-data 约定持久化**（命名规则 / INDEX 追加逻辑见产物存储约定）。
 
 ### 1.2 解析结果
 
@@ -174,7 +174,7 @@ Blueprint 感知：!`cat ~/.claude/skills/shared/blueprint-aware.md`
 | <name>    | <X> ns     | <X> ns        | ±X%    | <X>/s  | <X> allocs |
 ```
 
-**若 mode 为 `baseline`**：保存数据到 `.artifacts/bench-data-YYYYMMDD-HHMMSS.txt`，输出摘要后终止。
+**若 mode 为 `baseline`**：按 bench-data 约定持久化后输出摘要并终止。
 
 **若 mode 为 `optimize`**：额外记录目标确认：
 
@@ -190,10 +190,6 @@ Blueprint 感知：!`cat ~/.claude/skills/shared/blueprint-aware.md`
   1. 达到目标
   2. 连续 2 轮无有效改善（每轮提升 < 3%）
   3. 达到最大轮数
-```
-
-```bash
-mkdir -p .artifacts
 ```
 
 ---

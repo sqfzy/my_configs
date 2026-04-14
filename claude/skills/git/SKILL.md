@@ -18,6 +18,14 @@ allowed-tools: Bash(git:*), Bash(date:*), Bash(mkdir:*)
 
 ---
 
+## 核心理念
+
+> **Commit 是写给未来的信，不是写给现在的日志。**
+
+每个 commit 都会在三个月后被当证据读。届时人类记不住"为什么"——Conventional Commits 的 subject 说了"做了什么"，但 body 才是让未来读者理解"为什么做"的地方。`/git` 的任务是在用户还记得上下文的当下，把**动机**固化到 commit message 里，不让它随对话窗口一起丢失。
+
+---
+
 ## Step 0: 参数解析 & 状态判断
 
 解析可选参数：

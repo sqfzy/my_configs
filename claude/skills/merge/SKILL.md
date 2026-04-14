@@ -143,6 +143,7 @@ git merge -X theirs <upstream-ref> --no-edit 2>&1
 - 构建验证
 - 测试验证
 - 失败时**不自动回滚**，输出选项：修复 / 回滚 / /debug
+- **`auto` 模式**：失败时自动回滚到备份分支 `backup/merge-<timestamp>`，写明失败原因后终止。不自动尝试修复（避免在用户不知情下偏离意图）。
 
 ## Sync Phase 5: 报告
 
@@ -294,6 +295,7 @@ for each 功能单元 in 移植计划:
     [2] 回滚到移植前：git checkout <原分支> && git branch -D port/<name>
     [3] 使用 /debug 定位失败原因
   ```
+- **`auto` 模式**：失败时自动执行 [2] 回滚——切回原分支并删除 `port/<name>` 分支，写明失败原因后终止。Port 涉及跨库代码融合，自动修复风险过高，保守回滚更安全。
 
 ## Port Phase 5: 报告
 
@@ -327,6 +329,15 @@ for each 功能单元 in 移植计划:
 - 合入主分支：git checkout main && git merge port/<name>
 - 回滚：git checkout <原分支> && git branch -D port/<name>
 ```
+
+---
+
+## 关联 skill
+
+- **`/review`**：sync 或 port 完成后，建议对合并后的代码做一轮 review，特别是 port 模式
+- **`/debug`**：合并/移植后测试失败时调用 `/debug` 定位根因
+- **`/improve`**：port 完成后的代码往往风格不齐，可用 `/improve` 做一轮打磨以贴近目标库
+- **`/git`**：`merge` 不负责 commit message 的雕琢——若合并涉及复杂冲突取舍，后续可用 `/git` 整理 squash message
 
 ---
 

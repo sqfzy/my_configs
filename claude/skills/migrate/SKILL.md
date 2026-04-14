@@ -353,4 +353,14 @@ git add <本次改动的具体文件> && git commit -m "chore: remove migration 
 
 ---
 
+## 关联 skill
+
+- **`/debug`**：迁移过程中构建或测试失败时调用 `/debug` 定位根因，再回到 `/migrate` 修复
+- **`/improve`**：迁移完成后对代码做深度打磨（上面的"后续建议"已提示）
+- **`/doc`**：API 有变化时用 `/doc api` 和 `/doc changelog` 同步文档
+- **`/bench`**：性能敏感依赖升级后必须跑 benchmark 对比基线
+- **`/refactor breaking`**：迁移揭示出的结构性问题应分离到 refactor 单独处理，`/migrate` 专注外部 API 适配
+
+---
+
 输出语言跟随用户输入语言。

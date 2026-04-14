@@ -533,4 +533,14 @@ D(编排) → Validator, Serializer, B
 
 ---
 
+## 关联 skill
+
+- **`/review audit`**：Phase 1 的现状扫描委托给它做技术债清单
+- **`/discuss`**：迭代中遇到设计分歧时可升级到正式讨论
+- **`/refactor`** / **`/refactor breaking`**：`/improve` 做的是小范围打磨；发现需要结构性改动时升级到 `/refactor`
+- **`/retro`**：迭代完成后做复盘，把本轮教训固化到 `.artifacts/retro-*.md`
+- **`/bench`**：性能敏感模块的迭代必须配合 bench 基线
+
+---
+
 输出语言跟随用户输入语言。

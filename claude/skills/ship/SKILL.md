@@ -28,7 +28,9 @@ Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
 ## 核心理念
 
-发版不是 `git push` 加祈祷。每次 ship 之前必须过五关：
+> **发版不是 `git push` 加祈祷。**
+
+每次 ship 之前必须过五关：
 
 1. **Review**——变更中有没有漏洞、遗漏、隐患
 2. **Test**——测试覆盖是否充分，有没有盲区
