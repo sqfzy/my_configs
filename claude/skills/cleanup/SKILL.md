@@ -16,8 +16,8 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
 产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
-Plan 感知：!`cat ~/.claude/skills/shared/plan-aware.md`
-现有计划：!`find .artifacts -name "plan-*.md" 2>/dev/null | head -10 || echo "(无)"`
+Blueprint 感知：!`cat ~/.claude/skills/shared/blueprint-aware.md`
+现有计划：!`find .artifacts -name "blueprint-*.md" 2>/dev/null | head -10 || echo "(无)"`
 
 Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
@@ -69,9 +69,9 @@ Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
 这是 cleanup 的**核心差异点**——不受现有实现约束，以"从零设计"思维重新审视架构。
 
-**若存在 plan.md**：从 plan.md 提取目标架构、编码规范、接口设计作为"理想态"，Phase 1 的讨论聚焦于"当前代码与 plan.md 目标的差距"和"如何迁移"，跳过架构重新设计和模式统一的讨论（plan.md 已确定）。仅讨论以下 plan 未覆盖的维度：技术债归零（TODO/FIXME/HACK、deprecated、workaround）和迁移策略。
+**若存在 blueprint.md**：从 blueprint.md 提取目标架构、编码规范、接口设计作为"理想态"，Phase 1 的讨论聚焦于"当前代码与 blueprint.md 目标的差距"和"如何迁移"，跳过架构重新设计和模式统一的讨论（blueprint.md 已确定）。仅讨论以下 plan 未覆盖的维度：技术债归零（TODO/FIXME/HACK、deprecated、workaround）和迁移策略。
 
-**若不存在 plan.md**：执行完整的从零设计讨论：
+**若不存在 blueprint.md**：执行完整的从零设计讨论：
 
 ### 1.1 讨论引导
 
@@ -104,7 +104,7 @@ Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 - 哪些内部接口不应该是公共的？
 - 接口的参数设计是否最优？
 
-**技术债归零**（有无 plan.md 均执行）：
+**技术债归零**（有无 blueprint.md 均执行）：
 - 所有 TODO/FIXME/HACK——是修复还是删除？
 - 所有 deprecated 代码——是迁移还是删除？
 - 所有已知的 workaround——根因是否可以现在修复？

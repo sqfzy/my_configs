@@ -18,8 +18,8 @@ allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep
 
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
 产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
-Plan 感知：!`cat ~/.claude/skills/shared/plan-aware.md`
-现有计划：!`find .artifacts -name "plan-*.md" 2>/dev/null | head -10 || echo "(无)"`
+Blueprint 感知：!`cat ~/.claude/skills/shared/blueprint-aware.md`
+现有计划：!`find .artifacts -name "blueprint-*.md" 2>/dev/null | head -10 || echo "(无)"`
 
 Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
@@ -232,9 +232,9 @@ Phase 1 的输出（问题清单 + 架构地图 + 公共 API 快照）是 Phase 
 
 **Step 1：目标架构确定**
 
-**若存在 plan.md 且已定义架构设计**：直接从 plan.md 提取目标架构（模块划分、依赖方向、接口边界），跳过多角色讨论，仅对比当前状态与 plan 目标状态，生成迁移步骤。
+**若存在 blueprint.md 且已定义架构设计**：直接从 blueprint.md 提取目标架构（模块划分、依赖方向、接口边界），跳过多角色讨论，仅对比当前状态与 plan 目标状态，生成迁移步骤。
 
-**若不存在 plan.md**：选出 **5 个角色**（**必选 R14 架构师**），进行 3–6 轮对抗讨论，收敛出目标架构：
+**若不存在 blueprint.md**：选出 **5 个角色**（**必选 R14 架构师**），进行 3–6 轮对抗讨论，收敛出目标架构：
 
 - R14 负责提出目标架构方案（模块划分、依赖方向、接口边界）
 - 其他角色从各自立场质疑和补充

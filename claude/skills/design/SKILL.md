@@ -15,8 +15,8 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(head:*), Bash(mkdir:*), Bash(date
 
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
 产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
-Plan 感知：!`cat ~/.claude/skills/shared/plan-aware.md`
-现有计划：!`find .artifacts -name "plan-*.md" 2>/dev/null | head -10 || echo "(无)"`
+Blueprint 感知：!`cat ~/.claude/skills/shared/blueprint-aware.md`
+现有计划：!`find .artifacts -name "blueprint-*.md" 2>/dev/null | head -10 || echo "(无)"`
 
 Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
@@ -71,7 +71,7 @@ Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
 ### 1.0 检测已有计划
 
-按 Plan 感知约定执行——若存在 plan.md，读取已确定的决策作为约束，Phase 1.2 的需求分析直接从 plan.md 提取，跳过大部分需求澄清问题。
+按 Plan 感知约定执行——若存在 blueprint.md，读取已确定的决策作为约束，Phase 1.2 的需求分析直接从 blueprint.md 提取，跳过大部分需求澄清问题。
 
 ### 1.1 理解现有代码库
 
@@ -82,12 +82,12 @@ Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
 ### 1.2 需求分析
 
-**若存在 plan.md**：从 plan.md 提取核心目标、功能边界、架构约束、编码规范，仅补充以下 plan 未覆盖的任务级细节：
+**若存在 blueprint.md**：从 blueprint.md 提取核心目标、功能边界、架构约束、编码规范，仅补充以下 plan 未覆盖的任务级细节：
 
 ```
-## 需求理解（基于 plan.md）
+## 需求理解（基于 blueprint.md）
 
-### 来源：<plan.md 路径>
+### 来源：<blueprint.md 路径>
 
 ### 输入 / 输出
 - 输入：<数据类型、来源、约束>
@@ -104,7 +104,7 @@ Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 - [ ] <问题1>
 ```
 
-**若不存在 plan.md**：完整拆解需求：
+**若不存在 blueprint.md**：完整拆解需求：
 
 ```
 ## 需求理解
@@ -159,10 +159,10 @@ Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
 #### 2.1 方案设计
 
-**若存在 plan.md**：从 plan.md 继承架构设计、接口设计、编码规范，仅补充本次任务的实现细节：
+**若存在 blueprint.md**：从 blueprint.md 继承架构设计、接口设计、编码规范，仅补充本次任务的实现细节：
 
 ```
-## 设计方案（基于 plan.md）
+## 设计方案（基于 blueprint.md）
 
 ### 新增 / 修改的文件
   <path>  —  <职责>
@@ -170,11 +170,11 @@ Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 ### 实现策略
 <分步骤描述实现顺序>
 
-### 本次设计决策（plan.md 未覆盖的）
+### 本次设计决策（blueprint.md 未覆盖的）
 - 决策1：<选择了X而非Y，原因是...>
 ```
 
-**若不存在 plan.md**：完整输出设计文档：
+**若不存在 blueprint.md**：完整输出设计文档：
 
 ```
 ## 设计方案
