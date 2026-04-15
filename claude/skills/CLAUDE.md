@@ -44,7 +44,6 @@ Skills pull shared behavior by `cat`-ing files from `shared/` in their frontmatt
 - **`shared/build-detect.md`** — Priority chain for resolving build/test/bench/lint commands: user override → CLAUDE.md declaration → auto-detection from `Cargo.toml` / `xmake.lua` / `pyproject.toml` / `package.json` / `go.mod` / `Makefile`. Skills reference this as "按构建命令获取策略执行".
 - **`shared/roles.md`** — The R1–R14 role library (风险卫士, 极简主义者, 性能狂热者, ...) used by any skill that does multi-role adversarial discussion. Also defines the `┌─ ... ─┐` box-drawing format for round-by-round debate output.
 - **`shared/bench-aware.md`** — Baseline-check protocol. Any skill that modifies code first checks `.artifacts/INDEX.md` for a bench baseline, runs bench before edits if needed, then compares after. Defines regression thresholds (5% / 15%). Skills reference this as "按 Bench 感知约定执行".
-- **`shared/blueprint-aware.md`** — Detection of active `blueprint-*.md` files in `.artifacts/`. If found, the skill treats the blueprint's decisions as **constraints** and skips re-discussing already-decided dimensions. This is how `/blueprint` (plan-only) hands off to `/design` (plan + implement).
 - **`shared/autopilot-aware.md`** — Detection of running `/autopilot` sessions via `.artifacts/autopilot-state-*.json`. Any workspace-modifying skill should check this to avoid racing with an autopilot that's looking after a background task. Pure read-only skills can ignore it.
 - **`shared/autopilot-classifier.sh`** — Deterministic event classifier consumed by `/autopilot`'s wakeup loop. Reads `.artifacts/autopilot-state-<task>.json` + log tail, emits a single JSON `{severity, category, suggested_action, evidence}`. **No LLM in the loop** — this is the load-bearing primitive that keeps per-wakeup context at ~200 lines. When editing, preserve the JSON schema since the skill's decision tree depends on it.
 
@@ -52,7 +51,7 @@ Skills pull shared behavior by `cat`-ing files from `shared/` in their frontmatt
 
 Skills call each other by design — when editing one, check what delegates to it:
 
-- `/design` reads `blueprint.md` if present (via `blueprint-aware`); skips requirement re-clarification
+- `/blueprint` wraps Claude Code's plan mode — enters plan mode, runs a multi-dimension dialogue, then `ExitPlanMode` presents the plan. **No file is written.** If the user approves, they should call `/design` in the same session to implement.
 - `/fix` is the orchestrator for `/debug` → `/test` → `/git` as a single pipeline
 - `/ship` delegates Gate 1 to `/review auto` (expected, not a bug)
 - `/refactor [breaking]` and `/cleanup` overlap in scope — `/cleanup` is the holistic "rethink from scratch" version, `/refactor` is targeted
@@ -65,7 +64,7 @@ Skills call each other by design — when editing one, check what delegates to i
 - **Keep `allowed-tools` minimal.** Each bash pattern must be justified; skills default to deny. Add only the exact subcommands the workflow runs.
 - **Argument parsing is prose, not code.** Flags like `[auto]`, `[no-commit]`, `[deep]`, `[target: <path>]` are extracted by Claude reading the prompt, so describe them in a parameter table and let inference rules be explicit.
 - **Every artifact-producing skill's `argument-hint` should list `[auto]`** if the workflow has user-confirmation gates — otherwise non-interactive use is impossible.
-- `git status` currently shows untracked `blueprint/`, `coach/`, and `shared/blueprint-aware.md` — these are the newest additions and still in flight.
+- **Plans are ephemeral, not persistent.** There is no longer a cross-session blueprint contract (removed). If a user wants long-term design docs, the honest answer is `/doc summary` **after** code exists — not a speculative pre-implementation plan file.
 
 ## Testing a skill change
 

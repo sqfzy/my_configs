@@ -15,7 +15,6 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(head:*), Bash(tail:*), Bash(grep:
 
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
 产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
-Blueprint 感知：!`cat ~/.claude/skills/shared/blueprint-aware.md`
 
 任务：$ARGUMENTS
 
@@ -60,7 +59,6 @@ Blueprint 感知：!`cat ~/.claude/skills/shared/blueprint-aware.md`
 [ ] 确认 .artifacts/ 存在且可写
 [ ] 确认磁盘剩余空间
 [ ] 检查 git 状态（工作区是否干净，影响 rollback 可行性）
-[ ] 若项目有 blueprint.md，按 Blueprint 感知约定读取约束
 ```
 
 ### 0.2 重入保护

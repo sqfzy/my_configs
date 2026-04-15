@@ -15,8 +15,6 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
 产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
-Blueprint 感知：!`cat ~/.claude/skills/shared/blueprint-aware.md`
-现有计划：!`find .artifacts -name "blueprint-*.md" 2>/dev/null | head -10 || echo "(无)"`
 
 目标：$ARGUMENTS
 

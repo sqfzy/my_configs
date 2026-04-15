@@ -1,7 +1,7 @@
 ---
 name: blueprint
-description: "Interactive blueprint generation — co-creates a comprehensive blueprint.md through structured dialogue (AI asks questions with recommendations, user decides). Covers everything from tech stack to naming conventions. Only plans, never implements. TRIGGER when: user wants to plan a project/feature before coding, says \"let's plan this first\", \"create a blueprint\", \"I want a blueprint before we start\", or wants a comprehensive design-before-code document. DO NOT TRIGGER when: user wants to immediately start coding (use /design), or wants a pure discussion without a plan document (use /discuss)."
-argument-hint: "<project or feature description> [auto]"
+description: "Interactive planning via Claude Code plan mode — co-creates a comprehensive plan through structured multi-dimension dialogue (AI asks questions with recommendations, user decides). Plans are presented via ExitPlanMode for user approval and are session-local (NOT persisted to disk). Use immediately before implementing in the same session. TRIGGER when: user wants to plan a project/feature through a structured dimension-by-dimension dialogue before coding in the current session; user says \"let's plan this first\", \"plan this out\", \"walk me through planning X\". DO NOT TRIGGER when: user wants to immediately start coding (use /design); user wants a persistent design document (plans here are ephemeral — there is no file artifact); user wants pure discussion without producing a plan (use /discuss)."
+argument-hint: "<project or feature description>"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(date:*), Bash(git:*), Bash(ls:*)
 ---
 
@@ -9,7 +9,6 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(date:
 
 当前时间：!`date '+%Y-%m-%d %H:%M:%S'`
 当前目录：!`pwd`
-现有计划：!`find .artifacts -name "blueprint-*.md" 2>/dev/null | head -10 || echo "(无)"`
 项目文件概览：!`find . -type f \( -name "*.rs" -o -name "*.cpp" -o -name "*.hpp" -o -name "*.h" -o -name "*.py" -o -name "*.ts" -o -name "*.go" \) ! -path "*/target/*" ! -path "*/.git/*" ! -path "*/node_modules/*" | head -40`
 构建配置：!`find . -maxdepth 2 -name "xmake.lua" -o -name "Cargo.toml" -o -name "pyproject.toml" -o -name "package.json" -o -name "go.mod" -o -name "CMakeLists.txt" 2>/dev/null | head -10`
 
@@ -19,38 +18,41 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(date:
 
 ## 核心理念
 
-> blueprint.md 是施工图，不是草稿。实施时严格遵循，不再做设计决策。
+> **Plan 是共创产物，不是 AI 独白；是会话内的合约，不是磁盘资产。**
 
-blueprint.md 的完成过程是**对话驱动**的——AI 提问并提供建议，用户决策，AI 记录。这不是 AI 单方面分析后产出的文档，而是双方共创的产物。
+本 skill 利用 Claude Code 的 **plan mode** 作为呈现与审批层：AI 通过结构化的**逐维度对话**引出用户决策，最后用 `ExitPlanMode` 将完整计划呈给用户审批。整个过程**不写任何文件**——计划是会话本地的、一次性的。
+
+**为什么不写文件**：
+- 跨会话的持久化契约（过去的 blueprint-aware）会让 AI 和用户都误以为"写过就是确定"，结果 plan 与真实代码长期漂移
+- Plan mode 的天然语义就是"read-only 规划 → 审批 → 立即执行或丢弃"，和"长期资产"互相抵触
+- 需要长期文档 → 那是 `/doc summary`（从实际代码生成）的职责，不是 plan 的职责
+
+**使用时机**：你**马上**就要在同一会话内实施，只是想先把所有设计决策聊清楚。
 
 **与 /design 的区别**：
-- `/blueprint`：只做计划，不实施。产出 blueprint.md 后停止。blueprint.md 是长期资产，可跨多个会话使用
-- `/design`：设计 + 实施一体化。若项目中已有 blueprint.md，/design 读取它作为输入直接进入实现
+- `/blueprint`：plan mode 驱动的**结构化决策对话**，产出是 plan mode 里的最终计划；不做实施
+- `/design`：设计 + 实施一体化；如果 `/blueprint` 的 plan 被用户批准，下一步应该直接在同一会话内调用 `/design` 继续推进
 
-**blueprint.md 的完成标准**：
-- 实施时不需要额外的设计决策——所有"怎么做"的问题都已回答
-- 用户和 AI 都认为没有遗漏和争议
-- 每个关键决策有理由，可追溯
+**与直接切 plan mode 的区别**：
+- 直接切 plan mode = 给 AI 自由发挥的空间
+- `/blueprint` = 强制走维度清单，逐项给选项 + 推荐 + 理由，避免 AI 跳着回答或漏掉维度
 
 ---
 
 ## 参数解析
 
-- **描述**（必填）：要计划的项目或功能
-- `[auto]`：无人值守模式——AI 严格按推荐哲学选择每个决策点的最优方案（追求设计最优，一步到位），直接生成完整 plan，用户事后审阅。禁止因"保守"或"兼容现有"而降级推荐
-
-### 文件命名
-
-plan 文件遵守产物统一存储约定：`blueprint-<项目名>-YYYYMMDD-HHMMSS.md`，存入 `.artifacts/`。如 `blueprint-auth-module-20260402-143000.md`。活跃 plan 通过文件内 `状态：` 字段检索（非"已完成"即活跃）。
+- **描述**（必填）：要规划的项目或功能
+- 无 `[auto]` 参数——plan mode 的核心就是用户审批，auto 与其语义矛盾
 
 ---
 
 ## 流程
 
-### Phase 0: 上下文理解
+### Phase 0: 进入 plan mode + 上下文理解
 
-1. 若已有代码，阅读项目结构和关键文件，理解现状
-2. 根据项目规模和类型，确定本次计划需要覆盖的**决策维度**
+1. **第一件事**：调用 `EnterPlanMode` 工具进入 plan mode。从此点开始直到 `ExitPlanMode`，只能做读取和分析，不可修改任何文件。
+2. 若已有代码，阅读项目结构和关键文件，理解现状
+3. 根据项目规模和类型，确定本次计划需要覆盖的**决策维度**
 
 ### Phase 1: 逐维度对话
 
@@ -78,7 +80,7 @@ AI 输出：
 
   请逐一回答，或直接说"按推荐"采纳全部推荐项。
 
-用户回答后 → AI 将决策写入 blueprint.md → 确认本维度是否完整 → 进入下一维度
+用户回答后 → AI 在本轮对话里记录决策（写入内部 plan 草稿，不落盘）→ 确认本维度是否完整 → 进入下一维度
 ```
 
 **可选决策维度**（AI 根据项目动态选取）：
@@ -118,151 +120,98 @@ AI 输出：
 
 ### Phase 2: 一致性检查
 
-所有维度完成后，AI 对 blueprint.md 做全局一致性检查：
+所有维度完成后，AI 对内部草稿做全局一致性检查：
 
 - 决策之间是否矛盾？（如选了 async 框架但接口设计全是同步的）
 - 是否有遗漏？（如定义了错误类型但没说谁负责转换）
 - 命名约定是否与接口设计一致？
 - 实施计划是否与架构设计匹配？
 
-若发现不一致 → 向用户指出并讨论修正。
+若发现不一致 → 在对话中向用户指出并讨论修正（仍在 plan mode 内）。
 
-### Phase 3: 最终确认
+### Phase 3: 通过 ExitPlanMode 呈交最终计划
 
-输出完整 blueprint.md 的摘要，向用户确认：
-
-```
-## blueprint.md 完成度检查
-
-✅ 定位与边界：已确定
-✅ 技术选型：已确定
-✅ 架构设计：已确定（3 个模块，核心抽象 2 个）
-✅ 接口设计：已确定（5 个公共 API）
-✅ 编码规范：已确定
-✅ 实施计划：已确定（3 个阶段）
-✅ 一致性检查：通过
-
-是否还有需要补充或修改的？
-```
-
-用户确认 → 写入文件。
-
-**`auto` 模式**：不逐维度询问，AI 严格按推荐哲学为每个决策点选择**设计最优**的方案，直接生成完整 blueprint.md，最后输出给用户审阅。auto 模式下禁止以下行为：
-- 因为"没有用户确认"而选保守方案——auto 的含义就是信任 AI 的最优判断
-- 因为"当前代码是 X"而推荐兼容 X 的方案——如果 Y 更好就选 Y
-- 因为"迁移成本大"而降级推荐——计划阶段只关注终态，不关注迁移成本
-
----
-
-## blueprint.md 格式
+组装完整的 plan 文本，调用 `ExitPlanMode` 工具，`plan` 参数为 **Markdown 格式的完整计划**。建议遵循以下骨架：
 
 ```markdown
 # Plan: <项目/功能名>
 
 > <一句话描述>
 
-创建时间：<YYYY-MM-DD>
-状态：草案 / 已确认 / 实施中 / 已完成
-
----
-
 ## 定位与边界
-
-**目标**：<核心价值>
-**用户**：<目标用户>
-**In scope**：
-- ...
-**Out of scope**：
-- ...
-
----
+<核心目标、in/out scope>
 
 ## 技术选型
-
 | 类别 | 选择 | 理由 |
 |------|------|------|
-| 语言 | <X> | <理由> |
-| 框架 | <X> | <理由> |
-| 构建 | <X> | <理由> |
-| 测试 | <X> | <理由> |
-
----
 
 ## 架构设计
-
 ### 模块划分
-
 | 模块 | 职责 | 依赖 |
-|------|------|------|
-| <name> | <职责> | <依赖列表> |
-
 ### 核心抽象
-
-<关键类型/trait/interface 的定义和设计意图>
-
 ### 数据流
 
-<从输入到输出的主要数据路径>
-
----
-
 ## 接口设计
-
 ### 公共 API
-
-<函数签名 + 行为描述>
-
 ### 错误体系
 
-<错误类型定义 + 传播规则>
-
----
-
 ## 编码规范
-
 | 维度 | 规范 |
-|------|------|
-| 命名 | <约定> |
-| 错误处理 | <统一模式> |
-| 日志 | <级别使用 + 格式> |
-| 注释 | <风格> |
-
----
 
 ## 实施计划
-
-> **Commit 策略**：每个阶段完成并通过验收后，执行 `/git` 提交。commit message 标注阶段编号（如 `plan: 完成阶段 1 — 核心数据结构`）。这确保每个阶段是独立的回滚点——发现问题时可以回退到任意阶段的 commit，修改 plan 后从该阶段重新执行。
-
 ### 阶段 1: <标题>
-- 交付物：<...>
-- 验收标准：<...>
-- 推荐 skill：<如 /design, /refactor breaking, /test 等>
-- 预估：<...>
+- 交付物：
+- 验收标准：
+- 推荐 skill：<如 /design、/refactor breaking、/test>
+- 预估：
 
-### 阶段 2: <标题>
-...
+## 关键决策记录
+### D-1: <决策标题>
+- 问题：
+- 选项：A / B / C
+- 决策：
+- 理由：
+- 验收标准：
+```
+
+**用户审批后**：
+- **同意** → Claude Code 自动退出 plan mode，计划进入会话上下文。建议立即说明"可以调用 `/design <下一步>` 进入实施"。不要主动执行任何动作——`/blueprint` 的职责到此结束。
+- **拒绝或要求修改** → 留在 plan mode 内，按用户意见调整草稿，再次调用 `ExitPlanMode`。
 
 ---
 
-## 关键决策记录
+## 异常流程
 
-> 仅记录有争议或高影响的决策，普通决策已在上方各节中体现。
+### 用户在中途要求直接开工
 
-### D-1: <决策标题>
-- **问题**：<需要决策什么>
-- **选项**：A / B / C
-- **决策**：<选了什么>
-- **理由**：<为什么>
-- **验收标准**：<怎么判断实施正确>
-```
+如果用户在 Phase 1/2 就说"够了，开始做吧"：
+1. 询问是否接受当前草稿作为最终计划
+2. 若接受 → 立即跳到 Phase 3，调用 `ExitPlanMode` 呈交现状
+3. 若用户要的是不走 plan 直接动手 → 提示 `/blueprint` 不是正确的入口，建议切换到 `/design`
+
+### 用户在 Phase 1 发现需求本身有问题
+
+如果对话暴露出需求描述本身不清晰或不可行：
+1. 停止维度推进
+2. 在 plan mode 内向用户说明问题和选项
+3. 用户修正需求后 → 重新从 Phase 0 开始，或直接中止 skill（用户主动退出 plan mode）
+
+### 维度爆炸
+
+如果项目规模巨大，维度清单超过 10 项，对话冗长：
+1. 先在 Phase 0 与用户确认"本次 plan 只覆盖 <核心维度>，其余留到后续迭代"
+2. 明确 out-of-scope 的维度，写入最终 plan 的"未覆盖项"章节
+3. 避免一个 session 把所有事都定了——plan mode 是会话本地的，内容多了用户记不住
 
 ---
 
 ## 与其他 skill 的衔接
 
-- **`/design`**：启动时检测是否存在 blueprint.md。若存在，Phase 1（需求理解）直接从 blueprint.md 读取，跳过需求分析
-- **`/design auto`**：可以读取 blueprint.md 后自动实施——`/design auto`（让 AI 按 plan 执行）
-- **实施整个 plan**：逐阶段调用 `/design auto`，每阶段对应 plan 中的一个实施阶段
+**`/blueprint` 的输出是会话内的 plan mode 契约，不跨会话。**
+
+- **`/design`**：`/blueprint` 审批通过后，在**同一会话**内立即接力。由于 plan 已在 Claude 的 context 中，`/design` 无需重新澄清需求，可以直接从"设计方案（Phase 2）"开始
+- **`/discuss`**：若某个维度出现方案分歧无法收敛，可以建议用户先退出 plan mode 跑一轮 `/discuss` 沉淀分歧，再回来继续 `/blueprint`
+- **`/doc summary`**：**不是** `/blueprint` 的替代品。如果用户想要一份"项目永久文档"，应该先让代码实施完，然后用 `/doc summary` 从实际代码反向生成——这才是诚实的设计文档
 
 ---
 
