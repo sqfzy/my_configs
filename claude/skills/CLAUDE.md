@@ -64,6 +64,7 @@ Skills call each other by design — when editing one, check what delegates to i
 - **Keep `allowed-tools` minimal.** Each bash pattern must be justified; skills default to deny. Add only the exact subcommands the workflow runs.
 - **Argument parsing is prose, not code.** Flags like `[auto]`, `[no-commit]`, `[deep]`, `[target: <path>]` are extracted by Claude reading the prompt, so describe them in a parameter table and let inference rules be explicit.
 - **Every artifact-producing skill's `argument-hint` should list `[auto]`** if the workflow has user-confirmation gates — otherwise non-interactive use is impossible.
+- **Skill sub-files**: When a single skill has multiple optional fragments (templates, checklists, example outputs) that shouldn't all load at once, place them in a sibling subdirectory (`<skill>/<kind>/*.md`, e.g. `report/templates/`) and instruct Claude to `Read` the relevant one at runtime via absolute path `~/.claude/skills/<skill>/...`. Do not use `shared/` for skill-private fragments; `shared/` is for cross-skill modules.
 - **Plans are ephemeral, not persistent.** There is no longer a cross-session blueprint contract (removed). If a user wants long-term design docs, the honest answer is `/doc summary` **after** code exists — not a speculative pre-implementation plan file.
 
 ## Testing a skill change

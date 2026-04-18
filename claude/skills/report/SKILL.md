@@ -1,7 +1,7 @@
 ---
 name: report
 description: "Generate structured reports for stakeholders (managers, leads, executives) in markdown format. Principle-driven: conclusion-first, action-oriented, data-backed, anticipates questions. Auto-collects data from git history, .artifacts/, and code changes. TRIGGER when: user asks to write a report, summary for their boss/manager/lead, weekly/monthly report, status update, technical proposal, incident report, or achievement summary. DO NOT TRIGGER when: user wants code documentation (use /doc), project architecture overview (use /doc summary), or technical discussion records (use /discuss)."
-argument-hint: "<topic> [to: <role>] [purpose: progress|decision|issue|achievement] [source: git|artifacts|<path>] [output: <path>] [auto]"
+argument-hint: "<topic> [to: <role>] [purpose: progress|decision|issue|achievement|tech-proposal|incident|experiment] [source: git|artifacts|<path>] [output: <path>] [auto]"
 allowed-tools: Bash(git:*), Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(date:*)
 ---
 
@@ -20,9 +20,9 @@ allowed-tools: Bash(git:*), Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*
 
 ## 核心理念
 
-> 报告的唯一目的是**让读者用最少的时间获得足够信息来做决策或采取行动**。
+> 报告的价值不在于篇幅，而在于**让读者能在 10 秒内找到他需要的信息**——结论、影响、或细节，各取所需。
 
-报告不是工作日志，不是过程记录。读者不关心你做了多少事，关心的是：**结论是什么、对我有什么影响、需要我做什么**。
+不同报告服务于不同读者需求——进度周报里的日志流水可能本身就是信息，事故报告里的时间线就是证据。关键不是消灭过程记录，而是让**结构**替读者做分层：最重要的放最上面，详细内容放后面，读者用多少时间就能获取多少信息。
 
 ---
 
@@ -35,6 +35,9 @@ allowed-tools: Bash(git:*), Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*
   - `decision`：请求决策——该选什么方案？
   - `issue`：汇报问题——出了什么事？怎么解决？
   - `achievement`：分享成果——做了什么？效果如何？
+  - `tech-proposal`：技术提案——该做什么新东西，方案是什么？
+  - `incident`：事故报告——发生了什么，影响范围、根因、改进措施
+  - `experiment`：实验报告——验证了什么假设，结果支持 / 否决？
 
 ### 目的自动推断
 
@@ -44,8 +47,11 @@ allowed-tools: Bash(git:*), Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*
 |-------------|----------|
 | "进展"、"周报"、"月报"、"状态" | progress |
 | "方案"、"选 A 还是 B"、"审批" | decision |
-| "故障"、"事故"、"问题"、"出了什么事" | issue |
+| "问题"、"出了什么事"、"阻塞" | issue |
 | "成果"、"做了什么"、"优化效果" | achievement |
+| "技术提案"、"proposal"、"设计文档"、"RFC" | tech-proposal |
+| "事故"、"故障"、"P0"、"postmortem"、"incident" | incident |
+| "实验"、"验证"、"A/B"、"假设"、"spike"、"POC" | experiment |
 
 - 多个关键词匹配多个目的时，按合理顺序组合执行
 - 无法推断时使用默认目的（progress）
@@ -62,7 +68,7 @@ allowed-tools: Bash(git:*), Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*
 
 ## 写作原则
 
-以下 6 条原则是**强制的**。每条违反都会降低报告质量。
+以下 5 条原则是**强制的**。每条违反都会降低报告质量。
 
 ### 原则 1：结论先行
 
@@ -75,19 +81,7 @@ allowed-tools: Bash(git:*), Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*
 **反面示例**：先花 3 段描述背景和过程，最后一段才给出结论
 **正面示例**：第一句就是"建议选方案 A，预计节省 40% 的延迟"，后面再解释为什么
 
-### 原则 2：面向行动
-
-每份报告必须显式标注**需要读者做什么**。读完不知道"你要我干嘛"的报告是失败的。
-
-在报告开头用醒目格式标注：
-
-```
-**需要您**：[审批 / 决策 / 分配资源 / 知晓即可（FYI）]
-```
-
-若有具体的决策点，列出选项和推荐。
-
-### 原则 3：量化一切
+### 原则 2：量化一切
 
 **禁止**使用以下空话：
 - "效果显著" → 用 "延迟从 142ns 降至 89ns（-37%）"
@@ -97,7 +91,7 @@ allowed-tools: Bash(git:*), Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*
 
 所有描述性结论必须附：**绝对值 + 变化量/百分比 + 对比基准**。
 
-### 原则 4：预判质疑
+### 原则 3：预判质疑
 
 写完每个关键论断后，想象读者会问什么——然后在报告中预先回答。
 
@@ -108,13 +102,13 @@ allowed-tools: Bash(git:*), Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*
 
 以"Q&A"或"常见问题"形式附在报告末尾，或在正文中自然融入。
 
-### 原则 5：三层可读
+### 原则 4：三层可读
 
 报告必须支持三种阅读深度：
 
 | 阅读时间 | 读什么 | 获得什么 |
 |----------|--------|----------|
-| **10 秒** | 标题 + 执行摘要 | 结论 + 需要做什么 |
+| **10 秒** | 标题 + 执行摘要 | 核心结论 |
 | **1 分钟** | + 每节小标题 + 关键数据 | 论据是否充分、逻辑是否通 |
 | **完整** | + 详细分析 + 附录 | 全部细节 |
 
@@ -123,7 +117,7 @@ allowed-tools: Bash(git:*), Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*
 - 每节有小标题，小标题本身传达信息（不用"分析"，用"方案 A 比 B 快 3 倍但成本高 20%"）
 - 详细数据和过程放附录或折叠
 
-### 原则 6：叙事节奏（SCQA 骨架）
+### 原则 5：叙事节奏（SCQA 骨架）
 
 报告的内部叙事遵循自然逻辑：
 1. **背景**——读者已知的共识事实（简短，1-2 句）
@@ -137,110 +131,19 @@ allowed-tools: Bash(git:*), Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*
 
 ## 目的分类与结构重心
 
-根据报告目的，各部分的篇幅和侧重不同：
+根据推断或指定的 purpose，从对应模板读取结构骨架：
 
-### progress（汇报进展）
+| purpose | 模板文件 |
+|---------|---------|
+| `progress` | `~/.claude/skills/report/templates/progress.md` |
+| `decision` | `~/.claude/skills/report/templates/decision.md` |
+| `issue` | `~/.claude/skills/report/templates/issue.md` |
+| `achievement` | `~/.claude/skills/report/templates/achievement.md` |
+| `tech-proposal` | `~/.claude/skills/report/templates/tech-proposal.md` |
+| `incident` | `~/.claude/skills/report/templates/incident.md` |
+| `experiment` | `~/.claude/skills/report/templates/experiment.md` |
 
-```markdown
-# <项目/任务名> 进展报告
-
-**需要您**：[知晓 / 关注风险项 / 决策]
-
-## 执行摘要
-<1-3 句：整体进度 + 关键成果 + 需要关注的风险>
-
-## 进度概览
-| 任务 | 状态 | 完成度 | 预计完成 | 备注 |
-|------|------|--------|----------|------|
-
-## 本期关键成果
-<完成了什么，量化结果>
-
-## 风险与阻塞
-| 风险 | 影响 | 缓解措施 | 需要支持 |
-|------|------|----------|----------|
-
-## 下一步计划
-<下一周期的重点>
-
-## 预判 Q&A
-<Top 3 可能的质疑和回答>
-```
-
-### decision（请求决策）
-
-```markdown
-# <决策主题>
-
-**需要您**：在 <方案 A / B / C> 中做出选择
-
-## 推荐
-<一句话推荐 + 核心理由>
-
-## 方案对比
-| 维度 | 方案 A | 方案 B | 方案 C |
-|------|--------|--------|--------|
-| <关键维度1> | ... | ... | ... |
-
-## 推荐理由
-<为什么推荐这个方案，用数据支撑>
-
-## 风险与缓解
-<选择推荐方案的主要风险>
-
-## 预判 Q&A
-```
-
-### issue（汇报问题）
-
-```markdown
-# <问题标题>
-
-**需要您**：[知晓 / 协调资源 / 审批方案]
-
-## 执行摘要
-<什么问题 + 影响范围 + 当前状态 + 需要什么支持>
-
-## 影响
-<谁受影响、多大范围、持续多久，用数据>
-
-## 根因分析
-<为什么发生，不是"怎么发生的"流水账>
-
-## 已采取措施
-<做了什么、效果如何>
-
-## 需要的支持
-<具体需要什么：人力/资源/决策/跨团队协调>
-
-## 防止再次发生
-<长期改进措施>
-
-## 预判 Q&A
-```
-
-### achievement（分享成果）
-
-```markdown
-# <成果标题>
-
-**需要您**：知晓
-
-## 执行摘要
-<做了什么 + 核心数据 + 价值>
-
-## 关键成果
-<量化结果，对比优化前后/目标值>
-
-## 实现方式
-<简要描述方法，不需要技术细节——上司关心结果不关心过程>
-
-## 业务价值
-<对团队/产品/公司的意义>
-
-## 下一步
-<基于此成果可以进一步做什么>
-```
+模板是结构参考，不是填空题。严格遵守前面的写作原则；若某节对本次报告无意义，删掉即可。
 
 ---
 
@@ -263,10 +166,11 @@ allowed-tools: Bash(git:*), Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*
 
 按写作原则和目的分类撰写报告：
 
-1. 先写执行摘要（结论先行）
-2. 按目的对应的结构重心组织各节
-3. 所有论断附数据支撑（量化一切）
-4. 预判并回答 Top 3 质疑
+1. 根据 purpose，用 Read 工具读取对应模板文件（绝对路径见上表）作为结构骨架。**必须**使用绝对路径 `~/.claude/skills/report/templates/...`，避免与项目 CWD 内同名文件混淆
+2. 先写执行摘要（结论先行）
+3. 按模板骨架组织各节
+4. 所有论断附数据支撑（量化一切）
+5. 预判并回答 Top 3 质疑
 
 **受众适配**：
 - 技术上司：可以使用技术术语，但仍然结论先行
@@ -281,9 +185,8 @@ allowed-tools: Bash(git:*), Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*
 ## 质量自检
 
 - [ ] 第一段是否直接给出结论（不是背景铺垫）
-- [ ] 是否标注了需要读者做什么（FYI / 审批 / 决策 / 资源）
 - [ ] 所有关键论断是否有数据支撑（无空话）
-- [ ] 是否预判并回答了 Top 3 可能质疑
+- [ ] 是否在正文或末尾以 Q&A 形式回答了可能的质疑
 - [ ] 小标题是否传达信息（不是空泛的"分析""总结"）
 - [ ] 篇幅是否匹配受众和目的（不冗长也不过简）
 - [ ] 10 秒阅读（只看标题+摘要）是否能获取核心信息
