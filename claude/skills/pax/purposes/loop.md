@@ -22,11 +22,14 @@ BODY:
   step 1: /pax --review --auto (lens: {LENS})
           → tier_list
   step 2: pick = tier_list.tier1.first_unflagged()
-          if none: signal UNTIL("tier1 empty")
+          if none: ESCALATE       # 见 §6 梯队 L1/L2/L3/L4；绝不 signal UNTIL
   step 3: kind = classify(pick)
           route kind → /pax --{feat|fix|reshape|upgrade|test|bench|doc} --auto
           input: pick, lens: {LENS}
   step 4: collect commit_hashes; diff_stat; summary → STATE
+
+# 只有当 UNTIL 原文就是"Tier 1 清完"之类时，step 2 才允许 signal UNTIL。
+# UNTIL 为时间类（"到 9 点"）时，step 2 永远只能 ESCALATE，不得退出。
 ```
 
 **硬约束**：BODY 至少有一个"产出 commit 或改变状态"的 step，否则判空转。
@@ -42,10 +45,15 @@ BODY:
 | 状态 | "cargo test 全绿"、"无 clippy warning" | 跑命令 |
 | 清空 | "Tier 1 清完"、"无待修项" | 读 BODY 产物 |
 | 外部 | "用户打断" | 系统信号 |
-| 复合 | "8 点或 Tier 1 清完" | 任一满足即退 |
+| 复合 | "8 点或 Tier 1 清完" | 任一满足即退（仅当用户文字里明写"或/and/任一/both"才算复合）|
 | 空 | `""` | 永不满足（跑到被打断） |
 
-歧义按**最保守**解读（"今晚"→24:00、"早上"→次日 08:00），解读写入"终止条件解读"章节。
+**UNTIL 解读铁律**（Phase 0 假设列举必须列为最高优先级假设）：
+
+1. **不得隐式合取 / 析取**。用户只给一个条件就是一个条件；不得施工期自作主张加 "OR 队列耗尽" / "OR 无新发现" / "OR 觉得差不多" 等附加门。**唯一**的复合 UNTIL 是用户文字里明写"或/且/任一/both"的。
+2. **时间类 UNTIL 是硬墙**。到点前绝对不退出，任何其他信号（队列耗尽、无新发现、多轮无 commit）都不是 UNTIL 触发点，而是 ESCALATION 触发点（见 §6）——即扩大搜索面 / 换子目的 / 换镜头，**继续跑**直到时间到。
+3. 歧义按**最保守**解读（"今晚"→24:00、"早上"→次日 08:00、"一会儿"→2h），解读写入"终止条件解读"章节并在 Phase 0.5 假设中显式列出供用户 confirm。
+4. **BODY 不得 `signal UNTIL(...)` 除非该信号是 UNTIL 原文成分**。示例：UNTIL="Tier 1 清完" 时 BODY 可 signal；UNTIL="到 9 点" 时 BODY **严禁** signal 任何非时间信号。
 
 ### 3. BATCH_UNTIL —— subagent 级终止（subagent 模式必填）
 
@@ -84,10 +92,22 @@ subagent 模式下，主循环在派发新 subagent 时把 STATE 透传给它（
 | step 内失败 | 交给被调 purpose 的 `--auto` 规则（警告 + 自修复 + 回滚 + 继续剩余阶段） |
 | 单轮整体失败 | 标记该轮 `⚠️`，继续下一轮 |
 | 同一项跨两轮失败 | 加入 `skip_pool`，从待挑池永久移除 |
-| 连续 3 轮无 commit | 判定空转，警告 + 优雅退出 |
-| 被调 skill 不存在 / 参数错 | 警告 + 立刻退出（配置错误，非运行时问题） |
+| 连续 3 轮无 commit | **触发 ESCALATION**（升一级搜索面 / 换子目的 / 换镜头），**不退出**。若 UNTIL 尚未到且 ESCALATION 全部耗尽，继续空转冷却等 UNTIL，不优雅退出 |
+| 待挑池 / 队列耗尽 | **触发 ESCALATION**（Level 1 起），**不退出**。除非 UNTIL 原文就是"队列耗尽 / Tier 1 清完" |
+| 被调 skill 不存在 / 参数错 | 警告 + 立刻退出（配置错误，非运行时问题；属"物理不可继续"） |
 | subagent 返回 CONTINUE（context 耗尽） | 主循环派发新 subagent，传递 STATE |
 | subagent 返回格式错误 / 无报告 | 该批次标记失败，主循环判断是否派发重试（最多 1 次） |
+
+**ESCALATION 梯队**（UNTIL 未触发但手头活干完时的自适应升级）：
+
+| Level | 触发 | 行为 |
+|-------|------|------|
+| L1 | 当前镜头 / Tier 无项可挑 | 去掉 LENS 过滤（全景 review）；Tier 1 空了降到 Tier 2 |
+| L2 | L1 仍无项 | 换子目的：review → test（补盲区）→ bench（找热点）→ doc（补文档） |
+| L3 | L2 仍无新改动 | 打磨类任务：改注释 / 补日志 / 提升可测性 / 收紧 static_assert / 收紧 lint |
+| L4 | L3 仍无事可做（极端情况） | **空转冷却**（按指数退避但上限不变），定时重扫一遍整仓直到 UNTIL 触发 |
+
+**铁律**：ESCALATION 全部耗尽仍没到 UNTIL 时，**继续空转等时间到，绝不提前退出**。时间类 UNTIL 只有时间本身能触发。
 
 ### 7. BOUNDS —— 资源边界
 
@@ -183,7 +203,8 @@ Phase 3 自检时判定：
 **铁律**（借自旧 /repeat，必须写入契约）：
 
 - 只有 UNTIL / BATCH_UNTIL / BOUNDS / 用户打断才能终止
-- 禁以"觉得够好了"、"看起来没什么可做的"自行停
+- 禁以"觉得够好了"、"看起来没什么可做的"、"队列耗尽"、"无新发现"、"两轮无 commit" 等任何**非 UNTIL 原文成分**的理由自行停
+- **时间类 UNTIL 是绝对硬墙**：即使 ESCALATION 4 级全部耗尽、即使 99% 时间在空转冷却，也必须跑到时间点
 - 禁轮间暂停等待用户确认
 - 禁合并多轮报告（每轮一块，即使空转也要出 `➡️` 块）
 
@@ -263,6 +284,9 @@ Phase 3 自检时判定：
 | BODY 包含交互式命令（如 `git rebase -i`） | 拒绝——破坏无人值守前提 |
 | subagent 模式未定义 BATCH_UNTIL | 拒绝——等于永不退的 subagent |
 | FAILURE 策略缺失（尤其跨轮失败） | 拒绝——会陷入死循环重试 |
+| **时间类 UNTIL 与非时间信号合取 / 析取**（例 UNTIL="9点" 但 Phase 0.5 假设列作 "9点 或 队列耗尽"）| **拒绝**——时间类 UNTIL 必须原封不动，不允许加隐式出口 |
+| **BODY 在非成分信号上 signal UNTIL**（例 UNTIL="9点" 但 BODY 写 `if tier_empty: signal UNTIL`）| **拒绝**——signal 的内容必须是 UNTIL 原文成分 |
+| ESCALATION 梯队缺失（BODY 把"无项可挑"当退出路径而非升级路径） | **拒绝**——必须有 L1-L4 的自适应兜底 |
 
 ---
 
