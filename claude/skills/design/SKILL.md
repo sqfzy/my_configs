@@ -20,6 +20,8 @@ Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
 最终成果可视化原则：!`cat ~/.claude/skills/shared/deliverable-vision.md`
 
+改动总结可视化原则：!`cat ~/.claude/skills/shared/change-summary.md`
+
 需求：$ARGUMENTS
 
 ---
@@ -399,6 +401,10 @@ feat(<scope>): <subject>
 
 直接生成最合适的 commit message，询问用户确认。`auto` 模式直接使用。
 
+### 6.2.5 改动总结（向用户展示）
+
+提交完成后，**先打印改动总结给用户**，再继续生成报告。按"改动总结可视化原则"输出 ASCII 化的文件清单 / 结构对比 / 接口变化 / 行为变化 / 故意未改项。这份内容稍后**原样**写入 6.3 报告的 `## 改动总结` 章节。
+
 ### 6.3 报告
 
 按产物存储约定输出以下报告：
@@ -437,6 +443,10 @@ feat(<scope>): <subject>
 - 新增文件：<列表>
 - 修改文件：<列表>
 - 测试用例：<N 个>
+
+## 改动总结
+<按"改动总结可视化原则"输出：文件清单 + ASCII 结构对比 + 接口变化 + 行为变化 + 故意未改项。
+此章节内容必须与 Phase 5/6 末尾打印给用户的"改动总结"完全一致——会话输出会消失，报告必须独立成立。>
 
 ## 后续建议
 - <Out of scope 中的内容及优先级建议>

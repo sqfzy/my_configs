@@ -19,6 +19,8 @@ allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep
 
 Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
+改动总结可视化原则：!`cat ~/.claude/skills/shared/change-summary.md`
+
 输入：$ARGUMENTS
 
 ---

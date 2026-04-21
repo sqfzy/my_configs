@@ -20,6 +20,8 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 
 Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
+改动总结可视化原则：!`cat ~/.claude/skills/shared/change-summary.md`
+
 目标：$ARGUMENTS
 
 ---

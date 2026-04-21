@@ -21,6 +21,8 @@ allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep
 
 Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
+改动总结可视化原则：!`cat ~/.claude/skills/shared/change-summary.md`
+
 目标：$ARGUMENTS
 
 ---
@@ -453,6 +455,11 @@ D(编排) → Validator, Serializer, B
 - 终止原因：收敛 / 达到上限 / 用户中断
 ```
 
+### 3.1.5 改动总结（向用户展示）
+
+按"改动总结可视化原则"输出 ASCII 化的本次 improve **全部累计改动**（覆盖所有迭代，不只是最后一轮）：文件清单 / 结构对比 / 接口变化 / 行为变化 / 故意未改项。
+先打印给用户审阅，然后**原样**写入 Improve 报告的 `## 改动总结` 章节。
+
 ### 3.2 关键决策与教训
 
 简要记录改进中最重要的 2–3 个决策和教训（每项 2–3 句话），便于快速回顾。
@@ -505,6 +512,10 @@ D(编排) → Validator, Serializer, B
 - 修改文件：N 个
 - 净行数：+X / -Y
 - 新增测试：N 个
+
+### 改动总结
+<按"改动总结可视化原则"输出：ASCII 文件清单 / 结构对比 / 接口变化 / 行为变化 / 故意未改项。
+此章节内容必须与 3.1.5 末尾打印给用户的"改动总结"完全一致——会话输出会消失，报告必须独立成立。>
 
 ### 验证结果
 - 构建：✅

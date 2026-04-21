@@ -15,6 +15,8 @@ Remotes：!`git remote -v 2>&1`
 
 构建命令策略：!`cat ~/.claude/skills/shared/build-detect.md`
 
+改动总结可视化原则：!`cat ~/.claude/skills/shared/change-summary.md`
+
 参数：$ARGUMENTS
 
 ---
