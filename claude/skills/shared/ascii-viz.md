@@ -94,7 +94,7 @@ Input ──▶ [Parser] ──AST──▶ [Optimizer] ──IR──▶ [Codeg
 
 ### 适用范围
 
-- `/blueprint` 的计划（最终 plan 必含图示）
+- `/pax` 的计划（最终 plan 必含图示）
 - 施工阶段的改动总结（每阶段 ASCII 文件清单、改造前后结构、接口变化）
 - `/verify` 的审查/测试/发布报告中的"发现 / 影响面"展示
 - `/report` 生成的给人类读者的报告

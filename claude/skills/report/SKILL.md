@@ -1,6 +1,6 @@
 ---
 name: report
-description: "系统里唯一写入持久化产物的 skill。把会话中的决策 / 计划 / 发现 / 改动 / 复盘 / 实验落盘到 .artifacts/，并按读者定制：decision（决策记录）/ status（周报 / 绩效）/ incident（事故复盘）/ issue（问题报告）/ release（发布说明）/ retro（反思复盘）/ experiment（实验报告）。自动从会话 context + git log + .artifacts/ 收集素材。默认生成草稿供用户预览再落盘；--auto 直接落盘。TRIGGER when: 用户要记下决策 / 写周报 / 事故复盘 / 报 issue / 写 release notes / 做 retro / 写实验报告；说\"存一下\" / \"汇报\" / \"记录下来\" / \"告诉用户\"。DO NOT TRIGGER when: 用户要核查代码（用 /blueprint --review）；要做规划（用 /blueprint --<目的>）。"
+description: "系统里唯一写入持久化产物的 skill。把会话中的决策 / 计划 / 发现 / 改动 / 复盘 / 实验落盘到 .artifacts/，并按读者定制：decision（决策记录）/ status（周报 / 绩效）/ incident（事故复盘）/ issue（问题报告）/ release（发布说明）/ retro（反思复盘）/ experiment（实验报告）。自动从会话 context + git log + .artifacts/ 收集素材。默认生成草稿供用户预览再落盘；--auto 直接落盘。TRIGGER when: 用户要记下决策 / 写周报 / 事故复盘 / 报 issue / 写 release notes / 做 retro / 写实验报告；说\"存一下\" / \"汇报\" / \"记录下来\" / \"告诉用户\"。DO NOT TRIGGER when: 用户要核查代码（用 /pax --review）；要做规划（用 /pax --<目的>）。"
 argument-hint: "[<mode>] [<主题或补充素材>] [--auto] [--no-commit]"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(date:*), Bash(mkdir:*), Bash(git:*), Bash(ls:*)
 ---
@@ -21,10 +21,10 @@ ASCII 可视化原则：!`cat ~/.claude/skills/shared/ascii-viz.md`
 
 ## 定位
 
-`/report` 是 skill 系统里**唯一写入持久化产物**的 skill。其他所有 skill（包括 `/blueprint`）都不落盘——需要留存时用户**必须显式**调用 `/report`。
+`/report` 是 skill 系统里**唯一写入持久化产物**的 skill。其他所有 skill（包括 `/pax`）都不落盘——需要留存时用户**必须显式**调用 `/report`。
 
 **铁律**：
-- `/blueprint` 的 9 个目的产物（计划、施工日志、改动总结、审查发现、bench 数据…）**全部不自动落盘**
+- `/pax` 的 9 个目的产物（计划、施工日志、改动总结、审查发现、bench 数据…）**全部不自动落盘**
 - 只有 `/report` 写 `.artifacts/`
 - 一次会话可多次 `/report`，每次独立文件
 - 每次落盘必须更新 `.artifacts/INDEX.md`
@@ -98,7 +98,7 @@ ASCII 可视化原则：!`cat ~/.claude/skills/shared/ascii-viz.md`
 
 ### `--auto` 语义
 
-和 blueprint 的 `--auto` 一致：全自动、无需批准、自动处理任何情况。
+和 pax 的 `--auto` 一致：全自动、无需批准、自动处理任何情况。
 
 - 素材缺失 → 警告 + 用可得信息生成，缺失项在报告中标注 `[待补充]`
 - mode 无法推断 → 警告 + 按 context 最可能的选
@@ -154,7 +154,7 @@ experiment  → Read ~/.claude/skills/report/modes/experiment.md
 在向用户要任何信息**之前**，必须先尝试自主获取：
 
 **从会话上下文**：
-- blueprint plan（ExitPlanMode 呈交过的内容）
+- pax plan（ExitPlanMode 呈交过的内容）
 - 讨论内容、用户意图、关键决策、否决的方案
 - 会话中执行过的命令输出（测试结果、bench 数据、错误消息）
 - 施工阶段的改动清单、commit message、每阶段完成汇报
@@ -475,17 +475,17 @@ Commit：<hash>（若未 --no-commit）
 
 ---
 
-## 与 blueprint 的衔接
+## 与 pax 的衔接
 
-**场景**：blueprint 刚完成（审批计划、施工完毕、review 完成等），用户想留存。
+**场景**：pax 刚完成（审批计划、施工完毕、review 完成等），用户想留存。
 
 ```
-blueprint 完成 ──▶ /report <相关 mode> ──▶ .artifacts/<mode>-*.md
+pax 完成 ──▶ /report <相关 mode> ──▶ .artifacts/<mode>-*.md
 ```
 
 常见搭配：
 
-| blueprint 目的完成后 | 推荐 /report mode |
+| pax 目的完成后 | 推荐 /report mode |
 |---------------------|------------------|
 | `--feat` / `--fix` / `--reshape` / `--upgrade` 施工完 | `decision`（记录关键决策）+ `retro`（反思） |
 | `--review`（局部或全局） | `decision`（把 Tier 分层 / 发现留存）/ `issue`（把 Critical 条目发给协作者） |
@@ -494,7 +494,7 @@ blueprint 完成 ──▶ /report <相关 mode> ──▶ .artifacts/<mode>-*.m
 | `--doc` | 通常不需要单独 report（文档本身就是产物） |
 | `--ship` | `release`（对用户）+ `status`（对团队 / 上级） |
 
-`/report` 自动识别会话上下文中的 blueprint 产物并作为素材来源。
+`/report` 自动识别会话上下文中的 pax 产物并作为素材来源。
 
 ---
 

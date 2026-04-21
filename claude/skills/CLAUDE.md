@@ -8,7 +8,7 @@ Personal Claude Code skill definitions. `~/.claude/skills` is a symlink to this 
 
 ## Architecture: three skills, one pattern
 
-Three skills live at the top level (`blueprint/`, `report/`, `script/`). They share a common shape that must be preserved when editing:
+Three skills live at the top level (`pax/`, `report/`, `script/`). They share a common shape that must be preserved when editing:
 
 ```
 <skill>/
@@ -18,7 +18,7 @@ Three skills live at the top level (`blueprint/`, `report/`, `script/`). They sh
     └── <name>.md
 ```
 
-- `blueprint/purposes/` — 10 purposes: `feat, fix, reshape, upgrade, review, test, bench, doc, ship, loop`
+- `pax/purposes/` — 10 purposes: `feat, fix, reshape, upgrade, review, test, bench, doc, ship, loop`
 - `report/modes/` — 7 modes: `decision, status, incident, issue, release, retro, experiment`
 - `script/targets/` — 3 special targets: `setup, wizard, pipeline` (other script targets use only SKILL.md)
 
@@ -26,7 +26,7 @@ Three skills live at the top level (`blueprint/`, `report/`, `script/`). They sh
 
 ### The skeleton/variant split is load-bearing
 
-SKILL.md files define the **common skeleton**: flow phases, mandatory maneuvers (e.g. `EnterPlanMode` in blueprint Phase 0, `.artifacts/INDEX.md` update in report Phase 5), generic dimensions, `--auto` semantics, anti-patterns. Each variant file (`purposes/<p>.md`, `modes/<m>.md`, `targets/<t>.md`) contains **only what is unique** to that variant: extra mandatory sections, extra ASCII diagram requirements, extra traps, extra reporting fields.
+SKILL.md files define the **common skeleton**: flow phases, mandatory maneuvers (e.g. `EnterPlanMode` in pax Phase 0, `.artifacts/INDEX.md` update in report Phase 5), generic dimensions, `--auto` semantics, anti-patterns. Each variant file (`purposes/<p>.md`, `modes/<m>.md`, `targets/<t>.md`) contains **only what is unique** to that variant: extra mandatory sections, extra ASCII diagram requirements, extra traps, extra reporting fields.
 
 When editing:
 - **Do not duplicate skeleton content into variant files.** If you find yourself writing generic guidance inside a variant, it belongs in SKILL.md.
@@ -36,14 +36,14 @@ When editing:
 ## Inter-skill boundaries (enforced, not stylistic)
 
 ```
-/blueprint ── plans & constructs ──▶ in-session only, no disk writes
+/pax ── plans & constructs ──▶ in-session only, no disk writes
 /report   ── persists artifacts ──▶ the ONLY skill that writes .artifacts/
-/script   ── generates one file  ──▶ single-file programs; multi-file → /blueprint --feat
+/script   ── generates one file  ──▶ single-file programs; multi-file → /pax --feat
 ```
 
-- `/blueprint` products (plans, construction logs, review findings) **never** auto-persist. Users must explicitly call `/report` to save anything.
+- `/pax` products (plans, construction logs, review findings) **never** auto-persist. Users must explicitly call `/report` to save anything.
 - `.artifacts/INDEX.md` at repo root has a 5-column schema (`时间 | mode | 摘要 | Commit | 文件`) and must be appended on every `/report` write.
-- When editing, do not add disk-write behavior to blueprint or script. Do not introduce a fourth persistence path — route everything through `/report`.
+- When editing, do not add disk-write behavior to pax or script. Do not introduce a fourth persistence path — route everything through `/report`.
 
 ## The `--auto` contract (shared across all three skills)
 
@@ -53,7 +53,7 @@ When editing:
 
 Two skeletons enforce explicit production dimensions that must survive edits:
 
-- **blueprint**: the "生产级 8 维度" (correctness & boundaries / concurrency & resources / observability / security / performance / maintainability / test strategy / docs). Every plan must address all 8; small topics may merge items but cannot skip any. Phase 3 self-check iterates them explicitly.
+- **pax**: the "生产级 8 维度" (correctness & boundaries / concurrency & resources / observability / security / performance / maintainability / test strategy / docs). Every plan must address all 8; small topics may merge items but cannot skip any. Phase 3 self-check iterates them explicitly.
 - **script**: the "8 条生产级原则" (error handling / logging / idempotency / dry-run / input validation / path & command safety / confirmation / progress). These are bottom-line rules; variants reweight but cannot drop them.
 
 If an edit reduces either list, that is a semantic regression — flag it, don't make it silently.

@@ -1,6 +1,6 @@
 ---
 name: script
-description: "生成生产级、可观察、幂等的独立脚本：一次性任务、部署、运维、数据管道、git hook、交互向导等。默认遵守 8 条生产级原则（错误处理 / 日志 / 幂等 / dry-run / 输入校验 / 路径安全 / 确认环节 / 进度提示）；按议题特征动态调整维度权重；必要时读取 targets/<name>.md 加载特殊目标的独有约束（setup / wizard / pipeline）。生成后自动语法检查 + dry-run 验证。--auto 全自动无需批准。TRIGGER when: 用户要创建 / 生成一个独立脚本、自动化、部署脚本、setup 向导、运维工具、batch 处理、git hook、一次性任务。DO NOT TRIGGER when: 用户在写应用代码中顺便用了 shell 命令、一行终端命令（直接执行即可）、需要用 /blueprint 规划的大型工程任务。"
+description: "生成生产级、可观察、幂等的独立脚本：一次性任务、部署、运维、数据管道、git hook、交互向导等。默认遵守 8 条生产级原则（错误处理 / 日志 / 幂等 / dry-run / 输入校验 / 路径安全 / 确认环节 / 进度提示）；按议题特征动态调整维度权重；必要时读取 targets/<name>.md 加载特殊目标的独有约束（setup / wizard / pipeline）。生成后自动语法检查 + dry-run 验证。--auto 全自动无需批准。TRIGGER when: 用户要创建 / 生成一个独立脚本、自动化、部署脚本、setup 向导、运维工具、batch 处理、git hook、一次性任务。DO NOT TRIGGER when: 用户在写应用代码中顺便用了 shell 命令、一行终端命令（直接执行即可）、需要用 /pax 规划的大型工程任务。"
 argument-hint: "<脚本用途描述> [--auto] [--lang <bash|python|ruby|nu|...>] [--path <输出路径>]"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*), Bash(date:*), Bash(git:*), Bash(ls:*), Bash(which:*), Bash(uname:*), Bash(bash:*), Bash(python:*), Bash(python3:*), Bash(ruby:*), Bash(nu:*), Bash(shellcheck:*)
 ---
@@ -145,7 +145,7 @@ ASCII 可视化原则：!`cat ~/.claude/skills/shared/ascii-viz.md`
 
 ### `--auto` 语义
 
-和 blueprint / report 一致：全自动、警告+继续、不停下问用户。
+和 pax / report 一致：全自动、警告+继续、不停下问用户。
 
 - 用户描述不清晰 → 警告 + 按最保守解读生成
 - 参数缺失 → 警告 + 用最常见默认
@@ -280,7 +280,7 @@ EOF
 log_info "Done"
 ```
 
-**生产级编码要求**（和 blueprint 的施工类目的一致）：
+**生产级编码要求**（和 pax 的施工类目的一致）：
 - 命名准确
 - 注释讲 why 非 what
 - 非 trivial 函数简短文档
@@ -382,7 +382,7 @@ log_info "Done"
 
 ## 与其他 skill 的衔接
 
-- **`/blueprint`**：script 是"生成单文件"，不是"规划项目"。若用户议题涉及多文件 / 长期维护 / 跨模块 → 建议改用 `/blueprint --feat`。
+- **`/pax`**：script 是"生成单文件"，不是"规划项目"。若用户议题涉及多文件 / 长期维护 / 跨模块 → 建议改用 `/pax --feat`。
 - **`/report`**：脚本生成后若有决策值得留存（为何选某种实施策略、为何某维度弱化）→ `/report decision`。
 - **`/autopilot`**：脚本运行时间长 / 需要无人值守 → 用 `/autopilot` 执行 script 生成的脚本。
 

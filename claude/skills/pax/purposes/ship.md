@@ -2,7 +2,7 @@
 
 **适用**：准备发布 / release / 打 tag / 推到 remote。用户说"准备发布"、"ship 了"、"打个 tag"、"发布前检查"。
 
-**ship 是组合目的** —— 它**内部依次调用其他 blueprint 目的**的核查与生成能力，组织成一条不可跳过的发布流水线。ship 的价值在于**纪律**：每一个 Gate 都必须跑，每一个失败都必须处理，直到全部通过才能真正提交 / tag / push。
+**ship 是组合目的** —— 它**内部依次调用其他 pax 目的**的核查与生成能力，组织成一条不可跳过的发布流水线。ship 的价值在于**纪律**：每一个 Gate 都必须跑，每一个失败都必须处理，直到全部通过才能真正提交 / tag / push。
 
 **ship 必然修改代码**（commit / tag / CHANGELOG 更新 / 可能的文档更新），不默认只读。
 
@@ -23,13 +23,13 @@
 
 #### 2. Gate 清单（核心章节，每个 Gate 都必须在计划中显式列出并标注 skip 理由若 skip）
 
-ship 内部依次跑以下 Gate，每个 Gate 对应一个其他 blueprint 目的的能力：
+ship 内部依次跑以下 Gate，每个 Gate 对应一个其他 pax 目的的能力：
 
 ```
 Gate 1: Review（代码审查）
   - 功能：对本次 diff 做局部 review，找 Critical / Major 问题
   - 通过标准：无 Critical；Major 数量在可接受阈值内，或每个 Major 已有标注
-  - 失败处理：发现 Critical 必须回 /blueprint --fix 修复后才能再跑 Gate 1
+  - 失败处理：发现 Critical 必须回 /pax --fix 修复后才能再跑 Gate 1
 
 Gate 2: Test（测试覆盖）
   - 功能：对本次 diff 涉及的代码做 test 目的的覆盖盲区分析 + 生成
@@ -239,9 +239,9 @@ ship 是**整个生产级标准的最终闸门**：
 - tag 已发布、已被依赖方用 → **不回滚**，发 patch 版本修复
 
 **预警信号**：
-- Gate 1 发现大量 Critical → 本次改动成熟度不够，停下回 `/blueprint --fix` 批量修复
-- Gate 2 发现测试盲区极多 → 说明 diff 本身就不完整，停下回 `/blueprint --test` 系统补齐
-- Gate 3 发现大量 bench 退化 → 停下归因，可能需要 `/blueprint --bench --optimize`
+- Gate 1 发现大量 Critical → 本次改动成熟度不够，停下回 `/pax --fix` 批量修复
+- Gate 2 发现测试盲区极多 → 说明 diff 本身就不完整，停下回 `/pax --test` 系统补齐
+- Gate 3 发现大量 bench 退化 → 停下归因，可能需要 `/pax --bench --optimize`
 - Gate 4 发现 breaking 未在 diff 中记录 → 说明设计时没意识到，停下补 BREAKING CHANGE 声明 + 升 major
 - Push 失败 (权限 / 冲突 / hook) → 排查 remote 状态，不允许绕过 hook
 

@@ -188,7 +188,7 @@ upgrade 风险高，**必须**有回滚计划：
 - 关键阶段后跑 bench 对比基线
 - 兼容层阶段的代码用显式注释标记（`// COMPAT: remove after phase N+2`）
 - 不允许夹带 feat / reshape 改动 —— 除非是 breaking change 的直接后果
-- 若升级中途发现有显著难度（breaking 多于预期、迁移卡住），停下，回 `/blueprint --upgrade` 重新拆阶段
+- 若升级中途发现有显著难度（breaking 多于预期、迁移卡住），停下，回 `/pax --upgrade` 重新拆阶段
 
 ---
 
