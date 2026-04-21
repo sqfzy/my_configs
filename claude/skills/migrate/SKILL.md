@@ -22,6 +22,8 @@ Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
 改动总结可视化原则：!`cat ~/.claude/skills/shared/change-summary.md`
 
+生产级代码标准：!`cat ~/.claude/skills/shared/production-grade.md`
+
 目标：$ARGUMENTS
 
 ---
@@ -300,6 +302,10 @@ python examples/<name>.py 2>&1
 git add <本次改动的具体文件> && git commit -m "chore: remove migration scaffolding"
 ```
 
+### 改动总结（向用户展示）
+
+清理提交后，按"改动总结可视化原则"打印 ASCII 化的**累计改动总结**（覆盖整次迁移所有 commit）给用户审阅。同一份内容稍后**原样**写入 Phase 5 报告的 `## 改动总结` 章节。
+
 ---
 
 ## Phase 5: 迁移报告
@@ -338,6 +344,10 @@ git add <本次改动的具体文件> && git commit -m "chore: remove migration 
 |------|------|--------|------|
 | 1 | <描述> | <hash> | ✅ |
 | 2 | <描述> | <hash> | ✅ |
+
+## 改动总结
+<按"改动总结可视化原则"输出 ASCII 化的：文件清单（+/~/-/↻）/ 结构对比 / 接口变化 / 行为变化 / 故意未改项。
+覆盖整次迁移的累计改动，与 Phase 4 末尾打印给用户的"改动总结"完全一致。>
 
 ## 遇到的问题
 

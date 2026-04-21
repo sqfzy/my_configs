@@ -22,6 +22,8 @@ Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
 改动总结可视化原则：!`cat ~/.claude/skills/shared/change-summary.md`
 
+生产级代码标准：!`cat ~/.claude/skills/shared/production-grade.md`
+
 需求：$ARGUMENTS
 
 ---

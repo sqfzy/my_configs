@@ -23,6 +23,8 @@ Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
 改动总结可视化原则：!`cat ~/.claude/skills/shared/change-summary.md`
 
+生产级代码标准：!`cat ~/.claude/skills/shared/production-grade.md`
+
 目标：$ARGUMENTS
 
 ---
@@ -227,6 +229,12 @@ Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
 ---
 
+## Phase 4.5: 改动总结（向用户展示）
+
+Phase 4 验证通过后，按"改动总结可视化原则"打印 ASCII 化的累计改动总结给用户审阅。同一份内容稍后**原样**写入 Phase 5 报告的 `## 改动总结` 章节。
+
+---
+
 ## Phase 5: 报告
 
 按产物存储约定输出以下报告：
@@ -277,6 +285,10 @@ Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 - 删除文件：M（✅ 实际删除了旧代码）
 - 修改文件：K
 - 净行数：+X / -Y
+
+## 改动总结
+<按"改动总结可视化原则"输出 ASCII 化的：文件清单（+/~/-/↻）/ 结构对比 / 接口变化 / 行为变化 / 故意未改项。
+cleanup 跨多个 commit，此处必须覆盖**本次 skill 执行的全部累计改动**，而非只是最后一次提交。Phase 4 验证通过后打印给用户审阅，此处原样复刻。>
 
 ## 后续建议
 - <是否有 Minor 项需要后续 /improve 处理>

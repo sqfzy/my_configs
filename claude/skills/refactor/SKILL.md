@@ -22,6 +22,8 @@ Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
 改动总结可视化原则：!`cat ~/.claude/skills/shared/change-summary.md`
 
+生产级代码标准：!`cat ~/.claude/skills/shared/production-grade.md`
+
 意图：$ARGUMENTS
 
 ---
@@ -501,6 +503,10 @@ for each step in 重构步骤:
 
 再次运行完整测试，确认清理没有破坏任何东西。
 
+### 5.2.5 改动总结（向用户展示）
+
+提交前，按"改动总结可视化原则"打印 ASCII 化的改动总结给用户审阅。同一份内容稍后**原样**写入 Phase 6 重构报告的 `## 改动总结` 章节。
+
 ### 5.3 提交
 
 除非指定 `no-commit`，生成提交信息并执行：
@@ -544,6 +550,10 @@ git add <本次改动的具体文件> && git commit -m "<generated message>"
 - 重构类型：<Extract / Rename / Split / ...>
 - 风险等级：<低 / 中 / 高>
 - 目标：<一句话>
+
+## 改动总结
+<按"改动总结可视化原则"输出 ASCII 化的：文件清单（+/~/-/↻）/ 结构对比 / 接口变化 / 行为变化 / 故意未改项。
+此章节内容必须与 5.2.5 末尾打印给用户的"改动总结"完全一致——会话输出会消失，报告必须独立成立。>
 
 ## 重构前后对比
 

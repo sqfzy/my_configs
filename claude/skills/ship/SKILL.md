@@ -22,6 +22,8 @@ Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
 改动总结可视化原则：!`cat ~/.claude/skills/shared/change-summary.md`
 
+生产级代码标准：!`cat ~/.claude/skills/shared/production-grade.md`
+
 目标：$ARGUMENTS
 
 ---
@@ -334,6 +336,10 @@ git push --set-upstream origin <branch> 2>&1
 
 push 失败时输出具体错误和建议。
 
+### 5.5 改动总结（向用户展示）
+
+push 完成后，按"改动总结可视化原则"打印 ASCII 化的改动总结给用户审阅。覆盖整个 diff 范围（含 Gate 2/3/4 所做的修复、补测试、文档同步），不只是最后一次 commit。同一份内容稍后**原样**写入 Ship 报告的 `## 改动总结` 章节。
+
 ---
 
 ## Ship 报告
@@ -378,6 +384,10 @@ push 失败时输出具体错误和建议。
 | Commit | Message |
 |--------|---------|
 | <hash> | <subject> |
+
+## 改动总结
+<按"改动总结可视化原则"输出 ASCII 化的：文件清单（+/~/-/↻）/ 结构对比（若涉及）/ 接口变化 / 行为变化 / 故意未改项。
+覆盖整个 diff 范围 + Gate 2/3/4 引入的所有改动；与 5.5 末尾打印给用户的"改动总结"完全一致。>
 
 ## 后续建议
 - <Review 中记录的 Minor/Nit 问题，建议后续处理>

@@ -26,6 +26,8 @@ Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
 改动总结可视化原则：!`cat ~/.claude/skills/shared/change-summary.md`
 
+生产级代码标准：!`cat ~/.claude/skills/shared/production-grade.md`
+
 参数：$ARGUMENTS
 
 ---
@@ -350,6 +352,12 @@ feat(<scope>): <简述>
 
 ---
 
+## Phase 3.9: 累计改动总结（向用户展示）
+
+所有迭代完成后、Phase 4 报告生成前，按"改动总结可视化原则"打印 ASCII 化的**累计改动总结**（覆盖本次 evolve 全部轮次）给用户审阅。同一份内容稍后**原样**写入演进报告的 `## 改动总结` 章节。
+
+---
+
 ## Phase 4: 演进报告
 
 按产物存储约定输出以下报告：
@@ -387,6 +395,10 @@ feat(<scope>): <简述>
 - 修改文件：M 个
 - 净行数：+X / -Y
 - 新增测试：K 个
+
+## 改动总结
+<按"改动总结可视化原则"输出 ASCII 化的：文件清单（+/~/-/↻）/ 结构对比 / 接口变化 / 行为变化 / 故意未改项。
+evolve 跨多轮 design 子流程，此处必须覆盖**本次 evolve 全部累计改动**。Phase 4 报告生成前必须先打印给用户审阅，此处原样复刻。>
 
 ## 未完成缺口
 | 缺口 | Tier | 建议跟进 |

@@ -21,6 +21,8 @@ Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
 改动总结可视化原则：!`cat ~/.claude/skills/shared/change-summary.md`
 
+生产级代码标准：!`cat ~/.claude/skills/shared/production-grade.md`
+
 输入：$ARGUMENTS
 
 ---
@@ -302,6 +304,10 @@ Adds regression test for empty and whitespace-only inputs.
 
 **`auto` 模式**：直接使用，不询问。
 
+### 3.1.5 改动总结（向用户展示）
+
+执行提交前，按"改动总结可视化原则"打印 ASCII 化的改动总结给用户审阅。同一份内容稍后**原样**写入修复报告的 `### 改动总结` 段落。
+
 ### 3.2 执行提交
 
 **禁止使用 `git add -A` 或 `git add .`——必须逐文件 add，避免暴露 .env、credentials 等敏感文件或意外的大文件。**
@@ -356,10 +362,9 @@ git add <本次改动的具体文件> && git commit -m "<confirmed message>"
 
 ## 修复
 
-### 改动摘要
-| 文件 | 改动 |
-|------|------|
-| `<file>` | <描述> |
+### 改动总结
+<按"改动总结可视化原则"输出 ASCII 化的：文件清单（+/~/-/↻）/ 结构对比（若涉及）/ 接口变化 / 行为变化 / 故意未改项。
+Phase 3 提交前必须先把这份内容**打印给用户审阅**，然后**原样**写入此处——会话输出会消失，报告必须独立成立。>
 
 ### 关键 Diff
 \```diff

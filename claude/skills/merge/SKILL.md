@@ -17,6 +17,8 @@ Remotes：!`git remote -v 2>&1`
 
 改动总结可视化原则：!`cat ~/.claude/skills/shared/change-summary.md`
 
+生产级代码标准：!`cat ~/.claude/skills/shared/production-grade.md`
+
 参数：$ARGUMENTS
 
 ---
@@ -178,6 +180,10 @@ git merge -X theirs <upstream-ref> --no-edit 2>&1
 - 构建：✅ / ❌
 - 测试：✅ / ❌ / ⏭️
 
+## 改动总结
+<按"改动总结可视化原则"输出 ASCII 化的：本次合并引入的文件清单（+/~/-/↻）/ 结构变化 / 接口变化 / 行为变化 / 故意保留的本地差异。
+sync 模式下重点说明 upstream 覆盖了哪些本地内容、保留了哪些个人改进。Phase 4 验证通过后必须先打印给用户审阅，此处原样复刻。>
+
 ## 后续操作
 - 审查被覆盖改动：若需恢复，参考备份分支 backup/merge-<timestamp>
 - 回滚：git reset --hard <rollback-hash>
@@ -325,6 +331,10 @@ for each 功能单元 in 移植计划:
 ## 验证结果
 - 构建：✅ / ❌
 - 测试：✅ / ❌ / ⏭️
+
+## 改动总结
+<按"改动总结可视化原则"输出 ASCII 化的：移植到目标库的文件清单（+/~/↻）/ 在目标库中的最终结构 / 新增公共接口 / 适配带来的行为差异 / 故意未移植的部分。
+Phase 4 验证通过后必须先打印给用户审阅，此处原样复刻。>
 
 ## 后续操作
 - 代码审查：建议使用 /review 审查 port 分支
