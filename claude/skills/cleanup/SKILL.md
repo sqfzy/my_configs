@@ -19,6 +19,8 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 
 Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
+最终成果可视化原则：!`cat ~/.claude/skills/shared/deliverable-vision.md`
+
 目标：$ARGUMENTS
 
 ---
@@ -119,8 +121,27 @@ Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
 ### 1.4 产出：重设计方案
 
+**必须遵循"最终成果可视化原则"**——用 ASCII 图示展示理想架构的最终形态，并与现状并排对比，让用户直观看到 cleanup 后项目长什么样。文字+表格的描述远不足以让人理解"重新设计"的差异：
+
 ```
 ## 重设计方案
+
+### 现状架构 vs 理想架构
+\```
+   现状（当前混乱）                        理想（cleanup 后）
+   ────────────────                      ─────────────────
+   <ASCII 模块/目录全景图>                <ASCII 模块/目录全景图>
+\```
+
+### 理想态目录结构
+\```
+<完整目录树，标注每个模块的最终职责>
+\```
+
+### 理想态依赖图
+\```
+<ASCII 框图 + 箭头展示理想的模块依赖关系>
+\```
 
 ### 架构变更清单
 | 序号 | 变更 | 当前状态 | 目标状态 | 影响范围 | 迁移策略 |

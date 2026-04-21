@@ -18,6 +18,8 @@ allowed-tools: Bash(mkdir:*), Bash(date:*), Bash(cat:*), Bash(find:*), Bash(grep
 
 Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
+最终成果可视化原则：!`cat ~/.claude/skills/shared/deliverable-vision.md`
+
 意图：$ARGUMENTS
 
 ---
@@ -295,7 +297,7 @@ grep -rn "<函数名/模块名/类型名>" --include="*.rs" --include="*.py" --i
 
 ### 2.1 方案设计
 
-输出重构方案：
+输出重构方案。**必须遵循"最终成果可视化原则"**——「当前结构」与「目标结构」用并排 ASCII 图示展示，让差异一目了然，不能只用文字描述：
 
 ```
 ## 重构方案
@@ -303,11 +305,14 @@ grep -rn "<函数名/模块名/类型名>" --include="*.rs" --include="*.py" --i
 ### 目标
 <一句话：重构要达成什么结构改善>
 
-### 当前结构
-<简要描述现状的问题>
+### 当前结构 vs 目标结构
+\```
+   现状                           目标
+   ──────                         ──────
+   <ASCII 框图/目录树>            <ASCII 框图/目录树>
+\```
 
-### 目标结构
-<描述重构后的代码组织方式>
+（若有模块依赖变化，再额外画一张依赖关系对比图）
 
 ### 操作步骤
 <按执行顺序列出每一步具体操作，粒度到函数/类型级别>

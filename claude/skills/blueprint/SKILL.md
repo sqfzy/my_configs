@@ -12,6 +12,8 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(date:
 项目文件概览：!`find . -type f \( -name "*.rs" -o -name "*.cpp" -o -name "*.hpp" -o -name "*.h" -o -name "*.py" -o -name "*.ts" -o -name "*.go" \) ! -path "*/target/*" ! -path "*/.git/*" ! -path "*/node_modules/*" | head -40`
 构建配置：!`find . -maxdepth 2 -name "xmake.lua" -o -name "Cargo.toml" -o -name "pyproject.toml" -o -name "package.json" -o -name "go.mod" -o -name "CMakeLists.txt" 2>/dev/null | head -10`
 
+最终成果可视化原则：!`cat ~/.claude/skills/shared/deliverable-vision.md`
+
 目标：$ARGUMENTS
 
 ---
@@ -131,7 +133,11 @@ AI 输出：
 
 ### Phase 3: 通过 ExitPlanMode 呈交最终计划
 
-组装完整的 plan 文本，调用 `ExitPlanMode` 工具，`plan` 参数为 **Markdown 格式的完整计划**。建议遵循以下骨架：
+组装完整的 plan 文本，调用 `ExitPlanMode` 工具，`plan` 参数为 **Markdown 格式的完整计划**。
+
+**强制要求**：plan 必须遵循"最终成果可视化原则"——在「架构设计」「数据流」「实施计划」等章节中，**用 ASCII 图示展示最终形态**（目录结构、模块依赖、数据流向、改造前后对比），而不是只写文字描述。看不到"做完是什么样"的 plan 是不合格的。
+
+建议遵循以下骨架：
 
 ```markdown
 # Plan: <项目/功能名>
@@ -146,10 +152,32 @@ AI 输出：
 |------|------|------|
 
 ## 架构设计
-### 模块划分
+
+### 最终目录结构
+\```
+<必须用目录树展示完整的最终文件布局>
+\```
+
+### 模块依赖图
+\```
+<必须用 ASCII 框图 + 箭头展示模块间调用关系>
+\```
+
+### 模块职责
 | 模块 | 职责 | 依赖 |
+
 ### 核心抽象
+<关键类型/trait/接口的定义>
+
 ### 数据流
+\```
+<必须用 ASCII 流水线/时序图展示核心数据的流动路径>
+\```
+
+### 现状 vs 目标（若为改造类工作，必填）
+\```
+<必须用并排 ASCII 框图对比改造前后的结构差异>
+\```
 
 ## 接口设计
 ### 公共 API

@@ -11,6 +11,8 @@ allowed-tools: Bash(mkdir:*), Bash(date:*)
 当前目录：!`pwd`
 产物存储约定：!`cat ~/.claude/skills/shared/artifacts.md`
 
+最终成果可视化原则：!`cat ~/.claude/skills/shared/deliverable-vision.md`
+
 议题：$ARGUMENTS
 
 ---
@@ -82,7 +84,10 @@ allowed-tools: Bash(mkdir:*), Bash(date:*)
 
 ## Step 3: 收敛输出
 
-讨论结束后，输出结构化的收敛结果。使用清晰的视觉分隔：
+讨论结束后，输出结构化的收敛结果。使用清晰的视觉分隔。
+
+**当议题涉及具体技术方案/架构/模块设计时，"方案细节"章节必须遵循"最终成果可视化原则"**——用 ASCII 图示展示最终结构（目录树、模块依赖图、数据流、改造前后对比）。纯方法论/流程类讨论则不强制。
+
 
 ```
 ══════════════════════════════════════

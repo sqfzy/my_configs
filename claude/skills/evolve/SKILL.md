@@ -22,6 +22,8 @@ allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(wc:*)
 
 Bench 感知：!`cat ~/.claude/skills/shared/bench-aware.md`
 
+最终成果可视化原则：!`cat ~/.claude/skills/shared/deliverable-vision.md`
+
 参数：$ARGUMENTS
 
 ---

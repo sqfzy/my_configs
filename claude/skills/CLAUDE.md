@@ -46,6 +46,7 @@ Skills pull shared behavior by `cat`-ing files from `shared/` in their frontmatt
 - **`shared/bench-aware.md`** — Baseline-check protocol. Any skill that modifies code first checks `.artifacts/INDEX.md` for a bench baseline, runs bench before edits if needed, then compares after. Defines regression thresholds (5% / 15%). Skills reference this as "按 Bench 感知约定执行".
 - **`shared/autopilot-aware.md`** — Detection of running `/autopilot` sessions via `.artifacts/autopilot-state-*.json`. Any workspace-modifying skill should check this to avoid racing with an autopilot that's looking after a background task. Pure read-only skills can ignore it.
 - **`shared/autopilot-classifier.sh`** — Deterministic event classifier consumed by `/autopilot`'s wakeup loop. Reads `.artifacts/autopilot-state-<task>.json` + log tail, emits a single JSON `{severity, category, suggested_action, evidence}`. **No LLM in the loop** — this is the load-bearing primitive that keeps per-wakeup context at ~200 lines. When editing, preserve the JSON schema since the skill's decision tree depends on it.
+- **`shared/deliverable-vision.md`** — Mandate that planning/design skills make the **final deliverable visible** via ASCII diagrams (directory tree, module graph, data flow, before/after) instead of describing it only in prose. Wired into `/blueprint`, `/design`, `/discuss`, `/refactor`, `/cleanup`, `/migrate`, `/evolve`. When editing a plan/design phase template in any of these skills, keep the ASCII visualization slots — removing them defeats the principle.
 
 ## Skill interaction graph
 
