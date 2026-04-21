@@ -1,7 +1,7 @@
 ---
 name: pax
-description: "全阶段唯一入口：规划 + 施工 + 核查。根据用户意图推断目的（feat / fix / reshape / upgrade / review / test / bench / doc / ship），按目的的专属骨架产出计划并直接按计划执行。--deep 启用多角色对抗讨论作为横切能力。--auto 全自动无需批准，嵌入无人值守工作流。计划是会话本地契约，不落盘（如需留存用 /report decision）。TRIGGER when: 用户要规划/设计功能、修 bug、重构、升级依赖、审查代码、补测试、跑 bench、写文档、发布、说\"做一下 X\" / \"看看这段代码\" / \"准备发布\"。DO NOT TRIGGER when: 只想留存决策记录（用 /report）。"
-argument-hint: "<描述> [--feat|--fix|--reshape|--upgrade|--review|--test|--bench|--doc|--ship] [--deep] [--rounds: N] [--roles: N] [--auto]"
+description: "全阶段唯一入口：规划 + 施工 + 核查。根据用户意图推断目的（feat / fix / reshape / upgrade / review / test / bench / doc / ship / loop），按目的的专属骨架产出计划并直接按计划执行。--deep 启用多角色对抗讨论作为横切能力。--auto 全自动无需批准，嵌入无人值守工作流。计划是会话本地契约，不落盘（如需留存用 /report decision）。TRIGGER when: 用户要规划/设计功能、修 bug、重构、升级依赖、审查代码、补测试、跑 bench、写文档、发布、周期性重复/跑一晚/自主演进、说\"做一下 X\" / \"看看这段代码\" / \"准备发布\"。DO NOT TRIGGER when: 只想留存决策记录（用 /report）。"
+argument-hint: "<描述> [--feat|--fix|--reshape|--upgrade|--review|--test|--bench|--doc|--ship|--loop] [--deep] [--rounds: N] [--roles: N] [--auto]"
 allowed-tools: Bash(find:*), Bash(cat:*), Bash(grep:*), Bash(head:*), Bash(date:*), Bash(git:*), Bash(ls:*)
 ---
 
