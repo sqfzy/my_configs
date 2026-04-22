@@ -178,8 +178,30 @@ Phase 5     下一步提示（如何启动施工）
 
 ## Phase 0: 进入 plan mode + 上下文收集
 
-- **默认**：第一件事调用 `EnterPlanMode`，此点到 `ExitPlanMode` 之间只可读取
-- **含 `--auto`**：不调 `EnterPlanMode`（否则 Phase 4 ExitPlanMode 对话框卡死），靠自律保持 Phase 0-3 只读
+**第一句输出必须是参数扫描声明**（不得省略、不得改写、不得加修饰词）：
+
+```
+▶ --auto: 否 —— 参数 "<原样复述 $ARGUMENTS>" 不含 --auto
+```
+或
+```
+▶ --auto: 是 —— 参数 "<原样复述 $ARGUMENTS>" 含 --auto
+```
+
+**禁用任何形式的继承论**。以下措辞直接判违规，遇到立刻判"否"重来：
+
+- ❌ "会话继承 auto 模式" / "session inherits auto"
+- ❌ "沿用 / 延续 / 继承上轮的 auto"
+- ❌ "既然在 auto 里" / "上下文是 auto"
+- ❌ "宿主是 auto mode 所以..."
+- ❌ 参考系统 reminder / 历史消息判断 --auto
+
+宿主级 Auto Mode、上轮对话、系统 reminder、Claude Code 权限模式 —— **都不是参数**。判据只认 `$ARGUMENTS` 字符串的字面子串匹配。
+
+然后：
+
+- **声明为"否"**：第一件事调用 `EnterPlanMode`，此点到 `ExitPlanMode` 之间只可读取
+- **声明为"是"**：不调 `EnterPlanMode`（否则 Phase 4 ExitPlanMode 对话框卡死），靠自律保持 Phase 0-3 只读
 
 按议题需要阅读相关代码、配置、关键接口。读什么、读多少由议题决定。
 
