@@ -18,7 +18,7 @@ Three skills live at the top level (`pax/`, `report/`, `script/`). They share a 
     └── <name>.md
 ```
 
-- `pax/purposes/` — 10 purposes: `feat, fix, reshape, upgrade, review, test, bench, doc, ship, loop`
+- `pax/purposes/` — 11 purposes: `feat, fix, reshape, upgrade, review, test, bench, doc, experiment, ship, loop`
 - `report/modes/` — 7 modes: `decision, status, incident, issue, release, retro, experiment`
 - `script/targets/` — 3 special targets: `setup, wizard, pipeline` (other script targets use only SKILL.md)
 
