@@ -19,7 +19,7 @@ Three skills live at the top level (`pax/`, `report/`, `script/`). They share a 
 ```
 
 - `pax/purposes/` — 11 purposes: `feat, fix, reshape, upgrade, review, test, bench, doc, experiment, ship, loop`
-- `report/modes/` — 8 modes: `decision, status, incident, issue, release, retro, experiment, primer`
+- `report/modes/` — 9 modes: `decision, status, incident, issue, release, retro, experiment, primer, repro`
 - `script/targets/` — 3 special targets: `setup, wizard, pipeline` (other script targets use only SKILL.md)
 
 `shared/ascii-viz.md` is included by all three SKILL.md files via the frontmatter `!cat ~/.claude/skills/shared/ascii-viz.md` directive — treat it as a cross-skill contract.
