@@ -2,7 +2,20 @@
 -- This is just pure lua so anything that doesn't
 -- fit in the normal config locations above can go here
 
-if vim.env.NVIM_MINIMAL then
+if vim.fn.has "wsl" == 1 then
+  vim.g.clipboard = {
+    name = "win32yank",
+    copy = {
+      ["+"] = "win32yank.exe -i --crlf",
+      ["*"] = "win32yank.exe -i --crlf",
+    },
+    paste = {
+      ["+"] = "win32yank.exe -o --lf",
+      ["*"] = "win32yank.exe -o --lf",
+    },
+    cache_enabled = 0,
+  }
+elseif vim.env.NVIM_MINIMAL then
   vim.g.clipboard = {
     name = "OSC 52",
     copy = {
