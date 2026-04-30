@@ -49,11 +49,37 @@ review 范围：
 - 日志 / tracing 风格是否一致
 - 公共 API 风格是否统一（函数命名动词、参数顺序惯例）
 
+**架构与 API 设计扫描**（局部 review 在改动涉及接口 / 模块边界时启用；全局 review 必扫）：
+
+- **架构形态**：项目结构是否符合该规模 / 该领域已收敛的有效模式（分层 / 六边形 / 事件驱动 / actor / pipeline / DDD / clean）？识别现有特征，评判是否合适，**不强推**新模式
+- **API 人体工程学**：命名 / 参数顺序 / 错误返回风格 / 异步形态 / batch vs single / config struct vs builder vs flat args / 默认值处理 / 类型安全程度（newtype / phantom / flag enum）
+- **抽象层级**：是否有泄漏（底层细节穿透到上层）？是否有过度封装（一层薄薄的转发层）？
+
+**现代化对标 + 同类项目对比**（局部 review 改 API 时启用；全局 review 必扫）：
+
+- **当下最佳实践**（按语言 / 生态 2024-2026 收敛惯例）：
+  - Rust：`thiserror`+`anyhow` / async-trait / `#[non_exhaustive]` / typed builders / `tracing` 而非 `log` / `Result<T, E>` 而非 panic
+  - C++23：`std::expected` / `std::span` / `std::format` / concepts / coroutines / RAII guard
+  - Python：type hints + pyright / pydantic v2 / `match` 替代 isinstance / async-first
+  - 标注本项目**对齐 / 部分对齐 / 未对齐**，列出未对齐的具体位置
+- **同类成熟项目对比**（必选 1-3 个对标对象）：
+  - 同语言 + 同领域优先（写网络库 → tokio/hyper/mio/smoltcp；写 ORM → sea-orm/sqlx/diesel；写 LSM tree → RocksDB/sled/Pebble）
+  - 对比维度：模块切分 / 命名 / 错误体系 / 公共类型导出 / 主接口形状 / 默认行为
+  - 输出：**对比矩阵**（本项目 vs 对标 1 vs 对标 2，每维度一句结论），不写"差不多"这种空话
+  - **命名校准**：本项目内同概念是否用了行业默认词？独创术语是否合理（有则保留，无则改）
+
+**过度设计防线**（铁律 —— 防止 review 变成"最佳实践堆砌癖"）：
+
+- "看着像最佳实践但本项目暂时用不上"的设计 → **不进 Critical / Major**
+- 改记入新档"📎 参考点"：未来若 X 发生（明确触发条件），考虑引入 Y
+- 例："目前单实例够用，不必引入 actor；若未来多核扩缩容，参考 actix 的 Arbiter 设计"
+- 判据：当前痛点 / 风险 / 摩擦 ≠ 0 才进 Critical/Major；为"将来可能"提案的进 📎 参考点
+
 每维度的发现必须：
 - 定位到具体位置（文件:行 或 符号）
 - 问题描述
-- 严重程度：🔴 Critical / 🟡 Major / 🔵 Minor
-- 建议的处理目的（feat / fix / reshape / upgrade / bench / test / doc）
+- 严重程度：🔴 Critical / 🟡 Major / 🔵 Minor / 📎 参考点（未来触发条件命中再考虑）
+- 建议的处理目的（feat / fix / reshape / upgrade / bench / test / doc）；📎 参考点不需立即对应处理目的
 
 #### 3. 局部 review 独有的产出
 
@@ -149,6 +175,16 @@ Tier 划分原则：
 - **项目画像图**（模块依赖全景 + 耦合热点标注）
 - **问题分布图**（按严重程度 / 按模块维度展示问题密度）
 - **演进路线 DAG**（Tier 1 → Tier 2 → Tier 3 的依赖关系）
+- **现代化对标矩阵**（必含若做了"同类成熟项目对比"扫描）：
+
+  ```
+  | 维度       | 本项目          | tokio 1.36     | hyper 1.x      | 评判          |
+  |-----------|----------------|----------------|----------------|--------------|
+  | 错误体系   | 自造 Error enum | thiserror      | thiserror      | 🟡 未对齐    |
+  | 异步形态   | 半同步半 Future | async-await 全 | async-await 全 | 🟡 未对齐    |
+  | 命名"任务" | task / job 混用 | task           | task           | 🔵 命名校准  |
+  | ...       | ...            | ...            | ...            | ✓ / 🟡 / 🔴 |
+  ```
 
 ---
 
@@ -199,6 +235,10 @@ review **本身就是按生产级 8 维度扫描现有代码**，作为发现清
 - ❌ 没有对生产级 8 维度的系统扫描
 - ❌ 局部 review 没有做"改动面评估"（行为变化、波及范围、夹带代码）
 - ❌ 凭"感觉"给结论，没有定位到具体文件 / 行 / 符号
+- ❌ 评判 API 设计 / 架构却没列对标项目（成了"我以为应该这样"，不是 review）
+- ❌ 把"未来可能要的最佳实践"当 Critical / Major（应进 📎 参考点，不阻塞当下）
+- ❌ 对标项目选错（如评判 web 框架却拿 OS kernel 类项目对比）—— 必须同语言 + 同领域
+- ❌ 对比矩阵单元格写"差不多" / "类似" 等空话 —— 必须给可比维度
 
 ---
 
