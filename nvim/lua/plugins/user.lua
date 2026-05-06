@@ -387,4 +387,11 @@ return {
   --     "saghen/blink.cmp",
   --   },
   -- },
+
+  {
+    "chomosuke/typst-preview.nvim",
+    opts = {
+      follow_cursor = false,
+    },
+  },
 }

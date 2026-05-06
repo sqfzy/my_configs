@@ -104,6 +104,9 @@ return {
     -- NOTE: keycodes follow the casing in the vimdocs. For example, `<Leader>` must be capitalized
     mappings = {
       n = {
+        -- 禁用 AstroNvim 默认的 <C-q> 关 buffer，避免 t-mode 用 <C-q> 退回后误按丢窗口
+        ["<C-q>"] = false,
+
         -- 光标位移
         ["<S-Right>"] = { "<Left>" },
         ["L"] = { "5l" },
@@ -419,7 +422,8 @@ return {
         ["<A-3>"] = { "<cmd>3ToggleTerm direction=float<cr>", desc = "ToggleTerm float" },
         ["<A-2>"] = { "<cmd>2ToggleTerm size=10 direction=horizontal<cr>", desc = "ToggleTerm horizontal split" },
         ["<A-1>"] = { "<cmd>1ToggleTerm size=50 direction=vertical<cr>", desc = "ToggleTerm vertical split" },
-        ["<Esc>"] = { "<c-\\><c-n>", desc = "Back normal mode" },
+        -- ["<Esc>"] = { "<c-\\><c-n>", desc = "Back normal mode" },
+        ["<C-q>"] = { "<c-\\><c-n>", desc = "Back normal mode" },
       },
       s = {
         ["p"] = { "p" },
@@ -438,27 +442,27 @@ return {
     autocmds = {
       -- 在 Claude Code 终端里让 <Esc> 透传给 TUI（用于退出后台任务视图等）
       -- 仍可用 <C-\><C-n> 退回 normal mode
-      claude_code_term_esc = {
-        {
-          -- bufname 只到 shell（bash），靠 buffer 名识别不到 Claude Code。
-          -- 改听 TermRequest：Claude Code 通过 OSC 设置终端标题为含 "Claude" 的字串。
-          -- 检测到就对该 buffer 局部解除 <Esc> 拦截；标题变回去时再恢复。
-          event = "TermRequest",
-          desc = "Pass <Esc> through to Claude Code (detected via terminal title)",
-          callback = function(args)
-            local title = vim.b[args.buf].term_title or ""
-            if title:lower():find("claude", 1, true) then
-              -- ESC 透传给 Claude Code
-              vim.keymap.set("t", "<Esc>", "<Esc>", { buffer = args.buf, desc = "Send <Esc> to Claude Code" })
-              -- Claude Code buffer 内用 <C-q> 退回 normal mode（替代被让出的 ESC）
-              vim.keymap.set("t", "<C-q>", "<C-\\><C-n>", { buffer = args.buf, desc = "Back to normal mode" })
-            else
-              pcall(vim.keymap.del, "t", "<Esc>", { buffer = args.buf })
-              pcall(vim.keymap.del, "t", "<C-q>", { buffer = args.buf })
-            end
-          end,
-        },
-      },
+      -- claude_code_term_esc = {
+      --   {
+      --     -- bufname 只到 shell（bash），靠 buffer 名识别不到 Claude Code。
+      --     -- 改听 TermRequest：Claude Code 通过 OSC 设置终端标题为含 "Claude" 的字串。
+      --     -- 检测到就对该 buffer 局部解除 <Esc> 拦截；标题变回去时再恢复。
+      --     event = "TermRequest",
+      --     desc = "Pass <Esc> through to Claude Code (detected via terminal title)",
+      --     callback = function(args)
+      --       local title = vim.b[args.buf].term_title or ""
+      --       if title:lower():find("claude", 1, true) then
+      --         -- ESC 透传给 Claude Code
+      --         vim.keymap.set("t", "<Esc>", "<Esc>", { buffer = args.buf, desc = "Send <Esc> to Claude Code" })
+      --         -- Claude Code buffer 内用 <C-q> 退回 normal mode（替代被让出的 ESC）
+      --         vim.keymap.set("t", "<C-q>", "<C-\\><C-n>", { buffer = args.buf, desc = "Back to normal mode" })
+      --       else
+      --         pcall(vim.keymap.del, "t", "<Esc>", { buffer = args.buf })
+      --         pcall(vim.keymap.del, "t", "<C-q>", { buffer = args.buf })
+      --       end
+      --     end,
+      --   },
+      -- },
     },
   },
 }
