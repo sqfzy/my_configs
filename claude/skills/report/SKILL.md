@@ -85,9 +85,32 @@ ASCII 可视化原则：!`cat ~/.claude/skills/shared/ascii-viz.md`
 | "实验报告"、"验证了 X"、"假设 vs 实际" | experiment |
 | "理解项目"、"onboard"、"读代码"、"架构概览"、"快速入门"、"导览"、"这仓库干啥的"、"给新人看的"、"用户手册（留给自己查）" | primer |
 | "复现"、"reproduce"、"重现"、"steps to reproduce"、"minimal repro"、"recipe"、"重跑"、"配方"、"精确复现"、"一键跑出" | repro |
-| 无法推断 | 反问用户（默认模式）/ 按 context 最可能的选（auto 模式） |
+| **无清晰匹配 / 议题跨多个 mode / 议题在 9 mode 之外** | **freeform**（自由模式 —— 不读 modes/&lt;mode&gt;.md，按通用约束自由组织；详见下方"freeform mode"）|
+| 含义模糊但能猜出大致方向 | 反问用户（默认模式）/ 按 context 最可能的选（auto 模式） |
 
 推断后输出：`▶ Mode：<mode>（从"<证据>"推断）`
+
+### freeform mode（无清晰匹配时）
+
+9 mode 覆盖大多数场景，但**议题不该被强行套进 mismatched mode**——硬塞会让报告写错章节、漏关键内容，输出比"自由发挥"更糟。
+
+**何时走 freeform**：
+- 议题清晰但跨多个 mode（如"既是事故复盘又含决策记录又给客户解释" → 不是单一 incident / decision / release）
+- 议题在 9 mode 之外（如"过去三个月所有 PR 的标题列给法务"、"内部技术分享提纲"、"和客户的会议纪要"）
+- 没有任何 mode 匹配 ≥ 60%
+
+**freeform 的处理**：
+- Phase 0 不读 `modes/<mode>.md`（不存在）
+- **通用约束仍全部生效**：§2.1 结论先行 / §2.2 数据驱动 / §2.4 锚点清晰 / §2.5 ASCII / §2.6 自我一致 / §2.7 自包含 / §2.8 上下文充足 / §2.9 概念清晰 / §2.10 覆盖完整 / §2.11 无敏感信息
+- 文件名：`.artifacts/freeform-<slug>-YYYYMMDD-HHMMSS.md`，slug 从议题取 2-3 个核心词（如 `freeform-pr-list-for-legal-...md`）
+- INDEX.md mode 列写 `freeform`；摘要必须具体到议题主题
+- 顶部标注 `> Mode: freeform（议题：<一句话>；不匹配现有 9 mode 的理由：<...>）`
+- 章节由议题决定，不依赖任何 mode 模板
+
+**禁滥用**：
+- ❌ 议题清楚匹配某 mode（如"事故复盘"对应 incident）却选 freeform 偷懒
+- ❌ 用 freeform 绕开通用约束（结论先行 / 锚点 / 覆盖完整 等）
+- 判据：能在 9 mode 里找到 ≥ 60% 匹配的就用那个；找不到才 freeform
 
 ---
 
@@ -141,6 +164,7 @@ retro       → Read ~/.claude/skills/report/modes/retro.md
 experiment  → Read ~/.claude/skills/report/modes/experiment.md
 primer      → Read ~/.claude/skills/report/modes/primer.md
 repro       → Read ~/.claude/skills/report/modes/repro.md
+freeform    → 不读骨架；走通用约束自由组织（见上方"freeform mode"）
 ```
 
 骨架文件只写独有内容——通用骨架（结构、素材收集、共享约束、落盘流程）全部在本 SKILL.md。

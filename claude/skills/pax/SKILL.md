@@ -113,9 +113,29 @@ ASCII 可视化原则：!`cat ~/.claude/skills/shared/ascii-viz.md`
 | "文档"、"README"、"CHANGELOG"、"doc comment"、"API 文档"、"架构概览" | doc |
 | "发布"、"ship"、"release"、"打 tag"、"发布前检查" | ship |
 | "跑一晚"、"持续"、"反复"、"循环"、"自主演进"、"直到..."、"一直...到..."、"每隔..."、"重复跑" | loop |
-| 无法推断 | feat（默认） |
+| **无清晰匹配 / 议题跨多个目的 / 议题在 11 目的之外** | **freeform**（自由模式 —— 跳过 purposes/&lt;purpose&gt;.md 读取，仅用通用骨架；详见下方"freeform 目的"）|
 
 推断后输出：`▶ 目的：<purpose>（从"<证据>"推断）`
+
+### freeform 目的（无清晰匹配时）
+
+11 个 purpose 覆盖大多数情况，但**议题不该被强行套进 mismatched purpose**——硬塞会让计划写出错的章节、漏掉真正该有的章节，输出比"自由发挥"更糟。
+
+**何时走 freeform**：
+- 议题清晰但跨多个目的（如"既改架构又升级依赖又补测试" → 不是单一 reshape / upgrade / test）
+- 议题在 11 目的之外（如"准备一份内部技术分享提纲"、"把多个仓库统一目录约定"）
+- 没有任何 purpose 匹配 ≥ 60%
+
+**freeform 的处理**：
+- Phase 1 不读 `purposes/<purpose>.md`（不存在），跳过"骨架已读"自检
+- 通用骨架仍**全部强制**：必要性 / 假设 / 定位 / 现状 / 目标 / 效果三件套（若涉及改代码）/ 影响范围 / 8 维度 / 实施计划字段
+- 计划顶部标注 `> 目的：freeform（无标准 purpose 匹配；理由：<一句话>）`
+- 用户问的问题（Phase 0.3 / 2.5）自由组织，不依赖某 purpose 模板
+
+**禁滥用**：
+- ❌ 议题清楚匹配某 purpose（如"修复 bug X"）却选 freeform 偷懒
+- ❌ 用 freeform 绕开通用骨架的必含字段
+- 判据：能在 11 目的里找到 ≥ 60% 匹配的，就用那个；找不到才 freeform
 
 ### `--auto` 语义
 
