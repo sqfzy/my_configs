@@ -25,6 +25,7 @@
 - **After the modification, re-run the benchmarks and verify there is no performance regression compared to the baseline**
 - If a regression is detected, investigate and resolve it before finalizing the change
 ### General Principles
+- **Simple is best** — favor the simplest solution that works; resist over-engineering
 - Avoid unnecessary abstractions; prefer explicit over clever
 - Commit frequently with meaningful messages; treat git history as documentation
 - Each commit should represent one logical change and be buildable independently
