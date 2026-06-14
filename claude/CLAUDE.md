@@ -5,6 +5,10 @@
 - Shell: Nushell
 - Primary languages: Rust, C++23
 ## Code Style
+### Function Design
+- **「函数即目录」**：每个函数只在同一抽象层级上做一件事，由一串自解释的命名调用组成，让人能自顶向下逐层下钻——读函数名即懂意图，要细节再进下一层
+- 综合 Compose Method（组合方法）+ SLAP（单一抽象层级原则）+ Clean Code 的 Do One Thing & Stepdown Rule + Extract Function / SRP：代码读起来应像一份能层层展开的提纲
+- `main` 及上层入口应是几行命名调用，而非一大坨实现细节
 ### Observability
 - All non-trivial functions must include leveled logging: ERROR / WARN / INFO / DEBUG / TRACE
 - Log all error branches, external I/O, and key function entry/exit points (at DEBUG level)
