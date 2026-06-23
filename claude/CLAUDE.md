@@ -8,13 +8,17 @@
 ### Function Design
 - **「函数即目录」**：每个函数只在同一抽象层级上做一件事，由一串自解释的命名调用组成，让人能自顶向下逐层下钻——读函数名即懂意图，要细节再进下一层
 - 综合 Compose Method（组合方法）+ SLAP（单一抽象层级原则）+ Clean Code 的 Do One Thing & Stepdown Rule + Extract Function / SRP：代码读起来应像一份能层层展开的提纲
-- `main` 及上层入口应是几行命名调用，而非一大坨实现细节
+- **行数是结果而非判据**：编排函数理想 ≤5 行，多数函数舒适上限 ≤15~20 行，>40 行基本确定违反 SLAP。但真正的拆分信号是"同一函数混入了两种抽象高度的词汇"或"做了多件事"——超行数只是去查这个病因的提示。反之也别为压行数硬拆出只能连在一起读、共享隐式状态的碎片
+- **扁平化代码，不要过早抽象**：遵循 YAGNI + Rule of Three（三次法则）+ "宁可重复，勿要错误的抽象"（Sandi Metz）。错误抽象的代价（特例分支、flag 参数、被 N 处绑死）远高于重复（线性、显式、可逆）。需要泛型 / trait / 接口 / 配置驱动的"万能函数"时，等共性出现第三次、真正稳定后再抽；发现抽错了，先内联回重复再重新提炼
+- **区分两种"抽"**：为"读得懂 / 压平抽象层级"而抽函数——单次调用也尽管抽（即"函数即目录"，本地、廉价、可逆）；为"将来复用 / 消除重复"而抽通用抽象——延后到共性稳定（YAGNI）。警惕把后者伪装成前者：看到两段相似代码就急着抽一个带多个 bool 参数的"共用函数"，那不是 DRY，是过早抽象
 ### Observability
 - All non-trivial functions must include leveled logging: ERROR / WARN / INFO / DEBUG / TRACE
 - Log all error branches, external I/O, and key function entry/exit points (at DEBUG level)
 - Log messages must be **actionable**: include relevant context — variable values, function arguments, system state — not just "error occurred"
 - Rust: use the `tracing` crate; annotate non-trivial functions with `#[instrument(err)]`
 - C++: use spdlog with `SPDLOG_ACTIVE_LEVEL` for compile-time log filtering
+### Naming
+- **默认拼全名**：只允许领域内人人秒懂、无歧义的通用缩写（`id` / `url` / `ctx` / `cfg` / `req` / `db` 等），且一旦采用就全代码库一致——绝不自创只有自己当下懂的简写
 ### Comments
 - Comment non-obvious logic, especially complex algorithms and critical decision points
 - Explain **why**, not just **what** — the code already shows what; comments should reveal intent
