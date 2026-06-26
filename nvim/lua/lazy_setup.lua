@@ -25,6 +25,12 @@ require("lazy").setup(specs --[[@as LazySpec]], {
   -- Configure any other `lazy.nvim` configuration options here
   install = { colorscheme = { "astrotheme", "habamax" } },
   ui = { backdrop = 100 },
+  -- 限制并发 git 操作数量，避免代理 (Clash/Mihomo) 在高并发下连接被 reset 导致
+  -- "TLS connect error: unexpected eof while reading"
+  concurrency = 4,
+  git = {
+    timeout = 120, -- 单个 git 操作超时秒数，默认 20 太短遇到慢链路会失败
+  },
   performance = {
     rtp = {
       -- disable some rtp plugins, add more to your liking
