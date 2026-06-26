@@ -1,57 +1,47 @@
 -- Customize Treesitter
+--
+-- AstroNvim v6 起,nvim-treesitter(main 分支)只作为 parser 的下载工具,
+-- 高亮 / 缩进 / 自动安装 / textobjects 全部由 AstroCore 的 `treesitter` 模块接管。
+-- 配置文档见 `:h astrocore`。
 
 ---@type LazySpec
 return {
-  "nvim-treesitter/nvim-treesitter",
+  "AstroNvim/astrocore",
   opts = function(_, opts)
-    -- add more things to the ensure_installed table protecting against community packs modifying it
-    opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, {
+    local treesitter = opts.treesitter or {}
+
+    treesitter.highlight = true -- 启用 treesitter 高亮
+    treesitter.indent = true -- 启用 treesitter 缩进
+    treesitter.auto_install = true -- 自动安装检测到的语言 parser
+
+    -- 用 list_insert_unique 累加,防止被社区包(community packs)的同名列表覆盖
+    treesitter.ensure_installed = require("astrocore").list_insert_unique(treesitter.ensure_installed, {
       "lua",
       "vim",
       "nu",
-      -- add more arguments for adding more treesitter parsers
+      -- 在此追加更多 treesitter parser
     })
-    opts.textobjects.lsp_interop = {
-      enable = true,
-      border = "single",
-      floating_preview_opts = {
-        -- - height: (integer) height of floating window
-        -- - width: (integer) width of floating window
-        -- - wrap: (boolean, default true) wrap long lines
-        -- - wrap_at: (integer) character to wrap at for computing height when wrap is enabled
-        -- - max_width: (integer) maximal width of floating window
-        -- - max_height: (integer) maximal height of floating window
-        -- - pad_top: (integer) number of lines to pad contents at top
-        -- - pad_bottom: (integer) number of lines to pad contents at bottom
-        -- - focus_id: (string) if a popup with this id is opened, then focus it
-        -- - close_events: (table) list of events that closes the floating window
-        -- - focusable: (boolean, default true) Make float focusable
-        -- - focus: (boolean, default true) If `true`, and if {focusable}
-        --          is also `true`, focus an existing floating window with the same
-        --          {focus_id}
-      },
-      peek_definition_code = {
-        ["go"] = "@function.outer",
-        ["gO"] = "@class.outer",
-      },
-    }
-    -- opts.textobjects.select = {
-    --   enable = true,
-    --   lookahead = true,
-    --   keymaps = {
-    --     ["B"] = { query = "@block.outer", desc = "around block" },
-    --     ["b"] = { query = "@block.inner", desc = "inside block" },
-    --     ["C"] = { query = "@class.outer", desc = "around class" },
-    --     ["c"] = { query = "@class.inner", desc = "inside class" },
-    --     ["?"] = { query = "@conditional.outer", desc = "around conditional" },
-    --     ["/"] = { query = "@conditional.inner", desc = "inside conditional" },
-    --     ["F"] = { query = "@function.outer", desc = "around function" },
-    --     ["f"] = { query = "@function.inner", desc = "inside function" },
-    --     ["O"] = { query = "@loop.outer", desc = "around loop" },
-    --     ["o"] = { query = "@loop.inner", desc = "inside loop" },
-    --     ["A"] = { query = "@parameter.outer", desc = "around argument" },
-    --     ["a"] = { query = "@parameter.inner", desc = "inside argument" },
+
+    -- textobjects(v6 新 schema):按 type(select / move / swap)→ method → 键位 → { query, desc } 组织,
+    -- 键位会在含对应 capture 的 buffer 上自动挂载。需要时取消注释:
+    -- treesitter.textobjects = {
+    --   select = {
+    --     select_textobject = {
+    --       ["af"] = { query = "@function.outer", desc = "around function" },
+    --       ["if"] = { query = "@function.inner", desc = "inside function" },
+    --       ["ac"] = { query = "@class.outer", desc = "around class" },
+    --       ["ic"] = { query = "@class.inner", desc = "inside class" },
+    --     },
+    --   },
+    --   move = {
+    --     goto_next_start = { ["]f"] = { query = "@function.outer", desc = "Next function start" } },
+    --     goto_previous_start = { ["[f"] = { query = "@function.outer", desc = "Prev function start" } },
     --   },
     -- }
+    --
+    -- 注意:旧的 textobjects `lsp_interop` / `peek_definition_code`(原 go / gO)在上游 main 分支
+    -- 已被移除,无直接等价物。peek 定义改用 LSP:`gd` / `<A-k>` hover / `Snacks.picker`。
+
+    opts.treesitter = treesitter
   end,
 }
