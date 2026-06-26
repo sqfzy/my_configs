@@ -145,8 +145,8 @@ return {
         rust_analyzer = {
           settings = rust_settings,
           root_dir = function(fname)
-            local root_patterns = require("lspconfig").util.root_pattern("Cargo.toml", "rust-project.json")
-            local root_dir = root_patterns(fname)
+            -- v6: 用原生 vim.fs.root 取代已废弃的 require("lspconfig").util.root_pattern
+            local root_dir = vim.fs.root(fname, { "Cargo.toml", "rust-project.json" })
 
             if root_dir and root_dir:find "demo_code" then
               return nil
@@ -177,12 +177,11 @@ return {
       },
       -- customize how language servers are attached
       handlers = {
-        -- a function without a key is simply the default handler, functions take two parameters, the server name and the configured options table for that server
-        -- function(server, opts) require("lspconfig")[server].setup(opts) end
+        -- v6: 带 `*` key 的函数会修改默认 handler,函数只接收 server 名一个参数
+        -- ["*"] = function(server) vim.lsp.enable(server) end
 
-        -- the key is the server that is being setup with `lspconfig`
+        -- the key is the server that is being setup with `vim.lsp.config`
         -- rust_analyzer = false, -- setting a handler to false will disable the set up of that language server
-        -- pyright = function(_, opts) require("lspconfig").pyright.setup(opts) end -- or a custom handler function can be passed
       },
       -- Configure buffer local auto commands to add when attaching a language server
       autocmds = {
@@ -201,7 +200,10 @@ return {
             -- the rest of the autocmd options (:h nvim_create_autocmd)
             desc = "Refresh codelens (buffer)",
             callback = function(args)
-              if require("astrolsp").config.features.codelens then vim.lsp.codelens.refresh { bufnr = args.buf } end
+              -- v6: 对齐模板,用 vim.lsp.codelens.enable 取代旧的 codelens.refresh
+              if require("astrolsp").config.features.codelens then
+                vim.lsp.codelens.enable(true, { bufnr = args.buf })
+              end
             end,
           },
         },
