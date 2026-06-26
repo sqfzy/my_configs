@@ -463,6 +463,35 @@ return {
       --     end,
       --   },
       -- },
+
+      -- 让未聚焦的终端窗口（如多个 Claude Code 会话）也跟随输出自动下滚。
+      -- Neovim 默认只有光标在最后一行时终端才跟随，后台窗口会停住；
+      -- 这里监听 buffer 变化，把所有显示该终端、但未聚焦的窗口光标钉到底部。
+      term_follow_output = {
+        {
+          event = "TermOpen",
+          desc = "Auto-scroll unfocused terminal windows to follow output",
+          callback = function(args)
+            local buf = args.buf
+            vim.api.nvim_buf_attach(buf, false, {
+              on_lines = function()
+                -- on_lines 处于 textlock，必须 schedule 出去才能改光标
+                vim.schedule(function()
+                  if not vim.api.nvim_buf_is_valid(buf) then return end
+                  local last_line = vim.api.nvim_buf_line_count(buf)
+                  for _, win in ipairs(vim.fn.win_findbuf(buf)) do
+                    -- 只滚后台窗口；聚焦窗口由 terminal-mode 自己跟随，
+                    -- 这样在某个窗口往上翻历史时不会被强行拉回底部
+                    if win ~= vim.api.nvim_get_current_win() then
+                      pcall(vim.api.nvim_win_set_cursor, win, { last_line, 0 })
+                    end
+                  end
+                end)
+              end,
+            })
+          end,
+        },
+      },
     },
   },
 }
