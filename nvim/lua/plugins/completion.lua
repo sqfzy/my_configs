@@ -1,6 +1,6 @@
 return { -- override nvim-cmp plugin
   {
-    "Saghen/blink.cmp",
+    "saghen/blink.cmp",
     opts = function(_, opts)
       opts.keymap["<A-m>"] = {
         function()
