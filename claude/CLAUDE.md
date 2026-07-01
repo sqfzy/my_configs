@@ -1,44 +1,52 @@
+# 核心哲学
+
+> **纯过程式 + POD 数据 + 可配置化 + 函数即目录 + 函数只做一件事 + 可观测 + 现代化 + 绝不过度设计——简单就是好。**
+
+一句话：**数据是数据、逻辑是逻辑；代码读起来像一份能层层下钻的提纲；关键路径都留下可观测的痕迹；能不抽象就不抽象，用当代语言最直接的表达。** 下面各节都是这句话的展开。
+
 ## Environment
 - OS: WSL Arch Linux
 - Editor: Neovim
 - Build tools: xmake (C++), uv (Python)
 - Shell: Nushell
 - Primary languages: Rust, C++23
+
 ## Code Style
-### Function Design
+
+### Paradigm（范式）——纯过程式 + POD
+- **数据与逻辑分离**：用 POD 结构体承载状态，用自由函数（Rust 自由/关联函数、C++ 自由函数）操作它；避免 OOP 仪式（继承、深层多态、把行为绑进对象）。这是刻意的过程式选择，不是"贫血模型"反模式
+- **POD 优先**：数据结构默认就是"只有字段、无自定义语义"的纯数据（C++ aggregate/POD、Rust `#[derive]` 的普通 struct）；行为放在操作数据的函数里，而非塞进对象
+- **组合优于继承**：能用「数据 + 函数」表达的，就不要用类层级
+
+### Function Design（函数即目录 + 只做一件事）
 - **「函数即目录」**：每个函数只在同一抽象层级上做一件事，由一串自解释的命名调用组成，让人能自顶向下逐层下钻——读函数名即懂意图，要细节再进下一层
 - 综合 Compose Method（组合方法）+ SLAP（单一抽象层级原则）+ Clean Code 的 Do One Thing & Stepdown Rule + Extract Function / SRP：代码读起来应像一份能层层展开的提纲
 - **行数是结果而非判据**：编排函数理想 ≤5 行，多数函数舒适上限 ≤15~20 行，>40 行基本确定违反 SLAP。但真正的拆分信号是"同一函数混入了两种抽象高度的词汇"或"做了多件事"——超行数只是去查这个病因的提示。反之也别为压行数硬拆出只能连在一起读、共享隐式状态的碎片
+- **区分两种"抽"**：为"读得懂 / 压平抽象层级"而抽函数——单次调用也尽管抽（本地、廉价、可逆）；为"将来复用 / 消除重复"而抽通用抽象——延后到共性稳定（YAGNI）
+
+### 绝不过度设计（扁平化，不过早抽象）
+- **简单就是好**：favor the simplest solution that works；resist over-engineering；prefer explicit over clever
 - **扁平化代码，不要过早抽象**：遵循 YAGNI + Rule of Three（三次法则）+ "宁可重复，勿要错误的抽象"（Sandi Metz）。错误抽象的代价（特例分支、flag 参数、被 N 处绑死）远高于重复（线性、显式、可逆）。需要泛型 / trait / 接口 / 配置驱动的"万能函数"时，等共性出现第三次、真正稳定后再抽；发现抽错了，先内联回重复再重新提炼
-- **区分两种"抽"**：为"读得懂 / 压平抽象层级"而抽函数——单次调用也尽管抽（即"函数即目录"，本地、廉价、可逆）；为"将来复用 / 消除重复"而抽通用抽象——延后到共性稳定（YAGNI）。警惕把后者伪装成前者：看到两段相似代码就急着抽一个带多个 bool 参数的"共用函数"，那不是 DRY，是过早抽象
-### Observability
-- All non-trivial functions must include leveled logging: ERROR / WARN / INFO / DEBUG / TRACE
-- Log all error branches, external I/O, and key function entry/exit points (at DEBUG level)
-- Log messages must be **actionable**: include relevant context — variable values, function arguments, system state — not just "error occurred"
-- Rust: use the `tracing` crate; annotate non-trivial functions with `#[instrument(err)]`
-- C++: use spdlog with `SPDLOG_ACTIVE_LEVEL` for compile-time log filtering
+- 警惕伪装成 DRY 的过早抽象：看到两段相似代码就急着抽一个带多个 bool 参数的"共用函数"，那不是 DRY，是过早抽象
+
+### Configuration（可配置化）
+- **可配置化**：把随环境 / 部署 / 运维而变的量外置为配置（密钥、endpoint、超时、重试、并发度、日志级别、路径），代码里不写死
+- **判据**：因部署 / 运维而变 → 配置；因需求 / 业务逻辑而变 → 代码。配置表达**环境差异**，不表达**业务逻辑**（避免 soft-coding：把业务规则塞进 YAML 反而更难读、更难改、逻辑两处散落）
+- 配置项也受 YAGNI + 三次法则约束：别为"万一以后要换"预留开关。每个配置项都是一次延迟到运行期、绕过编译器检查、且与其它开关组合爆炸的决定
+
+### Observability（可观测——关键点必留痕）
+- **所有关键点都有日志**，尤其是**延迟**和**关键业务函数**：函数入口/出口（DEBUG）、所有 error 分支、外部 I/O、关键业务决策点
+- **延迟可观测**：对外部 I/O、关键业务函数记录耗时（Rust `#[instrument]` span / C++ scoped timer + Quill），慢路径要能从日志直接看出耗时，而非靠猜
+- **分级**：ERROR / WARN / INFO / DEBUG / TRACE，各司其职
+- **日志必须 actionable**：带上相关上下文——变量值、函数入参、系统状态——而不是只写 "error occurred"
+- **Rust**：用 `tracing`；非平凡函数标注 `#[instrument(err)]`，关键业务函数带 span 以观测延迟
+- **C++**：用 Quill（高性能异步日志，热路径仅拷贝参数、格式化与 I/O 交由后台线程），配合 `QUILL_COMPILE_ACTIVE_LOG_LEVEL` 做编译期日志过滤
+
+### 现代化（Modern by default）
+- **用当代语言最直接的表达**，别写遗留风格
+- **C++23**：优先 concepts、ranges、`std::expected`、`std::format`、结构化绑定等，替代 legacy 模式；倾向编译期驱动开发（常量求值、泛型编程），尽早暴露错误、提升性能；C++ 库尽量 header-only
+- **Rust**：善用类型系统、`?`、迭代器适配器、`derive`、零成本抽象等惯用法
+- 现代化服务于"简单"，不是炫技：只在让代码更直接、更安全、更快时采用
+
 ### Naming
 - **默认拼全名**：只允许领域内人人秒懂、无歧义的通用缩写（`id` / `url` / `ctx` / `cfg` / `req` / `db` 等），且一旦采用就全代码库一致——绝不自创只有自己当下懂的简写
-### Comments
-- Comment non-obvious logic, especially complex algorithms and critical decision points
-- Explain **why**, not just **what** — the code already shows what; comments should reveal intent
-- Keep comments close to the relevant code and updated when logic changes
-### Testing
-- Write tests for boundary conditions and error-handling paths, not just the happy path
-- Prefer integration tests for I/O-heavy code; unit tests for pure logic
-- Test names should describe the scenario: `test_parse_empty_input_returns_error`, not `test1`
-- **After any code change, run all tests that cover the modified code and ensure they pass before considering the task complete**
-### Benchmarking
-- **Before modifying any code that has associated benchmarks, run the benchmarks first to establish a baseline**
-- **After the modification, re-run the benchmarks and verify there is no performance regression compared to the baseline**
-- If a regression is detected, investigate and resolve it before finalizing the change
-### General Principles
-- **Simple is best** — favor the simplest solution that works; resist over-engineering
-- Avoid unnecessary abstractions; prefer explicit over clever
-- Commit frequently with meaningful messages; treat git history as documentation
-- Each commit should represent one logical change and be buildable independently
-- Prefer composition over inheritance
-- Prefer modern C++ features (concepts, ranges, std::expected, std::format, structured bindings, etc.) over legacy patterns
-- Prefer header-only code style for C++ libraries when feasible
-- Prefer compile-time driven development in C++ (constant evaluation, generic programming) to catch errors early and improve performance
-- Prefer scripts that are **robust, observable, and idempotent**: handle errors explicitly, emit clear progress/status output, and produce consistent results when run multiple times — avoid side effects that accumulate or break on re-execution
