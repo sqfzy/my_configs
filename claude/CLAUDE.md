@@ -11,6 +11,9 @@
 - Shell: Nushell
 - Primary languages: Rust, C++23
 
+## 铁则（Hard Rules）
+- **每次回复完毕，只要本轮对任何文件有过增 / 删 / 改 / 查（新建、修改、删除、移动或重命名、读取），必须在回复末尾明确列出涉及的文件路径。**
+
 ## Code Style
 
 ### Paradigm（范式）——纯过程式 + POD
