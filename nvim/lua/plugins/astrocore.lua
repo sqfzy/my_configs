@@ -86,7 +86,6 @@ return {
         -- configure global vim variables (vim.g)
         -- NOTE: `mapleader` and `maplocalleader` must be set in the AstroNvim opts or before `lazy.setup`
         -- This can be found in the `lua/lazy_setup.lua` file
-        mkdp_width = 80,
         -- clipboard = {
         --   name = "OSC 52",
         --   copy = {
@@ -98,6 +97,12 @@ return {
         --     ["*"] = require("vim.ui.clipboard.osc52").paste "*",
         --   },
         -- },
+      },
+    },
+    commands = {
+      MarkdownPreview = {
+        function() require("commands.markdown").preview() end,
+        desc = "Open the current Markdown file in Edge",
       },
     },
     -- Mappings can be configured through AstroCore as well.

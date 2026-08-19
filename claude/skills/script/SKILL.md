@@ -199,7 +199,7 @@ Phase 6   输出汇报（脚本路径 + 使用说明 + 验证结果）
 - 检测 OS：`uname -a`
 - 检测 shell：`$SHELL` / `echo $SHELL`
 - 扫项目既有脚本的风格：`find . -name "*.sh" -o -name "*.py" | head -5` 读几个作为风格参考
-- 读 `README.md` / `CLAUDE.md` 里的"how to run / setup"章节
+- 读 `README.md` / `AGENTS.md` 里的"how to run / setup"章节
 - 若脚本涉及 git / docker / kubectl 等，检查工具是否已安装
 
 **不足时询问**（默认）/ **警告继续**（auto）：参考 report 的三级优先逻辑。

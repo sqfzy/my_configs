@@ -207,7 +207,7 @@ freeform    → 不读骨架；走通用约束自由组织（见上方"freeform 
 - 版本号 → 查 `Cargo.toml` / `package.json` / `pyproject.toml`
 - 时间范围 → 若未指定，默认"上次同 mode 报告至今"（查 INDEX.md）
 - 环境信息 → 查 OS / 工具链版本
-- 复现命令 → 查 README / CLAUDE.md 的"how to build / test / bench"
+- 复现命令 → 查 README / AGENTS.md 的"how to build / test / bench"
 
 **原则**：
 - 对每一项缺失信息，**先问自己**："我能否通过读取文件 / 执行只读命令 / 查 context 获取？"
