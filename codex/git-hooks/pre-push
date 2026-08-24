@@ -1,0 +1,56 @@
+#!/bin/sh
+
+set -eu
+
+log() {
+    level=$1
+    shift
+    printf '%s\n' "[release-gate] $level $*" >&2
+}
+
+run_legacy_hook() {
+    candidate_hook=$1
+    if [ ! -x "$candidate_hook" ]; then
+        return
+    fi
+    if [ "$candidate_hook" -ef "$0" ]; then
+        return
+    fi
+    log INFO "running existing pre-push hook path=$candidate_hook"
+    "$candidate_hook" "$remote_name" "$remote_location" <"$updates_file"
+}
+
+if [ "${CODEX_RELEASE_GATE_ACTIVE:-}" = "1" ]; then
+    log ERROR "a release reviewer is not allowed to push"
+    exit 2
+fi
+
+remote_name=${1:-origin}
+remote_location=${2:-unknown}
+hook_directory=$(CDPATH= cd "$(dirname "$0")" && pwd)
+repository_root=$(git rev-parse --show-toplevel)
+repository_git_directory=$(git rev-parse --absolute-git-dir)
+repository_common_directory=$(git rev-parse --path-format=absolute --git-common-dir)
+temporary_directory=$(mktemp -d "${TMPDIR:-/tmp}/codex-release-gate.XXXXXX")
+updates_file="$temporary_directory/push-updates"
+trap 'rm -rf "$temporary_directory"' EXIT HUP INT TERM
+cat >"$updates_file"
+
+run_legacy_hook "$repository_git_directory/hooks/pre-push"
+if [ "$repository_common_directory" != "$repository_git_directory" ]; then
+    run_legacy_hook "$repository_common_directory/hooks/pre-push"
+fi
+
+python_command=${CODEX_RELEASE_REVIEW_PYTHON_COMMAND:-python3}
+if ! command -v "$python_command" >/dev/null 2>&1; then
+    log ERROR "required Python executable is unavailable: $python_command"
+    exit 2
+fi
+
+log INFO "starting fresh read-only review remote=$remote_name repository=$repository_root"
+"$python_command" \
+    "$hook_directory/../skills/release-gate/scripts/run_release_review.py" \
+    --event push \
+    --repository "$repository_root" \
+    --remote-name "$remote_name" \
+    --updates-file "$updates_file"

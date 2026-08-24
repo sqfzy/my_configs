@@ -7,7 +7,7 @@ description: Analyze a Git branch's committed changes, apply the repository's ow
 
 ## Goal
 
-Create an auditable GitHub pull request or GitLab merge request from already committed work, using an English Conventional Commits title and a Chinese body. Treat the repository's template as the primary document contract, derive claims from evidence, require validation to pass before remote writes, and update an existing open change request instead of creating a duplicate.
+Create an auditable GitHub pull request or GitLab merge request from already committed work, using an English Conventional Commits title and a Chinese body. Treat the repository's template as the primary document contract, derive claims from evidence, require validation and an independent release review to pass before remote writes, and update an existing open change request instead of creating a duplicate.
 
 Do not stage, commit, amend, rebase, merge, reset, checkout another branch, or force-push.
 
@@ -42,6 +42,7 @@ Keep these policies fixed:
 - Write titles in English Conventional Commits format and bodies in Chinese; preserve commands, paths, identifiers, and quoted source text as-is.
 - Analyze committed changes only and require a completely clean worktree.
 - Stop when validation fails, times out, cannot start, or cannot be discovered reliably.
+- Use `$release-gate` for a fresh read-only review immediately before creating or updating a change request. Never reuse the push review verdict.
 - Create new change requests ready for review. Preserve Draft/Ready state when updating an existing request.
 - Include full active non-loopback IP addresses when `include_ip_addresses` is `true`.
 
@@ -51,7 +52,7 @@ Use `pull request`/`PR` for GitHub and `merge request`/`MR` for GitLab. Use `cha
 
 ### 1. Announce and time each phase
 
-Report concise progress for preflight, provider detection, template resolution, evidence collection, test discovery, test execution, push, and change-request creation or update. Record elapsed time for tests and external Git or provider operations.
+Report concise progress for preflight, provider detection, template resolution, evidence collection, test discovery, test execution, push, release review, and change-request creation or update. Record elapsed time for tests, release review, and external Git or provider operations.
 
 On failure, report the command or operation, exit status when available, relevant context, and corrective action. Never expose credentials, tokens, private keys, authorization headers, environment-variable values, or complete raw logs that may contain secrets.
 
@@ -204,8 +205,10 @@ For `submission_mode=ready`, continue only after preflight, template resolution,
 
 1. Check the remote head. Push only the current `HEAD` with a normal fast-forward push; set upstream when the remote branch does not exist.
 2. Stop on non-fast-forward rejection. Never rewrite commits or force-push.
-3. Find open change requests whose source and target exactly match. Stop on more than one exact match.
-4. Update the one exact match without changing its Draft/Ready state, or create a new ready-for-review request when none exists.
+3. Invoke `$release-gate` with `event=change-request` and the exact `merge_base..HEAD` range. This must start a new ephemeral read-only reviewer even though the push had its own review. Stop on findings, timeout, execution failure, or an invalid verdict.
+4. Reconfirm that `HEAD` and the remote source branch still equal the reviewed commit. Rerun the gate if either changed.
+5. Find open change requests whose source and target exactly match. Stop on more than one exact match.
+6. Update the one exact match without changing its Draft/Ready state, or create a new ready-for-review request when none exists.
 
 For GitHub, use the GitHub connector for exact PR lookup, ready-for-review creation, and update. Do not request Draft state when creating. Preserve the state of an existing PR.
 
@@ -222,6 +225,6 @@ Do not wait for newly triggered CI. Report CI as pending unless a status for the
 
 ### 10. Report the outcome
 
-Return provider and repository, `base <- head`, analyzed range/count, selected template, tests and total duration, push state, created/updated/rendered state, PR/MR URL and number, CI state, and remaining unknown facts.
+Return provider and repository, `base <- head`, analyzed range/count, selected template, tests and total duration, release-review target/verdict/duration, push state, created/updated/rendered state, PR/MR URL and number, CI state, and remaining unknown facts.
 
 If push succeeds but creation or update fails, state the partial result and corrective next step. Never claim atomic rollback of a successful push.

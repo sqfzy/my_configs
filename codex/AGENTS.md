@@ -14,6 +14,15 @@
 - **每次回复完毕，只要本轮对任何文件有过增 / 删 / 改（新建、修改、删除、移动或重命名），必须在回复末尾明确列出涉及的文件路径。**
 - **写程序之前，先确定好配置的定义。** 动手写实现代码前，必须先把配置项定义清楚——列出每一项：名称、类型、默认值、取值范围、来源（环境变量 / 配置文件 / CLI）、以及"它为何是配置而非硬编码"（判据见 Configuration 节：因部署 / 运维而变 → 配置）。配置的形状（schema）是接口契约，必须先于实现敲定，不能边写边拍脑袋加。
 
+## Release Gate（发布前独立审查）
+
+- 在执行任何 `git push`、创建或更新 GitHub PR / GitLab MR、或向任意环境部署之前，必须使用 `$release-gate` 对**确切发布候选**执行一次全新的只读审查。
+- Release Gate 必须启动 `--ephemeral --sandbox read-only` 的独立 Codex 进程并显式使用 `$review-agent`；不得用当前对话自审，也不得复用带当前对话历史的子 agent。
+- push 审查完整的实际 ref 更新；PR/MR 审查完整 merge-base 到精确 `HEAD`；部署审查当前已部署提交到冻结部署提交。多仓库部署逐一审查。
+- 每个发布边界都重新审查，不复用 push、PR/MR 或部署之间的 verdict。审查后目标、`HEAD`、index 或部署契约变化时也必须重跑。
+- 任意 actionable finding、审查失败、超时或无效输出都阻断发布动作。不得增加静默跳过或 fail-open 路径。
+- 普通本地 commit、build、lint、format 与 test 不触发 Release Gate；仅生成 PR/MR 草稿文本且不执行远端写入也不触发。
+
 ## Project Documentation（项目文档）
 
 ### File Organization（文件组织）

@@ -26,6 +26,10 @@
 
 {{key_config}}
 
+## Alertd 告警投递
+
+{{alertd_delivery}}
+
 ## 程序产出
 
 {{program_outputs}}
@@ -49,4 +53,4 @@
 - `inferred`：根据启动参数或路由推断，已注明依据。
 - `unknown`：证据不足；不会把 DPDK/raw socket 等不可观测路径伪装成确定结果。
 
-> 报告不包含密钥、token、密码、私钥或 webhook secret。外部状态和数据库不在应用级回滚保证范围内。
+> 按报告策略，Alertd 完整 webhook URL（含 access_token）会写入可信简报；signing secret、其他 token、密码和私钥仍不记录。外部状态和数据库不在应用级回滚保证范围内。

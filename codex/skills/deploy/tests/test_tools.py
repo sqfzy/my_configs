@@ -14,6 +14,7 @@ import time
 import unittest
 from pathlib import Path
 from typing import Any
+from unittest import mock
 
 SKILL_ROOT = Path(__file__).resolve().parent.parent
 
@@ -32,6 +33,7 @@ def load_script(name: str) -> Any:
 collect_host = load_script("collect_host")
 check_alertd = load_script("check_alertd")
 check_outputs = load_script("check_outputs")
+inspect_alertd_delivery = load_script("inspect_alertd_delivery")
 render_report = load_script("render_report")
 
 
@@ -348,6 +350,33 @@ def fixture_gate_sections() -> dict[str, str]:
     }
 
 
+def fixture_delivery_config() -> str:
+    return """
+[delivery]
+token_env = "ALERTD_TEST_TOKEN"
+secret_env = "ALERTD_TEST_SECRET"
+"""
+
+
+def fixture_delivery_evidence(token: str = "trusted-token") -> dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "provider": "dingtalk",
+        "endpoint": "https://oapi.dingtalk.com/robot/send",
+        "webhook_url": inspect_alertd_delivery.build_webhook_url(token),
+        "token_env": "ALERTD_TEST_TOKEN",
+        "secret_env": "ALERTD_TEST_SECRET",
+        "environment_files": ["/etc/alertd/alertd.env"],
+        "signing_secret_present": True,
+        "alertd_commit": "d" * 40,
+        "checked_at": "2026-08-24T00:00:00+00:00",
+        "status": "verified",
+        "verified": True,
+        "warnings": [],
+        "probe_duration_seconds": 0.2,
+    }
+
+
 class CollectHostTests(unittest.TestCase):
     def test_service_parser_redacts_secret_and_expands_affinity(self) -> None:
         fields = [
@@ -453,6 +482,125 @@ class AlertdGateTests(unittest.TestCase):
         self.assertEqual(
             {value["comparison"] for value in failures}, {"new", "worsened"}
         )
+
+
+class AlertdDeliveryTests(unittest.TestCase):
+    def metadata_sections(self, main_pid: int = 200, config: str | None = None) -> dict[str, str]:
+        config = fixture_delivery_config() if config is None else config
+        return {
+            "unit": (
+                "LoadState=loaded\nActiveState=active\n"
+                f"MainPID={main_pid}\nEnvironmentFiles=/etc/alertd/alertd.env (ignore_errors=no)"
+            ),
+            "config": base64.b64encode(config.encode()).decode(),
+        }
+
+    def test_builds_complete_url_with_encoded_token(self) -> None:
+        url = inspect_alertd_delivery.build_webhook_url("token value/+?")
+        self.assertEqual(
+            url,
+            "https://oapi.dingtalk.com/robot/send?access_token=token%20value%2F%2B%3F",
+        )
+        self.assertNotIn("timestamp=", url)
+        self.assertNotIn("sign=", url)
+
+    def test_delivery_environment_names_follow_alertd_defaults(self) -> None:
+        self.assertEqual(
+            inspect_alertd_delivery.parse_delivery_config(
+                '[runtime]\ninterval = "30s"\n'
+            ),
+            ("ALERTD_DINGTALK_TOKEN", "ALERTD_DINGTALK_SECRET"),
+        )
+
+    def test_collects_url_without_returning_signing_secret(self) -> None:
+        snapshot = fixture_snapshot()
+        token = "full-token-value"
+        responses = [
+            (self.metadata_sections(), 0.1),
+            ({
+                "token": base64.b64encode(token.encode()).decode(),
+                "secret_present": "yes",
+            }, 0.1),
+        ]
+        with mock.patch.object(inspect_alertd_delivery, "run_remote", side_effect=responses):
+            evidence = inspect_alertd_delivery.inspect_delivery(
+                snapshot, Path("/tmp/known_hosts"), "/etc/alertd/alertd.toml"
+            )
+        self.assertTrue(evidence["verified"])
+        self.assertIn(token, evidence["webhook_url"])
+        self.assertTrue(evidence["signing_secret_present"])
+        serialized = json.dumps(evidence)
+        self.assertNotIn("signing-secret-value", serialized)
+        self.assertNotIn("timestamp", serialized)
+        self.assertNotIn('"sign"', serialized)
+
+    def test_missing_token_degrades_without_failure_gate(self) -> None:
+        responses = [
+            (self.metadata_sections(), 0.1),
+            ({"token": "", "secret_present": "yes"}, 0.1),
+        ]
+        with mock.patch.object(inspect_alertd_delivery, "run_remote", side_effect=responses):
+            evidence = inspect_alertd_delivery.inspect_delivery(
+                fixture_snapshot(), Path("/tmp/known_hosts"), "/etc/alertd/alertd.toml"
+            )
+        self.assertFalse(evidence["verified"])
+        self.assertIsNone(evidence["webhook_url"])
+        self.assertTrue(any("missing or empty" in warning for warning in evidence["warnings"]))
+
+    def test_missing_secret_preserves_confirmed_webhook(self) -> None:
+        token = "confirmed-token"
+        responses = [
+            (self.metadata_sections(), 0.1),
+            ({
+                "token": base64.b64encode(token.encode()).decode(),
+                "secret_present": "no",
+            }, 0.1),
+        ]
+        with mock.patch.object(inspect_alertd_delivery, "run_remote", side_effect=responses):
+            evidence = inspect_alertd_delivery.inspect_delivery(
+                fixture_snapshot(), Path("/tmp/known_hosts"), "/etc/alertd/alertd.toml"
+            )
+        self.assertTrue(evidence["verified"])
+        self.assertIn(token, evidence["webhook_url"])
+        self.assertFalse(evidence["signing_secret_present"])
+        self.assertTrue(any("ALERTD_TEST_SECRET" in warning for warning in evidence["warnings"]))
+
+    def test_missing_main_pid_and_invalid_config_degrade(self) -> None:
+        with mock.patch.object(
+            inspect_alertd_delivery, "run_remote", return_value=(self.metadata_sections(0), 0.1)
+        ):
+            no_pid = inspect_alertd_delivery.inspect_delivery(
+                fixture_snapshot(), Path("/tmp/known_hosts"), "/etc/alertd/alertd.toml"
+            )
+        self.assertFalse(no_pid["verified"])
+        self.assertTrue(any("no MainPID" in warning for warning in no_pid["warnings"]))
+
+        with mock.patch.object(
+            inspect_alertd_delivery,
+            "run_remote",
+            return_value=(self.metadata_sections(config="not = [valid"), 0.1),
+        ):
+            invalid = inspect_alertd_delivery.inspect_delivery(
+                fixture_snapshot(), Path("/tmp/known_hosts"), "/etc/alertd/alertd.toml"
+            )
+        self.assertFalse(invalid["verified"])
+        self.assertEqual(invalid["warnings"], ["alertd delivery evidence could not be confirmed"])
+
+    def test_secret_value_is_not_returned_by_remote_script(self) -> None:
+        script = inspect_alertd_delivery.credentials_script(
+            200, "ALERTD_TEST_TOKEN", "ALERTD_TEST_SECRET"
+        )
+        self.assertIn("secret_present", script)
+        self.assertNotIn("signing-secret-value", script)
+        self.assertNotIn("timestamp", script)
+        self.assertNotIn("sign=", script)
+
+    def test_sensitive_evidence_is_written_with_mode_0600(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            output = Path(temporary_directory) / "delivery.json"
+            inspect_alertd_delivery.write_result(fixture_delivery_evidence(), output)
+            self.assertEqual(output.stat().st_mode & 0o777, 0o600)
+            self.assertIn("trusted-token", output.read_text(encoding="utf-8"))
 
 
 class OutputGateTests(unittest.TestCase):
@@ -734,6 +882,32 @@ class ReportTests(unittest.TestCase):
         self.assertIn("部署复现流程", report)
         self.assertIn("AWS ENI", report)
         self.assertIn("程序产出未记录", report)
+        self.assertIn("Alertd 告警投递", report)
+        self.assertIn("投递证据未提供", report)
+
+    def test_report_includes_complete_webhook_but_not_signing_secret(self) -> None:
+        snapshot = fixture_snapshot()
+        template = (SKILL_ROOT / "assets" / "report-template.md").read_text(encoding="utf-8")
+        delivery = fixture_delivery_evidence("full/token value")
+        report = render_report.build_report(
+            "succeeded",
+            snapshot,
+            snapshot,
+            fixture_contract_v3(),
+            {},
+            template,
+            fixture_output_result(),
+            delivery,
+        )
+        self.assertIn(
+            "https://oapi.dingtalk.com/robot/send?access_token=full%2Ftoken%20value",
+            report,
+        )
+        self.assertIn("ALERTD_TEST_SECRET", report)
+        self.assertIn("已配置（值未记录）", report)
+        self.assertNotIn("signing-secret-value", report)
+        self.assertNotIn("timestamp=", report)
+        self.assertNotIn("sign=", report)
 
     def test_v2_report_uses_six_column_key_output_table(self) -> None:
         snapshot = fixture_snapshot()
@@ -932,6 +1106,7 @@ class ReportTests(unittest.TestCase):
                 "contract.json": fixture_contract_v2(),
                 "gate.json": {"phase": "postdeploy", "healthy": True, "polls": [{"reasons": []}]},
                 "outputs.json": fixture_output_result(),
+                "delivery.json": fixture_delivery_evidence("terminal-private-token"),
             }
             for name, value in inputs.items():
                 (root / name).write_text(json.dumps(value), encoding="utf-8")
@@ -944,6 +1119,7 @@ class ReportTests(unittest.TestCase):
                     "--contract", str(root / "contract.json"),
                     "--gate", str(root / "gate.json"),
                     "--outputs", str(root / "outputs.json"),
+                    "--alertd-delivery", str(root / "delivery.json"),
                     "--status", "succeeded",
                     "--output", str(root / "report.md"),
                 ],
@@ -954,7 +1130,11 @@ class ReportTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             report = (root / "report.md").read_text(encoding="utf-8")
             self.assertIn("/var/log/alpha/alpha.log", report)
+            self.assertIn("terminal-private-token", report)
             self.assertIn("outputs=passed", result.stdout)
+            self.assertIn("delivery=verified", result.stdout)
+            self.assertNotIn("terminal-private-token", result.stdout)
+            self.assertNotIn("terminal-private-token", result.stderr)
 
     def test_auto_contract_rejects_irreversible_change(self) -> None:
         contract = fixture_contract()

@@ -80,6 +80,19 @@ the final free percentage after build staging, the new release, and retained rol
 Abort if any affected filesystem would fall below the configured percentage or if the estimate is
 not defensible.
 
+## Pass the independent release review
+
+Before any remote mutation, invoke `$release-gate` separately for every repository in the frozen
+deployment contract. Use `event=deploy` and review the exact range from the commit currently
+deployed to the frozen target commit. For a new deployment with no current commit, compare the
+frozen target with the fetched remote default branch's merge base.
+
+Require a fresh ephemeral read-only reviewer for this deployment even when the same commit passed
+a push or PR/MR review. Stop on every actionable finding, timeout, execution failure, invalid
+verdict, ambiguous range, or unavailable object. Record the repository, exact range, verdict, and
+elapsed time in the deployment evidence. If the frozen target or deployment contract changes,
+rerun the review before continuing.
+
 ## Establish monitoring before application mutation
 
 Inventory `alertd` without changing the host. If absent, include its bootstrap as a separate,
@@ -91,7 +104,9 @@ rollback-covered transaction before the application transaction:
 3. Build with `cargo build --release --locked` inside the container. Do not install host Rust.
 4. Verify architecture and SHA-256, stage a versioned release, validate config, install the unit,
    and start it atomically.
-5. Require pre-provisioned delivery environment variables. Never read or report their values.
+5. Require pre-provisioned delivery environment variables. Keep the signing secret out of every
+   artifact; permit the token only through the dedicated delivery inspector and final trusted
+   report described below.
 
 Generate journal coverage for every business unit. Add a stable process check for each enabled,
 long-running service and explicit SHM/application checks when their semantics are known. Check
@@ -112,6 +127,21 @@ configuration and state must be readable, and state must be fresh. Record existi
 alerts, collector failures, process gaps, and journal coverage gaps as baseline warnings rather
 than blockers. Preserve the structured baseline so later gates can distinguish inherited issues
 from new or worsened problems.
+
+Collect the effective Alertd webhook after monitoring is established:
+
+```bash
+python3 <skill-root>/scripts/inspect_alertd_delivery.py \
+  --snapshot <scratch>/before.json \
+  --known-hosts <known-hosts> \
+  --config-path <alertd-config> \
+  --output <scratch>/alertd-delivery.json
+```
+
+The inspector may read the running process token only to construct the complete static DingTalk
+webhook URL. It must not return the signing secret, dynamic `timestamp` or `sign`, or print the URL
+to logs or terminal output. Keep the evidence file at mode `0600`. Treat unavailable delivery
+evidence as a report warning, not a deployment or rollback gate.
 
 After monitoring is established and before application mutation, record the declared output
 baseline with a read-only check:
@@ -193,6 +223,7 @@ python3 <skill-root>/scripts/render_report.py \
   --contract <scratch>/contract.json \
   --gate <scratch>/final-gate.json \
   --outputs <scratch>/final-outputs.json \
+  --alertd-delivery <scratch>/alertd-delivery.json \
   --status <succeeded|failed|rolled_back> \
   --output <local-report>.md
 ```
@@ -209,6 +240,13 @@ known total size, and at most two representative paths per service; normalize hi
 hugepage and DPDK paths to path families. Summarize multi-process SHM evidence by process count,
 permission set, and writable-FD count without listing PIDs. This compaction applies only to the
 Markdown report; preserve the complete output-check JSON as audit evidence.
+
+Show Alertd provider, complete static webhook URL including `access_token`, credential environment
+names and EnvironmentFile paths, signing-secret presence, Alertd commit, evidence time, and
+collection status in a dedicated section. Never show the signing secret. State that `timestamp`
+and `sign` are generated per request. Keep the URL out of the frozen contract, health/output JSON,
+ordinary logs, and terminal summary. Remove the mode-`0600` delivery evidence after both report
+copies are complete.
 
 Classify observed `/dev/shm` objects as `shared_memory`; merge mapped/open evidence into an existing
 declaration instead of duplicating it. A healthy optional SHM belongs in the per-service summary,

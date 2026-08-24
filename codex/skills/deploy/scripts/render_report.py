@@ -95,6 +95,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--contract", required=True, type=Path)
     parser.add_argument("--gate", type=Path)
     parser.add_argument("--outputs", type=Path)
+    parser.add_argument("--alertd-delivery", type=Path)
     parser.add_argument("--status", required=True, choices=["succeeded", "failed", "rolled_back"])
     parser.add_argument("--template", type=Path, default=default_template)
     parser.add_argument("--output", required=True, type=Path)
@@ -442,6 +443,61 @@ def render_key_config(contract: dict[str, Any]) -> str:
     return table(["配置", "来源", "最终生效值"], rows)
 
 
+def validate_alertd_delivery(evidence: dict[str, Any]) -> None:
+    if evidence.get("schema_version") != 1:
+        raise ValueError("alertd delivery evidence schema_version must be 1")
+    if evidence.get("provider") != "dingtalk":
+        raise ValueError("alertd delivery evidence provider must be dingtalk")
+    if evidence.get("endpoint") != "https://oapi.dingtalk.com/robot/send":
+        raise ValueError("alertd delivery evidence endpoint is invalid")
+    if evidence.get("status") not in {"verified", "unavailable"}:
+        raise ValueError("alertd delivery evidence status is invalid")
+    if not isinstance(evidence.get("environment_files"), list):
+        raise ValueError("alertd delivery environment_files must be a list")
+    secret_present = evidence.get("signing_secret_present")
+    if secret_present is not None and not isinstance(secret_present, bool):
+        raise ValueError("alertd delivery signing_secret_present must be boolean or null")
+    verified = evidence.get("verified")
+    if not isinstance(verified, bool) or verified != (evidence["status"] == "verified"):
+        raise ValueError("alertd delivery verified flag does not match status")
+    if verified:
+        webhook_url = str(evidence.get("webhook_url", ""))
+        prefix = "https://oapi.dingtalk.com/robot/send?access_token="
+        if not webhook_url.startswith(prefix) or len(webhook_url) == len(prefix) or "&" in webhook_url:
+            raise ValueError("verified alertd delivery evidence has an invalid webhook URL")
+
+
+def render_alertd_delivery(evidence: dict[str, Any]) -> str:
+    if not evidence:
+        return "未记录（历史简报或投递证据未提供）。"
+    validate_alertd_delivery(evidence)
+    verified = bool(evidence.get("verified"))
+    webhook_url = evidence.get("webhook_url") if verified else "无法确认"
+    secret_status = {
+        True: "已配置（值未记录）",
+        False: "缺失或为空",
+        None: "无法确认",
+    }[evidence.get("signing_secret_present")]
+    warnings = evidence.get("warnings", [])
+    rows = [
+        ["平台", "钉钉机器人"],
+        ["静态 Endpoint", evidence.get("endpoint", "unknown")],
+        ["完整 Webhook URL", webhook_url],
+        ["Token 环境变量", evidence.get("token_env", "unknown")],
+        ["Signing Secret 环境变量", evidence.get("secret_env", "unknown")],
+        ["EnvironmentFile", ", ".join(str(value) for value in evidence["environment_files"]) or "unknown"],
+        ["Signing Secret", secret_status],
+        ["Alertd Commit", evidence.get("alertd_commit", "unknown")],
+        ["采集状态", "已确认" if verified else "无法确认"],
+        ["采集时间", evidence.get("checked_at", "unknown")],
+    ]
+    result = table(["字段", "值"], rows)
+    result += "\n\n> `timestamp` 与 `sign` 由 alertd 每次发送时动态生成，不属于静态 webhook URL。"
+    if warnings:
+        result += "\n\n" + "\n".join(f"- {markdown(value)}" for value in warnings)
+    return result
+
+
 def render_program_outputs(contract: dict[str, Any], output_result: dict[str, Any]) -> str:
     if contract.get("schema_version") == 1:
         return "程序产出未记录（历史 schema v1 契约）。"
@@ -734,8 +790,10 @@ def build_report(
     gate: dict[str, Any],
     template: str,
     output_result: dict[str, Any] | None = None,
+    delivery_evidence: dict[str, Any] | None = None,
 ) -> str:
     output_result = output_result or {}
+    delivery_evidence = delivery_evidence or {}
     current = after or before
     title = f"{current.get('machine', {}).get('hostname', 'unknown')} · {status_label(status)}"
     values = {
@@ -747,6 +805,7 @@ def build_report(
         "capacity": render_capacity(before, after),
         "repositories": render_repositories(contract),
         "key_config": render_key_config(contract),
+        "alertd_delivery": render_alertd_delivery(delivery_evidence),
         "program_outputs": render_program_outputs(contract, output_result),
         "deployment": render_deployment(status, contract, gate, output_result),
         "reproduce": render_steps(contract.get("reproduce", [])),
@@ -776,15 +835,26 @@ def main() -> int:
         contract = load_json(args.contract)
         gate = load_json(args.gate, required=False)
         output_result = load_json(args.outputs, required=False)
+        delivery_evidence = load_json(args.alertd_delivery, required=False)
         validate_contract(contract)
         template = args.template.expanduser().read_text(encoding="utf-8")
-        report = build_report(args.status, before, after, contract, gate, template, output_result)
+        report = build_report(
+            args.status,
+            before,
+            after,
+            contract,
+            gate,
+            template,
+            output_result,
+            delivery_evidence,
+        )
         write_report(report, args.output)
         print(
             f"status={args.status} host={before.get('machine', {}).get('hostname', 'unknown')} "
             f"services={len((after or before).get('services', []))} "
             f"health={'passed' if gate.get('healthy') else ('not-provided' if not gate else 'failed')} "
             f"outputs={'passed' if output_result.get('healthy') else ('not-provided' if not output_result else 'failed')} "
+            f"delivery={delivery_evidence.get('status', 'not-provided')} "
             f"report={args.output.expanduser().resolve()}"
         )
         return 0

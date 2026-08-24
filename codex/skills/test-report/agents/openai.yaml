@@ -1,0 +1,4 @@
+interface:
+  display_name: "Test Report"
+  short_description: "执行本地或 SSH 测试并生成独立、可审计的中文测试报告"
+  default_prompt: "使用 $test-report 执行测试、采集脱敏证据并生成独立测试报告。"

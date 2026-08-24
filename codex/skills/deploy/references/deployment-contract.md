@@ -283,6 +283,17 @@ severity, and counts against that baseline; unchanged warnings are inherited, wh
 issues fail. Preserve any explicit user override as failed evidence with its accepted risk and
 unavailable guarantee.
 
+Collect delivery evidence separately from the deployment contract and health gates. The evidence
+schema version 1 contains provider, static endpoint, complete webhook URL, token/secret environment
+variable names, EnvironmentFile paths, signing-secret presence, Alertd commit, collection time,
+status, and warnings. Store this temporary JSON with mode `0600`; remove it after producing both
+report copies. A collection failure is a report warning and never independently triggers rollback.
+
+For the current DingTalk delivery implementation, the static webhook URL is
+`https://oapi.dingtalk.com/robot/send?access_token=<URL-encoded token>`. The signing secret never
+leaves the server. Dynamic `timestamp` and `sign` values are generated for each delivery and are
+not evidence fields.
+
 ## Evidence and redaction
 
 Label resource attribution as one of:
@@ -298,8 +309,10 @@ kernel sockets to cgroup PIDs and route remote peers to interfaces where possibl
 
 Redact values whose names or flags contain `password`, `passwd`, `secret`, `token`, `api_key`,
 `apikey`, `private_key`, `credential`, or `authorization`. Redact URI userinfo and sensitive command
-arguments. Never copy environment-file contents, private keys, tokens, or webhook secrets into a
-snapshot, contract, terminal output, or report.
+arguments. The sole exception is the Alertd `access_token` inside the dedicated delivery evidence
+and final trusted report. Never copy it into a snapshot, contract, health/output result, ordinary
+log, or terminal output. Never record EnvironmentFile contents, signing secrets, other tokens,
+private keys, or passwords.
 
 Inspect writable file descriptors only by their `/proc/<pid>/fd` metadata. Record regular files and
 ignore read-only descriptors, sockets, pipes, anonymous descriptors, and `/dev/null`; never read

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Release Gate"
+  short_description: "在发布动作前启动全新只读 Codex 审查并执行阻断"
+  default_prompt: "使用 $release-gate 在 push、PR/MR 或部署前审查确切发布范围，并按结构化 verdict 放行或阻断。"
