@@ -21,7 +21,7 @@ system, developer, safety, and tool constraints.
 deploy/
 ├── SKILL.md                         # Orchestrates inspection, deployment, rollback, and reporting.
 ├── references/deployment-contract.md # Defines configuration, frozen contract, and hard gates.
-├── scripts/                         # Collects evidence and evaluates health/output gates.
+├── scripts/                         # Collects evidence, evaluates gates, and exports test context.
 ├── assets/report-template.md        # Provides the Markdown deployment brief structure.
 ├── tests/test_tools.py              # Covers collectors, gates, redaction, and report rendering.
 └── agents/openai.yaml               # Supplies Codex UI metadata.
@@ -228,6 +228,23 @@ python3 <skill-root>/scripts/render_report.py \
   --output <local-report>.md
 ```
 
+Also export the versioned, redacted context consumed optionally by `$test-report`:
+
+```bash
+python3 <skill-root>/scripts/export_test_context.py \
+  --before <scratch>/before.json \
+  --after <scratch>/after.json \
+  --contract <scratch>/contract.json \
+  --gate <scratch>/final-gate.json \
+  --outputs <scratch>/final-outputs.json \
+  --status <succeeded|failed|rolled_back> \
+  --output <local-report-dir>/deployment-evidence.json
+```
+
+The test-context artifact is supplementary and never changes deployment or rollback gates. Copy it
+with the deployment brief when available. It must follow the evidence contract reference and must
+not contain the Alertd webhook, access token, signing secret, rollback commands, or other secrets.
+
 Verify that every business unit appears in the CPU table, including inactive/oneshot units; every
 repository has URL, requested target, full commit, and available build/artifact digests; key config
 shows source and redacted effective value; and reproduction/rollback steps use the immutable
@@ -256,7 +273,9 @@ filesystem types, or mount paths.
 
 Copy the completed report to the configured server report directory through strict SSH. Upload to
 a temporary name, set controlled ownership/mode, and atomically rename it. Preserve failed and
-rolled-back reports as audit evidence. Return the terminal summary and local Markdown file.
+rolled-back reports as audit evidence. Upload the redacted deployment evidence through the same
+atomic path when it was produced. Return the terminal summary, local Markdown file, and evidence
+file.
 
 Do not estimate disk growth. Do not claim database rollback, DPDK/raw-socket attribution, CPU
 pinning, or network ownership without evidence.

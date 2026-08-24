@@ -85,7 +85,9 @@ def reject_secret_values(value: Any, path: str = "contract") -> None:
     if isinstance(value, dict):
         for name, nested in value.items():
             location = f"{path}.{name}"
-            if SENSITIVE_NAME.search(str(name)) and nested not in {None, "<redacted>"}:
+            if SENSITIVE_NAME.search(str(name)) and not (
+                nested is None or nested == "<redacted>"
+            ):
                 raise ValueError(f"secret-bearing field must be redacted: {location}")
             reject_secret_values(nested, location)
     elif isinstance(value, list):
@@ -231,6 +233,14 @@ def validate_contract(contract: dict[str, Any]) -> None:
     )
     validate_subject(contract.get("subject"))
     validate_tests(contract, default_timeout)
+    key_config = contract.get("key_config", [])
+    if not isinstance(key_config, list):
+        raise ValueError("key_config must be an array")
+    for index, item in enumerate(key_config):
+        if not isinstance(item, dict) or not item.get("name") or not item.get("source") or "value" not in item:
+            raise ValueError(f"key_config[{index}] needs name, source, and value")
+        if SENSITIVE_NAME.search(str(item["name"])) and item["value"] != "<redacted>":
+            raise ValueError(f"key_config[{index}] sensitive value must be redacted")
     reject_secret_values(contract)
 
 
@@ -352,8 +362,11 @@ def run_text(target: dict[str, Any], argv: list[str], working_directory: str = "
         remote = f"cd {shlex.quote(working_directory)} && exec {shlex.join(argv)}"
         command = ssh_prefix(target) + ["sh -lc " + shlex.quote(remote)]
         cwd = None
-    completed = subprocess.run(command, cwd=cwd, capture_output=True, text=True, timeout=30, check=False)
-    return completed.returncode, redact_text(completed.stdout.strip())
+    try:
+        completed = subprocess.run(command, cwd=cwd, capture_output=True, text=True, timeout=30, check=False)
+        return completed.returncode, redact_text(completed.stdout.strip())
+    except (OSError, subprocess.TimeoutExpired):
+        return 127, ""
 
 
 def local_memory() -> dict[str, Any]:
@@ -527,6 +540,40 @@ def collect_result_source(
     return item
 
 
+def capture_status(capture: dict[str, Any], expected_exit_codes: list[int], timeout: int) -> tuple[str, str]:
+    if capture["error"]:
+        return "error", str(capture["error"])
+    if capture["timed_out"]:
+        return "timed_out", f"exceeded {timeout} seconds"
+    if capture["returncode"] in expected_exit_codes:
+        return "passed", "exit code matched"
+    return "failed", f"unexpected exit code {capture['returncode']}"
+
+
+def execute_cleanup(
+    target: dict[str, Any],
+    test: dict[str, Any],
+    working_directory: str,
+    timeout: int,
+    output_dir: Path,
+    evidence_dir: Path,
+    maximum_bytes: int,
+) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
+    cleanup_argv = test.get("cleanup_argv")
+    if not cleanup_argv or test["mutation_scope"] not in {"test_target", "external"}:
+        return None, []
+    capture = execute_capture(target, list(cleanup_argv), working_directory, timeout, output_dir)
+    artifacts = persist_process_logs(capture, evidence_dir, test["id"], "cleanup", maximum_bytes)
+    cleanup = {
+        "returncode": capture["returncode"],
+        "timed_out": capture["timed_out"],
+        "error": capture["error"],
+        "duration_seconds": capture["duration_seconds"],
+        "succeeded": not capture["error"] and not capture["timed_out"] and capture["returncode"] == 0,
+    }
+    return cleanup, artifacts
+
+
 def execute_test(
     contract: dict[str, Any],
     test: dict[str, Any],
@@ -560,34 +607,14 @@ def execute_test(
     LOG.info("test started id=%s target=%s timeout_seconds=%d", test_id, target.get("kind", "local"), timeout)
     capture = execute_capture(target, list(test["argv"]), working_directory, timeout, output_dir)
     artifacts = persist_process_logs(capture, evidence_dir, test_id, "run", maximum_bytes)
-    if capture["error"]:
+    status, reason = capture_status(capture, test.get("expected_exit_codes", [0]), timeout)
+    cleanup, cleanup_artifacts = execute_cleanup(
+        target, test, working_directory, timeout, output_dir, evidence_dir, maximum_bytes
+    )
+    artifacts.extend(cleanup_artifacts)
+    if cleanup is not None and not cleanup["succeeded"]:
         status = "error"
-        reason = capture["error"]
-    elif capture["timed_out"]:
-        status = "timed_out"
-        reason = f"exceeded {timeout} seconds"
-    elif capture["returncode"] in test.get("expected_exit_codes", [0]):
-        status = "passed"
-        reason = "exit code matched"
-    else:
-        status = "failed"
-        reason = f"unexpected exit code {capture['returncode']}"
-
-    cleanup = None
-    cleanup_argv = test.get("cleanup_argv")
-    if cleanup_argv and test["mutation_scope"] in {"test_target", "external"}:
-        cleanup_capture = execute_capture(target, list(cleanup_argv), working_directory, timeout, output_dir)
-        artifacts.extend(persist_process_logs(cleanup_capture, evidence_dir, test_id, "cleanup", maximum_bytes))
-        cleanup = {
-            "returncode": cleanup_capture["returncode"],
-            "timed_out": cleanup_capture["timed_out"],
-            "error": cleanup_capture["error"],
-            "duration_seconds": cleanup_capture["duration_seconds"],
-            "succeeded": not cleanup_capture["error"] and not cleanup_capture["timed_out"] and cleanup_capture["returncode"] == 0,
-        }
-        if not cleanup["succeeded"]:
-            status = "error"
-            reason = "cleanup failed"
+        reason = "cleanup failed"
 
     result_sources = [
         collect_result_source(target, source, working_directory, evidence_dir, test_id, index, maximum_bytes)

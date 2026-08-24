@@ -34,6 +34,7 @@ collect_host = load_script("collect_host")
 check_alertd = load_script("check_alertd")
 check_outputs = load_script("check_outputs")
 inspect_alertd_delivery = load_script("inspect_alertd_delivery")
+export_test_context = load_script("export_test_context")
 render_report = load_script("render_report")
 
 
@@ -840,6 +841,56 @@ class OutputGateTests(unittest.TestCase):
         self.assertTrue(result["healthy"])
         self.assertEqual(len(result["failures"]), 0)
         self.assertEqual(len(result["warnings"]), 2)
+
+
+class TestContextExportTests(unittest.TestCase):
+    def build_evidence(self) -> dict[str, Any]:
+        return export_test_context.build_evidence(
+            fixture_snapshot(),
+            fixture_snapshot(),
+            fixture_contract_v3(),
+            {"schema_version": 2, "phase": "postdeploy", "healthy": True, "clean": True, "warnings": [], "failures": []},
+            fixture_output_result(),
+            "succeeded",
+            {"before": None, "after": None, "contract": None, "gate": None, "outputs": None},
+        )
+
+    def test_exports_versioned_standalone_context(self) -> None:
+        evidence = self.build_evidence()
+
+        self.assertEqual(evidence["schema_version"], 1)
+        self.assertEqual(evidence["kind"], "deployment_test_context")
+        self.assertEqual(evidence["subject"]["repositories"][0]["commit"], "a" * 40)
+        self.assertEqual(evidence["subject"]["artifacts"][0]["sha256"], "c" * 64)
+        self.assertTrue(evidence["runtime"]["health"]["healthy"])
+        self.assertTrue(evidence["runtime"]["program_outputs"]["healthy"])
+
+    def test_redacts_secrets_and_omits_deployment_actions(self) -> None:
+        evidence = self.build_evidence()
+        serialized = json.dumps(evidence, ensure_ascii=False)
+
+        self.assertNotIn("must-not-leak", serialized)
+        self.assertNotIn("webhook", serialized.lower())
+        self.assertNotIn("access_token", serialized.lower())
+        self.assertNotIn("signing_secret", serialized.lower())
+        self.assertNotIn('"rollback"', serialized)
+        self.assertNotIn('"changes"', serialized)
+        self.assertEqual(evidence["key_config"][1]["value"], "<redacted>")
+
+    def test_rejects_forbidden_credential_field_on_write(self) -> None:
+        evidence = self.build_evidence()
+        evidence["webhook_url"] = "https://example.invalid"
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            with self.assertRaisesRegex(ValueError, "forbidden credential"):
+                export_test_context.write_result(Path(temporary_directory) / "evidence.json", evidence)
+
+    def test_aggregates_only_persistent_storage(self) -> None:
+        snapshot = fixture_snapshot()
+        snapshot["storage"]["filesystems"].append(
+            {"source": "tmpfs", "target": "/dev/shm", "fstype": "tmpfs", "size": 999, "used": 999, "avail": 0}
+        )
+        summary = export_test_context.storage_summary(snapshot)
+        self.assertEqual(summary["size"], 40 * 1024**3)
 
 
 class ReportTests(unittest.TestCase):

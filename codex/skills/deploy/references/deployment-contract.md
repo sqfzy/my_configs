@@ -10,6 +10,7 @@
 - [Hard gates](#hard-gates)
 - [Atomic deployment and rollback](#atomic-deployment-and-rollback)
 - [Alertd contract](#alertd-contract)
+- [Test-context evidence](#test-context-evidence)
 - [Evidence and redaction](#evidence-and-redaction)
 
 ## Supported scope
@@ -293,6 +294,56 @@ For the current DingTalk delivery implementation, the static webhook URL is
 `https://oapi.dingtalk.com/robot/send?access_token=<URL-encoded token>`. The signing secret never
 leaves the server. Dynamic `timestamp` and `sign` values are generated for each delivery and are
 not evidence fields.
+
+## Test-context evidence
+
+After the final deployment, rollback, or failed-action snapshot, emit a supplementary JSON object
+for the independent `test-report` Skill. This artifact is an audit output, not a deployment gate;
+its absence is a report warning and never changes rollback behavior.
+
+Use schema version 1:
+
+```json
+{
+  "schema_version": 1,
+  "kind": "deployment_test_context",
+  "generated_at": "RFC3339 timestamp",
+  "deployment_status": "succeeded|failed|rolled_back",
+  "target": {"host": "deploy.example", "user": "root", "port": 22},
+  "subject": {
+    "repositories": [
+      {"role": "application", "url": "git@example:team/repo.git", "target": "main", "commit": "full commit"}
+    ],
+    "artifacts": [
+      {"name": "application", "sha256": "64-hex digest", "repository_commit": "full commit"}
+    ]
+  },
+  "environment": {
+    "captured_at": "RFC3339 timestamp",
+    "machine": {},
+    "cpu": {},
+    "memory": {},
+    "storage_summary": {},
+    "network": {},
+    "services": []
+  },
+  "key_config": [],
+  "runtime": {"health": {}, "program_outputs": {}},
+  "source": {"contract_schema_version": 3, "before_captured_at": null, "after_captured_at": null, "sha256": {}},
+  "warnings": []
+}
+```
+
+Use the final post-action snapshot when available and otherwise the pre-deployment snapshot. Keep
+full repository commits and artifact hashes. Reduce storage to aggregate size, used, and available
+bytes. Preserve health failures, warnings, and program-output evidence because they help interpret
+later system tests.
+
+Apply the normal deployment redaction policy and additionally omit every field or scalar containing
+an Alertd webhook, `access_token`, or signing-secret material. Do not include the dedicated Alertd
+delivery evidence, `changes`, `reproduce`, `rollback`, or `irreversible_changes`. Hash each source
+JSON file so the consumer can identify the exact evidence inputs without copying their sensitive
+contents.
 
 ## Evidence and redaction
 
