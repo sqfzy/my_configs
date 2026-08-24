@@ -118,24 +118,27 @@ def load_json(path: Path | None, required: bool = True) -> dict[str, Any]:
 
 def validate_contract(contract: dict[str, Any]) -> None:
     schema_version = contract.get("schema_version")
-    if schema_version not in {1, 2}:
-        raise ValueError("contract schema_version must be 1 or 2")
-    if contract.get("mode") not in {"interactive", "auto"}:
-        raise ValueError("contract mode must be interactive or auto")
+    if schema_version not in {1, 2, 3}:
+        raise ValueError("contract schema_version must be 1, 2, or 3")
+    if schema_version in {1, 2} and contract.get("mode") not in {"interactive", "auto"}:
+        raise ValueError("historical contract mode must be interactive or auto")
+    if schema_version == 3 and "mode" in contract:
+        raise ValueError("contract schema_version 3 must not contain mode")
     required_objects = ["target", "deployment", "health"]
     for name in required_objects:
         if not isinstance(contract.get(name), dict):
             raise ValueError(f"contract {name} must be an object")
     required_lists = ["repositories", "changes", "key_config", "reproduce", "rollback", "irreversible_changes"]
-    if schema_version == 2:
+    if schema_version in {2, 3}:
         required_lists.append("program_outputs")
     for name in required_lists:
         if not isinstance(contract.get(name), list):
             raise ValueError(f"contract {name} must be a list")
     if not contract["repositories"]:
         raise ValueError("contract needs at least one repository")
-    if contract["mode"] == "auto" and contract["irreversible_changes"]:
-        raise ValueError("auto contract cannot contain irreversible changes")
+    legacy_auto = schema_version in {1, 2} and contract.get("mode") == "auto"
+    if (schema_version == 3 or legacy_auto) and contract["irreversible_changes"]:
+        raise ValueError("automatic contract cannot contain irreversible changes")
     for repository in contract["repositories"]:
         commit = str(repository.get("commit", ""))
         if not re.fullmatch(r"[0-9a-fA-F]{40}", commit):
@@ -192,9 +195,13 @@ def status_label(status: str) -> str:
 def render_summary(status: str, contract: dict[str, Any], before: dict[str, Any], gate: dict[str, Any]) -> str:
     target = contract["target"]
     health = "通过" if gate.get("healthy") else ("未提供" if not gate else "失败")
+    mode = ""
+    if contract.get("schema_version") in {1, 2}:
+        mode = f"- **模式：** `{markdown(contract['mode'])}`\n"
     return (
         f"- **状态：** {status_label(status)}\n"
-        f"- **模式：** `{markdown(contract['mode'])}`\n"
+        f"- **自动执行：** {status_label(status)}\n"
+        f"{mode}"
         f"- **目标：** `{markdown(target.get('user', ''))}@{markdown(target.get('host', ''))}:{target.get('port', 22)}`\n"
         f"- **主机：** `{markdown(before.get('machine', {}).get('hostname', 'unknown'))}`\n"
         f"- **健康观察：** {health}\n"
@@ -652,19 +659,50 @@ def render_deployment(
     if gate:
         result += f"\n\n**健康门禁：** {'通过' if gate.get('healthy') else '失败'}"
         result += f"；阶段 `{gate.get('phase', 'unknown')}`；轮询 {len(gate.get('polls', []))} 次。"
-        reasons = [
-            reason
-            for poll in gate.get("polls", [])
-            for reason in poll.get("reasons", [])
-        ]
-        if reasons:
-            result += "\n\n" + "\n".join(f"- {markdown(reason)}" for reason in sorted(set(reasons)))
+        if gate.get("schema_version") == 2:
+            baseline_clean = gate.get("baseline_clean")
+            if baseline_clean is not None:
+                result += f"\n\n**部署前基线：** {'clean' if baseline_clean else '存在既有警告'}。"
+            failure_title = (
+                "新增/恶化问题"
+                if gate.get("phase") in {"postdeploy", "rollback"}
+                else "阻断项"
+            )
+            result += render_gate_issues(failure_title, gate.get("failures", []))
+            result += render_gate_issues("非阻断警告", gate.get("warnings", []))
+            result += render_gate_issues("继承警告", gate.get("inherited_warnings", []))
+        else:
+            reasons = [
+                reason
+                for poll in gate.get("polls", [])
+                for reason in poll.get("reasons", [])
+            ]
+            if reasons:
+                result += "\n\n" + "\n".join(
+                    f"- {markdown(reason)}" for reason in sorted(set(reasons))
+                )
     if output_result:
         result += f"\n\n**程序产出门禁：** {'通过' if output_result.get('healthy') else '失败'}。"
         messages = [*output_result.get("failures", []), *output_result.get("warnings", [])]
         if messages:
             result += "\n\n" + "\n".join(f"- {markdown(message)}" for message in messages)
     return result
+
+
+def render_gate_issues(title: str, issues: list[Any]) -> str:
+    if not issues:
+        return ""
+    messages = []
+    for value in issues:
+        if not isinstance(value, dict):
+            messages.append(value)
+            continue
+        comparison = value.get("comparison")
+        prefix = f"[{comparison}] " if comparison in {"new", "worsened"} else ""
+        messages.append(prefix + str(value.get("message", value)))
+    return f"\n\n**{title}：**\n\n" + "\n".join(
+        f"- {markdown(message)}" for message in messages
+    )
 
 
 def render_steps(steps: list[Any]) -> str:

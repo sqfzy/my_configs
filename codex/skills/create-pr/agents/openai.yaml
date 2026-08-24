@@ -1,11 +1,4 @@
 interface:
   display_name: "Create PR"
-  short_description: "分析已提交变更、验证测试并创建或更新中文 Draft PR"
-  default_prompt: "使用 $create-pr 分析当前分支相对 main 的已提交变更，运行相关测试并创建或更新 Draft PR。"
-dependencies:
-  tools:
-    - type: "mcp"
-      value: "github"
-      description: "读取 GitHub 仓库和 PR，并创建或更新 Draft PR"
-      transport: "streamable_http"
-      url: "https://api.githubcopilot.com/mcp/"
+  short_description: "分析已提交变更并创建或更新 GitHub PR / GitLab MR"
+  default_prompt: "使用 $create-pr 分析当前分支，优先应用仓库模板，运行相关测试并创建或更新可直接评审的 GitHub PR 或 GitLab MR。"

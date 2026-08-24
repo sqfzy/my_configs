@@ -62,9 +62,10 @@ def deployment_units(contract: dict[str, Any]) -> list[str]:
 
 def validate_inputs(
     snapshot: dict[str, Any], contract: dict[str, Any], known_hosts_path: Path
-) -> tuple[Path, list[dict[str, Any]], list[str]]:
-    if contract.get("schema_version") != 2:
-        raise ValueError("output checks require contract schema_version 2")
+) -> tuple[Path, list[dict[str, Any]], list[str], list[str]]:
+    schema_version = contract.get("schema_version")
+    if schema_version not in {2, 3}:
+        raise ValueError("output checks require contract schema_version 2 or 3")
     target = snapshot.get("target", {})
     if not target.get("host") or not target.get("user"):
         raise ValueError("snapshot target is incomplete")
@@ -91,9 +92,9 @@ def validate_inputs(
         validate_output(index, output, set(units))
     covered = {str(output["service"]) for output in outputs}
     missing = sorted(set(units) - covered)
-    if missing:
+    if missing and schema_version == 2:
         raise ValueError(f"program_outputs does not cover units: {', '.join(missing)}")
-    return known_hosts, outputs, units
+    return known_hosts, outputs, units, missing
 
 
 def validate_output(index: int, output: Any, units: set[str]) -> None:
@@ -744,14 +745,13 @@ def build_result(
     outputs: list[dict[str, Any]],
     sections: dict[str, str],
     duration: float,
+    uncovered_units: list[str] | None = None,
 ) -> dict[str, Any]:
     units = parse_units(sections.get("units", ""))
     probes = parse_declared(sections.get("declared", ""))
     descriptors = parse_fds(sections.get("fds", ""))
     mappings = parse_shm_maps(sections.get("shm_maps", ""))
-    business_services = {
-        str(output["service"]) for output in outputs if output["service"] != "alertd.service"
-    }
+    business_services = set(units) - {"alertd.service"}
     shm_observations = collect_shm_observations(descriptors, mappings, business_services)
     declared, failures, warnings = evaluate_declared(outputs, probes, units, shm_observations)
     discovered = discover_outputs(outputs, units, descriptors, shm_observations)
@@ -759,6 +759,9 @@ def build_result(
         f"{entry['service']} has undeclared configured output {entry.get('path') or entry.get('locator')}"
         for entry in discovered
         if entry.get("evidence") == "configured"
+    )
+    warnings.extend(
+        f"{unit} has no declared program output" for unit in (uncovered_units or [])
     )
     return {
         "schema_version": 1,
@@ -793,9 +796,13 @@ def main() -> int:
     try:
         snapshot = load_json(args.snapshot)
         contract = load_json(args.contract)
-        known_hosts, outputs, units = validate_inputs(snapshot, contract, args.known_hosts)
+        known_hosts, outputs, units, uncovered_units = validate_inputs(
+            snapshot, contract, args.known_hosts
+        )
         sections, duration = run_remote(snapshot, known_hosts, remote_script(outputs, units))
-        result = build_result(args.phase, snapshot, outputs, sections, duration)
+        result = build_result(
+            args.phase, snapshot, outputs, sections, duration, uncovered_units
+        )
         write_result(result, args.output)
         LOG.info(
             "output gate phase=%s healthy=%s declared=%d discovered=%d duration_seconds=%.3f",

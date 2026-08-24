@@ -225,6 +225,13 @@ def fixture_contract_v2() -> dict[str, Any]:
     return contract
 
 
+def fixture_contract_v3() -> dict[str, Any]:
+    contract = copy.deepcopy(fixture_contract_v2())
+    contract["schema_version"] = 3
+    contract.pop("mode")
+    return contract
+
+
 def fixture_output_result() -> dict[str, Any]:
     entries = copy.deepcopy(fixture_contract_v2()["program_outputs"])
     entries[0].update(
@@ -403,6 +410,49 @@ class AlertdGateTests(unittest.TestCase):
         result = check_alertd.evaluate_poll(fixture_snapshot(), sections, {"alpha.service"})
         self.assertFalse(result["healthy"])
         self.assertTrue(any("config is unavailable" in reason for reason in result["reasons"]))
+
+    def test_baseline_business_issue_is_warning_not_failure(self) -> None:
+        sections = fixture_gate_sections()
+        state = json.loads(sections["state"])
+        state["checks"]["alpha"]["pending_since"] = "2026-08-13T00:00:00Z"
+        sections["state"] = json.dumps(state)
+        result = check_alertd.evaluate_poll(fixture_snapshot(), sections, {"alpha.service"})
+        check_alertd.decorate_poll(result, "baseline", {})
+        self.assertTrue(result["healthy"])
+        self.assertFalse(result["clean"])
+        self.assertEqual(result["failures"], [])
+        self.assertEqual(result["warnings"][0]["code"], "check_unhealthy")
+
+    def test_baseline_minimum_observability_issue_is_failure(self) -> None:
+        sections = fixture_gate_sections()
+        sections["alertd_unit"] = "LoadState=loaded\nActiveState=inactive"
+        result = check_alertd.evaluate_poll(fixture_snapshot(), sections, {"alpha.service"})
+        check_alertd.decorate_poll(result, "baseline", {})
+        self.assertFalse(result["healthy"])
+        self.assertEqual(result["failures"][0]["code"], "alertd_unavailable")
+
+    def test_postdeploy_inherits_unchanged_baseline_warning(self) -> None:
+        value = check_alertd.issue(
+            "collector_failures", "alpha", "collector failed once", count=1
+        )
+        baseline = {"schema_version": 2, "phase": "baseline", "clean": False, "issues": [value]}
+        failures, warnings, inherited = check_alertd.classify_issues(
+            "postdeploy", [copy.deepcopy(value)], baseline
+        )
+        self.assertEqual(failures, [])
+        self.assertEqual(warnings[0]["comparison"], "inherited")
+        self.assertEqual(inherited[0]["comparison"], "inherited")
+
+    def test_postdeploy_fails_new_or_worsened_issue(self) -> None:
+        old = check_alertd.issue("collector_failures", "alpha", "one failure", count=1)
+        worsened = check_alertd.issue("collector_failures", "alpha", "two failures", count=2)
+        new = check_alertd.issue("required_unit_unhealthy", "alpha.service", "service exited", count=1)
+        baseline = {"schema_version": 2, "phase": "baseline", "clean": False, "issues": [old]}
+        failures, _, _ = check_alertd.classify_issues("postdeploy", [worsened, new], baseline)
+        self.assertEqual({value["code"] for value in failures}, {"collector_failures", "required_unit_unhealthy"})
+        self.assertEqual(
+            {value["comparison"] for value in failures}, {"new", "worsened"}
+        )
 
 
 class OutputGateTests(unittest.TestCase):
@@ -626,6 +676,23 @@ class OutputGateTests(unittest.TestCase):
         self.assertNotIn("must-not-leak", value)
         self.assertNotIn("user:pass", value)
 
+    def test_v3_uncovered_units_are_warnings(self) -> None:
+        contract = fixture_contract_v3()
+        contract["program_outputs"] = []
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            known_hosts = Path(temporary_directory) / "known_hosts"
+            known_hosts.write_text("fixture", encoding="utf-8")
+            contract["target"]["known_hosts"] = str(known_hosts)
+            _, outputs, _, uncovered = check_outputs.validate_inputs(
+                fixture_snapshot(), contract, known_hosts
+            )
+        result = check_outputs.build_result(
+            "postdeploy", fixture_snapshot(), outputs, {}, 0.1, uncovered
+        )
+        self.assertTrue(result["healthy"])
+        self.assertEqual(len(result["failures"]), 0)
+        self.assertEqual(len(result["warnings"]), 2)
+
 
 class ReportTests(unittest.TestCase):
     def test_capacity_summarizes_persistent_filesystems_without_mount_details(self) -> None:
@@ -828,6 +895,33 @@ class ReportTests(unittest.TestCase):
         contract["program_outputs"] = contract["program_outputs"][:1]
         with self.assertRaises(ValueError):
             render_report.validate_contract(contract)
+
+    def test_v3_contract_rejects_mode_and_allows_partial_output_coverage(self) -> None:
+        contract = fixture_contract_v3()
+        contract["program_outputs"] = contract["program_outputs"][:1]
+        render_report.validate_contract(contract)
+        contract["mode"] = "auto"
+        with self.assertRaises(ValueError):
+            render_report.validate_contract(contract)
+
+    def test_v3_report_omits_mode_and_reports_automatic_execution(self) -> None:
+        snapshot = fixture_snapshot()
+        contract = fixture_contract_v3()
+        template = (SKILL_ROOT / "assets" / "report-template.md").read_text(encoding="utf-8")
+        gate = {
+            "schema_version": 2, "phase": "postdeploy", "healthy": True,
+            "baseline_clean": False, "failures": [], "warnings": [],
+            "inherited_warnings": [
+                {"code": "collector_failures", "subject": "alpha", "message": "existing issue"}
+            ], "polls": [],
+        }
+        report = render_report.build_report(
+            "succeeded", snapshot, snapshot, contract, gate, template, fixture_output_result()
+        )
+        self.assertNotIn("**模式：**", report)
+        self.assertIn("**自动执行：** 成功", report)
+        self.assertIn("部署前基线：** 存在既有警告", report)
+        self.assertIn("existing issue", report)
 
     def test_renderer_cli_accepts_outputs_result(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:

@@ -20,8 +20,8 @@ lacks the required Rust toolchain.
 
 Limit rollback to application artifacts, symlinks, systemd units/drop-ins, and enumerated
 configuration files. Never claim to roll back databases, external state, application writes, or
-program outputs such as logs, dumps, and data files. Reject irreversible migrations in `auto`
-mode.
+program outputs such as logs, dumps, and data files. Reject irreversible migrations unless an
+explicit user requirement overrides that default and accepts the unavailable rollback guarantee.
 
 ## Runtime configuration
 
@@ -30,7 +30,6 @@ addresses as data; never copy them into Skill names, comments, or fixed instruct
 
 | Name | Type | Default | Valid values | Source | Why configurable |
 |---|---|---|---|---|---|
-| `mode` | enum | `interactive` | `interactive`, `auto` | user request | operator risk preference |
 | `ssh.host` | string | required | valid IP or DNS name | user request | deployment target |
 | `ssh.user` | string | `root` | non-empty POSIX username | user request | host privilege model |
 | `ssh.port` | integer | `22` | 1–65535 | user request | SSH topology |
@@ -54,12 +53,12 @@ health semantics, CPU affinity, and network binding in the per-deployment contra
 ## Frozen deployment contract
 
 Create a JSON object with this shape in task-local scratch space. Do not mutate the server until
-it is complete, validated, printed, and—only in interactive mode—confirmed.
+it is complete, validated, and recorded. An explicit deployment request authorizes execution; do
+not add a default confirmation checkpoint.
 
 ```json
 {
-  "schema_version": 2,
-  "mode": "interactive",
+  "schema_version": 3,
   "target": {
     "host": "deploy.example",
     "user": "root",
@@ -141,17 +140,20 @@ Require full Git commits, absolute paths, an enumerated change for every mutable
 rollback commands, and at least one repository. Resolve a branch/tag with `git ls-remote`, then
 fetch and verify that exact commit. Record the requested target and immutable commit separately.
 
-For `auto`, require every field above, an empty `irreversible_changes`, a rollback action for every
-change, and zero unresolved assumptions. For `interactive`, show unresolved choices and obtain the
-missing values before confirmation; confirmation never permits an unknown rollback surface.
+Require every field above, an empty `irreversible_changes`, a rollback action for every change, and
+zero unresolved assumptions. Ask only when the target host, Git target, change surface, or rollback
+path has multiple materially reasonable interpretations. A user-requested pause is a one-time
+checkpoint, not a mode.
 
-Emit schema version 2 for every new deployment. Accept schema version 1 only when rendering a
-historical report; a version 1 contract is not valid input for a new deployment or output gate.
+Emit schema version 3 without a `mode` field for every new deployment. Accept schema versions 1 and
+2 only when rendering historical reports; neither is valid input for a new deployment. The output
+checker accepts v2 only to preserve its historical full-unit-coverage behavior.
 
 ## Program output contract
 
-Declare outputs for every unit in `deployment.service_units` and for `alertd.service`. Collect
-declarations from the user request, effective systemd properties, application configuration, and
+Declare operationally important outputs for units in `deployment.service_units` and
+`alertd.service`. Collect declarations from the user request, effective systemd properties,
+application configuration, and
 resolved startup arguments before freezing the contract. Verify them later through read-only
 runtime evidence; never scan an entire filesystem to discover outputs.
 
@@ -170,7 +172,7 @@ runtime evidence; never scan an entire filesystem to discover outputs.
 | `retention` | string | `unknown` | redacted policy or `unknown` | proven configuration | retention policy varies operationally |
 
 Resolve environment variables, systemd specifiers, and relative paths before freezing. Reject an
-unresolved path in `auto`; in interactive mode obtain a concrete value before confirmation. Apply
+unresolved path; obtain a concrete value before mutation. Apply
 these readiness rules:
 
 - `file`, `directory`, and POSIX SHM declarations use `exists`, or `writable_parent` only when the
@@ -187,10 +189,11 @@ these readiness rules:
   as optional and observed. Preserve a mapped `(deleted)` object as audit evidence.
 - Do not scan `/dev/shm`, read SHM contents, or attempt System V SHM attribution.
 
-After the observation window, a failed required readiness check fails the output gate. In `auto`,
-invoke the frozen application rollback. In interactive mode, show the evidence and wait for the
-operator's decision. A missing optional or runtime-observed output is a warning. Never delete an
-output during rollback; retain failed-release outputs in the final report as audit evidence.
+After the observation window, a failed required readiness check fails the output gate and invokes
+the frozen application rollback. A missing optional or runtime-observed output is a warning. In v3,
+a deployment unit without a declaration is also a warning; v2 retains the historical full-unit
+coverage requirement. Never delete an output during rollback; retain failed-release outputs in the
+final report as audit evidence.
 
 ## Business service inventory
 
@@ -207,7 +210,10 @@ Use unit enablement and type to classify expected health:
 
 ## Hard gates
 
-Abort before mutation when any condition fails:
+Treat these as default hard gates. Abort before mutation when any condition fails unless an
+explicit user deployment requirement directly conflicts with that gate. Never infer an override;
+freeze and report the failed evidence, user requirement, accepted risk, and unavailable guarantees
+without claiming that the gate passed.
 
 1. Verify the SSH host through the configured known-hosts file. Never use
    `StrictHostKeyChecking=no`, `accept-new`, or `/dev/null`.
@@ -216,17 +222,19 @@ Abort before mutation when any condition fails:
 4. Enumerate every changed path and its rollback action; reject irreversible changes.
 5. Stage artifacts and retained rollback versions while preserving at least the configured free
    percentage on every affected filesystem.
-6. Verify artifact architecture, hashes, file ownership/mode, unit syntax, config syntax, and build
-   or repository tests declared by the application.
-7. Verify a fresh, clean `alertd` baseline with complete journal coverage for business units.
+6. Verify artifact architecture, hashes, file ownership/mode, unit/config syntax, and
+   deployment-related core tests. Record unavailable external-environment tests and unrelated tests
+   as warnings.
+7. Verify minimum `alertd` observability: the service is active, config and state are readable, and
+   state is fresh. Record existing business alerts, collector failures, process gaps, and journal
+   coverage gaps as baseline warnings.
 8. Require explicit CPU affinity or network binding instructions before changing either. Default to
    observation only.
-9. Resolve every required program output and verify complete unit coverage before mutation. After
-   the health window, fail the release when a required output does not satisfy its readiness rule.
+9. Resolve every declared required program output. After the health window, fail the release when
+   a required output does not satisfy its readiness rule; warn for optional outputs and uncovered
+   units.
 
-In interactive mode, print the frozen plan after all gates and request confirmation immediately
-before the first mutation. In auto mode, log the same plan and proceed without confirmation only
-when no ambiguity remains.
+Log the frozen plan and proceed without confirmation when no critical ambiguity remains.
 
 ## Atomic deployment and rollback
 
@@ -238,9 +246,11 @@ Validate the staged release, then atomically replace the `current` symlink and c
 Run `systemd-analyze verify`, `systemctl daemon-reload`, and the contract's restart/start commands.
 Reload `alertd` only after its new config passes `alertd --check-config`.
 
-Observe for at least 300 seconds. Roll back on a new warning/critical state, collector failure,
-stale `alertd` state, failed required unit, or exited required process. Restore files and symlinks
-atomically, reload systemd, restart the old release, and record whether recovery succeeded. Never
+Observe for at least 300 seconds. Compare with the saved baseline and roll back when alertd becomes
+unavailable or stale, state stops advancing, a required service exits, or an issue is new or
+worsened. Do not attribute an unchanged baseline warning to this deployment. Restore files and
+symlinks atomically, reload systemd, restart the old release, and record whether recovery
+succeeded. Never
 hide a rollback failure. Do not remove logs, dumps, archives, shared memory, or business data during
 rollback; record any outputs left by the failed version.
 
@@ -260,13 +270,18 @@ long-running services a process check with a stable, non-secret cmdline matcher.
 other application checks only when their ABI/semantics are explicit. Check oneshot unit results
 directly because `alertd` has no native systemd-state collector.
 
-Define a clean gate as all of the following:
+Define minimum observability as all of the following:
 
 - `alertd.service` is active.
 - `state.json` exists and continues to advance within two configured collection intervals.
-- No state has `pending_since`, `firing_since`, a non-`ok` severity, or collection failures.
-- All required systemd units satisfy their expected state.
-- Every business unit appears in at least one journal check.
+- Configuration and state are readable.
+
+Abort before application mutation only when minimum observability fails. Record non-`ok` checks,
+collection failures, unhealthy required units, and process/journal coverage gaps as structured
+baseline warnings. Post-deployment and rollback gates compare stable `code + subject` issue keys,
+severity, and counts against that baseline; unchanged warnings are inherited, while new or worsened
+issues fail. Preserve any explicit user override as failed evidence with its accepted risk and
+unavailable guarantee.
 
 ## Evidence and redaction
 

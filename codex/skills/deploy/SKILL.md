@@ -1,6 +1,6 @@
 ---
 name: deploy
-description: Safely inspect, deploy, update, reproduce, or roll back native systemd applications on Amazon Linux 2023 ARM64 servers over SSH. Use when Codex must report host disk, memory, network, and CPU topology before a deployment; freeze a natural-language request into an auditable deployment contract; deploy with atomic application-level rollback and alertd health gates; verify program output paths, POSIX shared memory, and logical log sinks; attribute business services to CPUs and network interfaces; or produce a redacted Markdown deployment brief with repository, target, commit, effective configuration, program outputs, reproduction, and rollback steps. Supports interactive and auto modes; does not deploy Docker applications or estimate disk growth.
+description: Safely inspect, automatically deploy, update, reproduce, or roll back native systemd applications on Amazon Linux 2023 ARM64 servers over SSH. Use when Codex must report host disk, memory, network, and CPU topology before a deployment; freeze a natural-language request into an auditable deployment contract; deploy with atomic application-level rollback and alertd health gates; verify program output paths, POSIX shared memory, and logical log sinks; attribute business services to CPUs and network interfaces; or produce a redacted Markdown deployment brief with repository, target, commit, effective configuration, program outputs, reproduction, and rollback steps. Uses one automatic workflow without a default confirmation checkpoint; does not deploy Docker applications or estimate disk growth.
 ---
 
 # Deploy
@@ -9,19 +9,35 @@ Deploy only after turning the request into a complete, immutable contract. Prefe
 over an inferred production change. Keep machine data, application data, and orchestration logic
 separate.
 
+Follow an explicit user deployment requirement when it directly conflicts with this Skill's
+defaults, procedures, or hard gates. Do not infer an override from silence, missing information, or
+ambiguous wording. Freeze every deviation with its reason, risk, and unavailable guarantees, and
+report it without claiming that the overridden gate passed. Continue to obey higher-priority
+system, developer, safety, and tool constraints.
+
+## Skill layout
+
+```text
+deploy/
+├── SKILL.md                         # Orchestrates inspection, deployment, rollback, and reporting.
+├── references/deployment-contract.md # Defines configuration, frozen contract, and hard gates.
+├── scripts/                         # Collects evidence and evaluates health/output gates.
+├── assets/report-template.md        # Provides the Markdown deployment brief structure.
+├── tests/test_tools.py              # Covers collectors, gates, redaction, and report rendering.
+└── agents/openai.yaml               # Supplies Codex UI metadata.
+```
+
 ## Establish the contract
 
 Read [references/deployment-contract.md](references/deployment-contract.md) completely before any
 deployment work. Apply its configuration schema, business-unit definition, hard gates, rollback
 rules, `alertd` contract, evidence labels, and redaction policy.
 
-Interpret invocations as follows:
-
-- Default to `interactive`. Collect facts and print the frozen plan, then obtain explicit
-  confirmation immediately before the first remote mutation.
-- Use `auto` only when the user explicitly requests it. Skip confirmation but abort on every
-  missing value, ambiguity, unsupported host, capacity failure, monitoring gap, or rollback gap.
-- Treat a request to inspect, explain, or draft as read-only. Never infer authority to deploy.
+Treat an explicit deploy, update, or rollback request as authorization to execute the frozen
+transaction without a default confirmation checkpoint. Treat inspection, explanation, review, and
+drafting requests as read-only. Ask only when the target host, Git target, change surface, or
+rollback path has multiple materially reasonable interpretations. Honor a user-requested pause as
+a one-deployment checkpoint; do not introduce a named mode.
 
 Require the natural-language request to resolve the target host, repository and Git target,
 systemd unit, build/test commands, release layout, mutable paths, key configuration, health
@@ -62,7 +78,7 @@ contents, or claim System V SHM ownership.
 Write the frozen JSON contract described by the reference into task-local scratch space. Estimate
 the final free percentage after build staging, the new release, and retained rollback releases.
 Abort if any affected filesystem would fall below the configured percentage or if the estimate is
-not defensible in `auto` mode.
+not defensible.
 
 ## Establish monitoring before application mutation
 
@@ -91,7 +107,11 @@ python3 <skill-root>/scripts/check_alertd.py \
   --output <scratch>/baseline-gate.json
 ```
 
-Abort if baseline monitoring is stale, unhealthy, incomplete, or blind.
+Require minimum `alertd` observability before application mutation: the service must be active,
+configuration and state must be readable, and state must be fresh. Record existing business
+alerts, collector failures, process gaps, and journal coverage gaps as baseline warnings rather
+than blockers. Preserve the structured baseline so later gates can distinguish inherited issues
+from new or worsened problems.
 
 After monitoring is established and before application mutation, record the declared output
 baseline with a read-only check:
@@ -107,7 +127,8 @@ python3 <skill-root>/scripts/check_outputs.py \
 
 Use the baseline to distinguish pre-existing outputs from files created by the new release. A
 missing new-release output may make the checker return status 1, but is not itself a pre-mutation
-gate; unresolved paths, incomplete unit coverage, or an unverifiable parent/sink remain hard gates.
+gate. Unresolved declared paths or an unverifiable required parent/sink remain hard gates; units
+without declarations are warnings in schema v3.
 Never read output contents.
 
 ## Stage, switch, and roll back
@@ -117,8 +138,8 @@ architecture, hash, ownership, mode, unit syntax, and every path against the fro
 Snapshot active artifacts, unit/drop-in/config bytes, metadata, hashes, and symlink targets in the
 transaction directory.
 
-In interactive mode, present the exact contract and request confirmation now. In auto mode,
-continue only if all hard gates already pass.
+Record the exact frozen contract and continue immediately when hard gates pass or an explicit user
+requirement overrides a failed gate under the precedence rule above.
 
 Atomically install configuration and replace the `current` symlink. Run `systemd-analyze verify`,
 `systemctl daemon-reload`, and the contract's restart/start sequence. Update and validate `alertd`
@@ -132,6 +153,7 @@ python3 <skill-root>/scripts/check_alertd.py \
   --snapshot <scratch>/after.json \
   --known-hosts <known-hosts> \
   --config-path <alertd-config> --state-dir <alertd-state-dir> \
+  --baseline <scratch>/baseline-gate.json \
   --phase postdeploy --observe-seconds <300-1800> \
   --output <scratch>/postdeploy-gate.json
 ```
@@ -147,13 +169,14 @@ python3 <skill-root>/scripts/check_outputs.py \
   --output <scratch>/postdeploy-outputs.json
 ```
 
-On a health failure, stop observation and execute the already-approved frozen rollback; in `auto`
-this is mandatory. On a required output failure, roll back automatically in `auto`; in interactive
-mode, present the evidence and wait for the operator to choose rollback or accept the failed output
-gate. Restore files and symlinks atomically, reload systemd, restart the old release, and run
-`rollback` health and output gates. Report rollback failure prominently; never mask it as deployment
-failure. Never delete logs, dumps, shared memory, or business data during rollback; include
-failed-release outputs in the final audit report.
+On a health or required-output failure, stop observation and execute the frozen rollback
+automatically. Compare post-deployment and rollback health with the saved baseline: unchanged
+baseline warnings remain warnings, while alertd unavailability, stale/non-advancing state, a newly
+exited required service, or any new or worsened issue fails the gate. Restore files and symlinks
+atomically, reload systemd, restart the old release, and run `rollback` health and output gates.
+Report rollback failure prominently; never mask it as deployment failure. Never delete logs,
+dumps, shared memory, or business data during rollback; include failed-release outputs in the final
+audit report.
 
 After success, keep the current and previous successful release by default. Remove only releases
 outside the frozen rollback set and only after the observation window passes.
@@ -177,8 +200,8 @@ python3 <skill-root>/scripts/render_report.py \
 Verify that every business unit appears in the CPU table, including inactive/oneshot units; every
 repository has URL, requested target, full commit, and available build/artifact digests; key config
 shows source and redacted effective value; and reproduction/rollback steps use the immutable
-commit. Verify that every deployment unit and `alertd.service` appears in the program output table,
-including its configured path or logical query locator, runtime status, and proven
+commit. Verify that every declared program output appears in the program output table, including
+its configured path or logical query locator, runtime status, and proven
 rotation/retention policy or `unknown`. Keep every contract declaration, failed or unready output,
 configuration warning, and other anomaly in the six-column key-output table. Group healthy optional
 runtime discoveries by service and category instead of listing every object. Show object counts,
