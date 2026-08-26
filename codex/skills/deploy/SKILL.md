@@ -84,10 +84,21 @@ not defensible.
 
 Before any remote mutation, invoke `$release-gate` separately for every repository in the frozen
 deployment contract with `event=deploy`, the current release task's explicitly selected review
-mode, or default `no-verify`, and the exact current-to-frozen range. Follow the
-skill's target-selection, verdict, bypass, advisory, failure, and rerun contracts. Record the
-repository, mode, exact range, verdict or bypass, advisories, and elapsed time in the deployment
-evidence.
+mode when one exists, and the exact current-to-frozen range. Without a task override, omit
+`CODEX_RELEASE_REVIEW_MODE` so each exact candidate's `.codex/release-gate.toml` or the built-in
+fallback selects the mode. Follow the skill's target-selection, verdict, bypass, advisory, finding
+ledger, failure, and rerun contracts. Record the repository, effective mode and source, exact
+range, verdict or bypass, advisories, accepted exceptions, ledger synchronization, and elapsed time
+in the deployment evidence.
+
+If status `1` includes `Ledger sync required`, do not mutate the host. Put new findings in TODO by
+default; allow an agent-approved P2/P3 only with concrete code, test, or project-intent evidence;
+require explicit user approval before any P0/P1 ALLOW. Remove verified fixed TODOs and stale
+ALLOWs. When the authorized source workflow permits advancing the target, modify only
+`.codex/release-gate.md`, create `chore(release-gate): sync findings`, then resolve the new immutable
+commit and rebuild the entire frozen deployment contract before rerunning every repository gate.
+Otherwise return the canonical entries and require the repository owner to update the ledger. Do
+not deploy the pre-sync target or reuse its verdict.
 
 ## Establish monitoring before application mutation
 

@@ -6,12 +6,13 @@
 
 ```text
 .
+├── .codex/             # 本仓库的 Release Gate 默认模式与 finding 清单
 ├── btop/               # btop 监控工具配置
 ├── carapace/           # Carapace 补全桥接与命令规格
 ├── clangd/             # clangd 语言服务器配置
 ├── claude/             # Claude Code 的代理、命令与技能配置
 ├── codex/              # Codex 的代理规则、发布前 Git hook 与本地技能
-│   ├── AGENTS.md       # 全局开发约定与发布前独立审查策略
+│   ├── AGENTS.md       # 全局开发约定
 │   ├── git-hooks/      # 可版本控制的全局 Git hook 入口
 │   └── skills/         # PR、部署与 Release Gate 等可复用工作流
 ├── fish/

@@ -9,7 +9,10 @@ description: Analyze a Git branch's committed changes, apply the repository's ow
 
 Create an auditable GitHub pull request or GitLab merge request from already committed work, using an English Conventional Commits title and a Chinese body. Treat the repository's template as the primary document contract, derive claims from evidence, require validation before remote writes and an independent release review before provider mutation, and update an existing open change request instead of creating a duplicate.
 
-Do not stage, commit, amend, rebase, merge, reset, checkout another branch, or force-push.
+Do not stage, commit, amend, rebase, merge, reset, checkout another branch, or force-push, except
+for the narrow `$release-gate` ledger-sync workflow below. That exception may edit and stage only
+`.codex/release-gate.md` and must create the separate commit
+`chore(release-gate): sync findings`.
 
 ## File organization
 
@@ -42,7 +45,7 @@ Keep these policies fixed:
 - Write titles in English Conventional Commits format and bodies in Chinese; preserve commands, paths, identifiers, and quoted source text as-is.
 - Analyze committed changes only and require a completely clean worktree.
 - Stop when validation fails, times out, cannot start, or cannot be discovered reliably.
-- Use `$release-gate` immediately before creating or updating a change request. Propagate the current release task's explicitly selected review mode to push and change-request gates; otherwise use the default `no-verify`. Never reuse a push verdict or bypass as a substitute for the change-request gate.
+- Use `$release-gate` immediately before creating or updating a change request. Propagate the current release task's explicitly selected review mode to push and change-request gates; otherwise omit the environment override so the exact candidate's `.codex/release-gate.toml` or the built-in fallback selects the mode. Never reuse a push verdict or bypass as a substitute for the change-request gate.
 - Create new change requests ready for review. Preserve Draft/Ready state when updating an existing request.
 - Include full active non-loopback IP addresses when `include_ip_addresses` is `true`.
 
@@ -203,12 +206,17 @@ For `submission_mode=dry-run`, do not push and do not call GitHub or GitLab read
 
 For `submission_mode=ready`, continue only after preflight, template resolution, evidence collection, and validation pass:
 
-1. Check the remote head. Push only the current `HEAD` with a normal fast-forward push; set upstream when the remote branch does not exist. If the user explicitly requests `--no-verify` for this push, follow `$release-gate`'s single-use push-bypass contract.
+1. Check the remote head. Push only the current `HEAD` with a normal fast-forward push; set upstream when the remote branch does not exist. If the user explicitly requests `--no-verify` for this push, follow `$release-gate`'s single-use push-bypass contract. Pass `CODEX_RELEASE_REVIEW_MODE` only for an explicit task override; otherwise let the push hook read the candidate project mode.
 2. Stop on non-fast-forward rejection. Never rewrite commits or force-push.
-3. Invoke `$release-gate` with `event=change-request`, the current task's review-mode environment, and the exact `merge_base..HEAD` range, then follow its verdict or explicit bypass contract without substituting an earlier push result.
-4. Reconfirm that `HEAD` and the remote source branch still equal the reviewed commit. Rerun the gate if either changed.
-5. Find open change requests whose source and target exactly match. Stop on more than one exact match.
-6. Update the one exact match without changing its Draft/Ready state, or create a new ready-for-review request when none exists.
+3. Invoke `$release-gate` with `event=change-request`, any explicit task-mode environment override, and the exact `merge_base..HEAD` range. Without an override, let the candidate project configuration select the mode. Follow its verdict or explicit bypass contract without substituting an earlier push result.
+4. If status `1` includes `Ledger sync required`, inspect each canonical entry. Put new findings in TODO by default; allow an agent-approved P2/P3 only with concrete code, test, or project-intent evidence; require explicit user approval before any P0/P1 ALLOW. Remove verified fixed TODOs and stale ALLOWs. Modify only `.codex/release-gate.md`, create `chore(release-gate): sync findings`, recompute the committed analysis range and PR/MR evidence, push the new HEAD normally, and rerun the change-request gate. If the ledger cannot be updated safely, stop with the entries instead of publishing.
+5. Reconfirm that `HEAD` and the remote source branch still equal the reviewed commit. Rerun the gate if either changed.
+6. Find open change requests whose source and target exactly match. Stop on more than one exact match.
+7. Update the one exact match without changing its Draft/Ready state, or create a new ready-for-review request when none exists.
+
+Apply step 4 equally when the pre-push hook reports ledger synchronization before the first push.
+After the sync commit, rerun every affected release boundary against the new HEAD; never treat the
+earlier status as approval.
 
 For GitHub, use the GitHub connector for exact PR lookup, ready-for-review creation, and update. Do not request Draft state when creating. Preserve the state of an existing PR.
 
@@ -225,6 +233,6 @@ Do not wait for newly triggered CI. Report CI as pending unless a status for the
 
 ### 10. Report the outcome
 
-Return provider and repository, `base <- head`, analyzed range/count, selected template, tests and total duration, release-review mode/target/verdict/bypass/advisories/duration, push state distinguishing task-mode bypass from native Git `--no-verify`, created/updated/rendered state, PR/MR URL and number, CI state, and remaining unknown facts.
+Return provider and repository, `base <- head`, analyzed range/count, selected template, tests and total duration, release-review effective mode and source/target/verdict/bypass/advisories/accepted exceptions/ledger synchronization/duration, push state distinguishing task-mode bypass from native Git `--no-verify`, created/updated/rendered state, PR/MR URL and number, CI state, and remaining unknown facts.
 
 If push succeeds but creation or update fails, state the partial result and corrective next step. Never claim atomic rollback of a successful push.

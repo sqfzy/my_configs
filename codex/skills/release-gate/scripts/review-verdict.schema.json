@@ -12,8 +12,13 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["priority", "title", "path", "line", "explanation", "rule_source"],
+        "required": ["tracking_id", "priority", "title", "path", "line", "explanation", "rule_source"],
         "properties": {
+          "tracking_id": {
+            "type": ["string", "null"],
+            "pattern": "^RG-[0-9a-f]{12}$",
+            "description": "Existing TODO id when matched, otherwise null for a new finding."
+          },
           "priority": {
             "type": "string",
             "description": "Severity assigned under the fixed, mode-independent Release Gate priority contract.",
@@ -43,8 +48,13 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["rule_source", "path", "line", "explanation"],
+        "required": ["tracking_id", "rule_source", "path", "line", "explanation"],
         "properties": {
+          "tracking_id": {
+            "type": ["string", "null"],
+            "pattern": "^RG-[0-9a-f]{12}$",
+            "description": "Existing ALLOW id when matched, otherwise null for an AGENTS.md exception."
+          },
           "rule_source": {
             "type": "string"
           },

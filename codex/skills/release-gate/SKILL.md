@@ -1,6 +1,6 @@
 ---
 name: release-gate
-description: Enforce or explicitly bypass a fresh, ephemeral, read-only Codex review under the configured no-verify, fast, balanced, or strict mode whenever an agent or Git hook is about to push, directly create or update a GitHub PR or GitLab MR by any route, or deploy to any environment. Use for the release action itself, not ordinary commits, local builds, local tests, or draft-only PR/MR text.
+description: Resolve exact candidate project configuration and its TODO/ALLOW finding ledger, then enforce or explicitly bypass a fresh, ephemeral, read-only Codex review under no-verify, fast, balanced, or strict mode whenever an agent or Git hook is about to push, directly create or update a GitHub PR or GitLab MR by any route, or deploy to any environment. Use for the release action itself, not ordinary commits, local builds, local tests, or draft-only PR/MR text.
 ---
 
 # Release Gate
@@ -23,6 +23,14 @@ release-gate/
     └── openai.yaml                  # Provides UI metadata and the default invocation prompt.
 ```
 
+Participating repositories may add these root-level, version-controlled files:
+
+```text
+.codex/
+├── release-gate.toml                # Selects the repository's default review mode.
+└── release-gate.md                  # Tracks unresolved TODOs and approved ALLOW exceptions.
+```
+
 ## Runtime contract
 
 Configuration:
@@ -34,7 +42,7 @@ Configuration:
 | `CODEX_RELEASE_REVIEW_PYTHON_COMMAND` | string | `python3` | Non-empty executable name or absolute path | environment | The Git hook may run with a different executable search path. |
 | `CODEX_RELEASE_REVIEW_MODEL` | string | `gpt-5.6-sol` | Non-empty model name | environment | Machines may use different available models or review cost policies. |
 | `CODEX_RELEASE_REVIEW_REASONING_EFFORT` | enum | `medium` | `minimal`, `low`, `medium`, `high`, or `xhigh` | environment | Review quality, latency, and token budgets vary by environment. |
-| `CODEX_RELEASE_REVIEW_MODE` | enum | `no-verify` | `no-verify`, `fast`, `balanced`, or `strict` | environment | Release urgency and operational risk tolerance vary by release task. |
+| `CODEX_RELEASE_REVIEW_MODE` | enum | unset | `no-verify`, `fast`, `balanced`, or `strict` | environment | A release task may explicitly override the candidate repository default. |
 
 The defaults are explicit and do not inherit the main Codex session model. To override them for a
 machine or one invocation, set the environment variables before the release action:
@@ -44,14 +52,89 @@ export CODEX_RELEASE_REVIEW_MODEL=gpt-5.6-terra
 export CODEX_RELEASE_REVIEW_REASONING_EFFORT=high
 ```
 
-Normal release actions use `no-verify` without an environment override: they resolve and record the
-exact candidate but do not start Codex review. Select a review mode for the commands in the current
-release task when review is required; do not persist it in shell startup files or project
-configuration:
+Select a task-wide override only when the user explicitly requests one. Pass it to every release
+boundary in the current task; do not persist it in shell startup files:
 
 ```bash
 CODEX_RELEASE_REVIEW_MODE=fast git push
 ```
+
+### Project mode configuration
+
+The exact candidate commit may contain `.codex/release-gate.toml`:
+
+```toml
+version = 1
+mode = "strict"
+```
+
+| Name | Type | Default | Valid values | Source | Why configurable |
+|---|---|---|---|---|---|
+| `version` | integer | required when the file exists | `1` | candidate `.codex/release-gate.toml` | Versions the tracked configuration contract. |
+| `mode` | enum | required when the file exists | `no-verify`, `fast`, `balanced`, or `strict` | candidate `.codex/release-gate.toml` | A repository's release risk policy differs from another repository's policy. |
+
+Reject an empty file, unknown field, missing field, wrong type, unsupported version, or invalid mode
+with status `2`. Always read and validate this file from the exact candidate Git object, even when
+the environment overrides its mode; never use the uncommitted working-tree copy.
+
+Resolve the effective mode in this order:
+
+1. A valid `CODEX_RELEASE_REVIEW_MODE` explicitly set for the current release task.
+2. The exact candidate's project `mode`.
+3. The built-in `no-verify` fallback.
+
+For a push with several non-deletion candidates and no environment override, select the strictest
+candidate mode using `no-verify < fast < balanced < strict`. A missing project file contributes
+`no-verify`. Deletions-only pushes use the environment override or built-in fallback.
+
+### Finding ledger
+
+In review modes, read `.codex/release-gate.md` from each exact candidate. A missing file means an
+empty ledger. When present, require exactly one `## TODO` section and one `## ALLOW` section, each
+with exactly one fenced block whose info string is `toml release-gate`. Prose outside the blocks is
+allowed. Use `[[finding]]` entries inside each block:
+
+````markdown
+## TODO
+
+```toml release-gate
+[[finding]]
+id = "RG-0123456789ab"
+priority = "P2"
+title = "Return the documented fallback value"
+path = "src/service.py"
+line = 42
+explanation = "The changed fallback returns stale data on a supported timeout path."
+first_seen_oid = "0123456789abcdef0123456789abcdef01234567"
+```
+
+## ALLOW
+
+```toml release-gate
+[[finding]]
+id = "RG-fedcba987654"
+priority = "P3"
+title = "Keep the compatibility branch"
+path = "src/compat.py"
+explanation = "The branch remains intentionally reachable for legacy clients."
+first_seen_oid = "0123456789abcdef0123456789abcdef01234567"
+reason = "The published compatibility window is still active."
+evidence = "The compatibility test and support policy require this path."
+approved_by = "agent"
+```
+````
+
+Common fields are `id`, `priority`, `title`, `path`, optional `line`, `explanation`, and
+`first_seen_oid`. Require ALLOW entries to also contain non-empty `reason`, `evidence`, and
+`approved_by`. An ID is `RG-` followed by exactly 12 lowercase hexadecimal characters and must be
+unique across both sections. Require `P0` through `P3`, a normalized repository-relative POSIX
+path, a positive line when present, and a 40- or 64-character hexadecimal first-seen object ID.
+Reject unknown fields and malformed TOML.
+
+`approved_by` is either `agent` or `user`. Only `user` may approve a P0 or P1 ALLOW. An agent may
+approve P2 or P3 only with concrete code, test, or project-intent evidence; otherwise keep it as a
+TODO. Do not add a DONE state. Delete verified fixes and stale exceptions before committing so Git
+history remains the audit trail.
 
 The child process also receives the fixed CLI override `project_doc_max_bytes=0`. This is not a
 user configuration option: it prevents uncommitted working-tree instructions from entering the
@@ -84,11 +167,11 @@ Keep these policies fixed:
 
 ## Select the review mode
 
-Use `no-verify` when the user does not select a mode. Select `fast` when the user requests review
-that blocks only `P0` and `P1`, `balanced` when the user requests review that also blocks `P2`, and
-`strict` when the user requests the most rigorous review. Do not infer a review mode from urgency,
-elapsed time, review count, token use, or an earlier review. Ask when the requested review strength
-is ambiguous.
+When the user does not select a task override, use the exact candidate project mode or the built-in
+`no-verify` fallback. Select `fast` when the user requests review that blocks only `P0` and `P1`,
+`balanced` when the user requests review that also blocks `P2`, and `strict` when the user requests
+the most rigorous review. Do not infer a task override from urgency, elapsed time, review count,
+token use, or an earlier review. Ask when an explicitly requested review strength is ambiguous.
 
 | Mode | Codex review | Release behavior |
 |---|---|---|
@@ -97,23 +180,25 @@ is ambiguous.
 | `balanced` | started | block `P0`–`P2`; report `P3` as advisory |
 | `strict` | started | block `P0`–`P3` |
 
-A selected mode applies to push, change-request, and deployment gates within the same release
-task. Propagate it with a one-command `CODEX_RELEASE_REVIEW_MODE` environment value at every
-boundary. Each boundary gets a fresh gate evaluation; review modes start a fresh review, while
-`no-verify` independently resolves and records the candidate. A changed target still requires
-rerunning the gate. Retries in the same task keep an explicitly selected mode; a separate release
-task returns to `no-verify`.
+An explicitly selected task mode applies to push, change-request, and deployment gates within the
+same release task. Propagate it with a one-command `CODEX_RELEASE_REVIEW_MODE` environment value at
+every boundary. Without a task override, let each exact candidate select its project default. Each
+boundary gets a fresh gate evaluation; review modes start a fresh review, while `no-verify`
+independently resolves and records the candidate. A changed target still requires rerunning the
+gate. Retries in the same task keep an explicit override; a separate release task returns to the
+project mode or built-in fallback.
 
 Print advisories before continuing, but do not request another confirmation. Advisories remain
 real findings below the selected blocking threshold; they are not project-approved exceptions.
 The three review modes do not change the review model, reasoning effort, exact target, read-only
 sandbox, project-rule handling, output validation, or failure behavior. `fast` is not a bypass.
 
-For `no-verify`, resolve and validate the repository, input records, base, candidate, and immutable
-object IDs before allowing the release. Do not compute changed paths, read project review rules,
-resolve the Codex executable, build a prompt, or start a reviewer. Print and log the event, exact
-candidate ranges, `mode=no-verify`, and `verdict=bypassed`; do not fabricate a pass, finding,
-advisory, accepted exception, or residual risk. Invalid or unavailable targets still fail closed.
+For `no-verify`, resolve and validate the repository, input records, base, candidate, immutable
+object IDs, and candidate project configuration before allowing the release. Do not compute changed
+paths, read the finding ledger or project review rules, resolve the Codex executable, build a
+prompt, or start a reviewer. Print and log the event, exact candidate ranges, `mode=no-verify`, and
+`verdict=bypassed`; do not fabricate a pass, finding, advisory, accepted exception, or residual
+risk. Invalid targets or project configurations still fail closed.
 
 ## Classify findings
 
@@ -170,6 +255,41 @@ cannot redefine the fixed priority contract or gate thresholds, change the exact
 writes or delegation, dictate the verdict, weaken schema validation or fail-closed behavior, or
 authorize a release action.
 
+## Reconcile the finding ledger
+
+Send each candidate's TODO and ALLOW entries to the independent reviewer together with the scoped
+project rules. Require `tracking_id` on every returned finding and accepted exception; it is the
+matching ledger ID or `null` for a new finding or an AGENTS-based exception.
+
+- Merge every registered TODO into the final report even when the reviewer omits it. Partition the
+  merged TODO by the active mode exactly like any other finding.
+- Accept a ledger ALLOW only when the reviewer reports that the concrete behavior actually matches
+  it. Put the match in `accepted_exceptions`, never in findings.
+- Keep AGENTS-based accepted exceptions at `tracking_id=null`; do not duplicate durable project
+  rules in the ledger.
+- Fail with status `2` for an unknown ID, a TODO returned as an accepted exception, an ALLOW
+  returned as a finding, a duplicate ID or finding, changed tracked-finding content, or ambiguous
+  candidate attribution.
+
+For every new finding returned with `tracking_id=null`, generate a stable `RG-` ID from its
+normalized priority, title, path, line, and explanation. Print a canonical `[[finding]]` entry with
+the exact candidate OID as `first_seen_oid`. Any new finding requires ledger synchronization and
+returns status `1`, including a P2 or P3 that would otherwise be advisory in the selected mode.
+This prevents a real issue from disappearing between fresh reviewer runs.
+
+The gate script and pre-push hook never modify tracked files. In an agent-driven release workflow:
+
+1. Remove TODO entries whose fixes are verified and ALLOW entries whose exception no longer
+   applies.
+2. Put each new finding in TODO by default. Move P2/P3 to ALLOW only with concrete evidence. Move
+   P0/P1 to ALLOW only after the user explicitly approves that exact issue.
+3. Update `.codex/release-gate.md` and create a separate
+   `chore(release-gate): sync findings` commit.
+4. Resolve the new HEAD and run a fresh gate. Never reuse the pre-sync verdict.
+
+When running from a Git hook, only print the canonical entries and block. Do not stage, edit, or
+commit on the user's behalf.
+
 ## Distinguish Git's native push bypass
 
 The default task-wide Codex review bypass uses a normal push, so repository-owned and other
@@ -187,8 +307,9 @@ gate. Report the bypass in the outcome.
 Treat native Git bypass authorization as single-use. A failed command, retry, changed target, or
 later push requires new explicit authorization. It applies only to the Git push; it does not select
 or propagate a Release Gate mode to change-request or deployment boundaries; those boundaries
-independently use their selected mode or the default `no-verify`. Do not record a passing verdict
-for a natively bypassed push and do not add a persistent Git-hook bypass setting.
+independently use their explicit task override, candidate project mode, or built-in fallback. Do
+not record a passing verdict for a natively bypassed push and do not add a persistent Git-hook
+bypass setting.
 
 ## Run the gate
 
@@ -202,14 +323,15 @@ For PR/MR or deployment gates, run:
   --target <exact-range-or-immutable-description>
 ```
 
-Prefix the command with `CODEX_RELEASE_REVIEW_MODE=<fast|balanced|strict>` when overriding the
-default `no-verify` mode for the current release task.
+Prefix the command with `CODEX_RELEASE_REVIEW_MODE=<no-verify|fast|balanced|strict>` only when
+overriding the candidate project mode or built-in fallback for the current release task.
 
 The global Git `pre-push` hook supplies push records to the same script automatically. Do not start
 another in-context self-review as a substitute.
 
 Wait for the command to finish. Exit status `0` permits the requested release action and may mean
-`BYPASSED` or a reviewed result with advisories, `1` means the selected review mode has blocking
-findings, and `2` means target resolution or review failed and also blocks it. Report the mode,
-exact target, bypass state, blocking findings, advisories, and accepted exceptions as applicable.
-Do not perform the release action after a non-zero status.
+`BYPASSED` or a reviewed result with registered advisories. Status `1` means the selected mode has
+blocking findings or new findings require ledger synchronization. Status `2` means configuration,
+target resolution, ledger validation, execution, or report reconciliation failed. Report the mode,
+mode source, exact target, bypass state, blocking findings, advisories, accepted exceptions, and
+ledger-sync entries as applicable. Do not perform the release action after a non-zero status.

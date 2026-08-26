@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 from dataclasses import dataclass
@@ -14,6 +15,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import tomllib
 from typing import TextIO
 
 
@@ -28,14 +30,25 @@ MINIMUM_TIMEOUT_SECONDS = 30
 MAXIMUM_TIMEOUT_SECONDS = 3600
 VALID_REASONING_EFFORTS = ("minimal", "low", "medium", "high", "xhigh")
 VALID_REVIEW_MODES = ("no-verify", "fast", "balanced", "strict")
+REVIEW_MODE_RANK = {mode: rank for rank, mode in enumerate(VALID_REVIEW_MODES)}
 BLOCKING_PRIORITIES = {
     "fast": frozenset(("P0", "P1")),
     "balanced": frozenset(("P0", "P1", "P2")),
     "strict": frozenset(("P0", "P1", "P2", "P3")),
 }
 OID_PATTERN = re.compile(r"^[0-9a-fA-F]{40}([0-9a-fA-F]{24})?$")
+TRACKING_ID_PATTERN = re.compile(r"^RG-[0-9a-f]{12}$")
 REVIEW_RULE_HEADING_PATTERN = re.compile(r"^##[ \t]+Code Review Rules[ \t]*$")
 SECTION_HEADING_PATTERN = re.compile(r"^#{1,2}(?:[ \t]+|$)")
+LEDGER_SECTION_PATTERN = re.compile(r"^##[ \t]+(TODO|ALLOW)[ \t]*$")
+PROJECT_CONFIG_PATH = ".codex/release-gate.toml"
+FINDING_LEDGER_PATH = ".codex/release-gate.md"
+LEDGER_FENCE = "```toml release-gate"
+COMMON_LEDGER_FIELDS = frozenset(
+    ("id", "priority", "title", "path", "line", "explanation", "first_seen_oid")
+)
+REQUIRED_COMMON_LEDGER_FIELDS = COMMON_LEDGER_FIELDS - {"line"}
+ALLOW_LEDGER_FIELDS = frozenset(("reason", "evidence", "approved_by"))
 PRIORITY_CONTRACT = """Fixed priority contract:
 - First decide whether an issue is a qualifying finding: it must be concrete, actionable,
   supported by code evidence, and introduced, worsened, or activated by the candidate. Classify it
@@ -96,6 +109,28 @@ class ReleaseCandidate:
     label: str
     base_oid: str | None
     candidate_oid: str
+    project_review_mode: str | None = None
+
+
+@dataclass(frozen=True)
+class TrackedFinding:
+    status: str
+    tracking_id: str
+    priority: str
+    title: str
+    path: str
+    line: int | None
+    explanation: str
+    first_seen_oid: str
+    reason: str | None = None
+    evidence: str | None = None
+    approved_by: str | None = None
+
+
+@dataclass(frozen=True)
+class FindingLedger:
+    todo_findings: tuple[TrackedFinding, ...] = ()
+    allowed_findings: tuple[TrackedFinding, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -106,6 +141,7 @@ class ReviewCandidate:
     changed_paths: tuple[str, ...]
     rule_documents: tuple[ReviewRuleDocument, ...]
     rule_scopes: tuple[ReviewRuleScope, ...]
+    finding_ledger: FindingLedger
 
 
 @dataclass(frozen=True)
@@ -125,6 +161,7 @@ class ReviewReport:
     findings: tuple[dict[str, object], ...]
     accepted_exceptions: tuple[dict[str, object], ...]
     residual_risks: tuple[str, ...]
+    new_findings: tuple[dict[str, object], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -132,6 +169,7 @@ class GateDecision:
     verdict: str
     blocking_findings: tuple[dict[str, object], ...]
     advisories: tuple[dict[str, object], ...]
+    ledger_sync_required: bool = False
 
 
 def log(level: str, message: str) -> None:
@@ -198,21 +236,42 @@ def load_reasoning_effort(environment: dict[str, str]) -> str:
     return reasoning_effort
 
 
-def load_review_mode(environment: dict[str, str]) -> str:
-    review_mode = environment.get("CODEX_RELEASE_REVIEW_MODE", DEFAULT_REVIEW_MODE).strip()
+def validate_review_mode(review_mode: str, source: str) -> str:
+    review_mode = review_mode.strip()
     if review_mode not in VALID_REVIEW_MODES:
         valid_values = ", ".join(VALID_REVIEW_MODES)
-        raise ValueError(f"CODEX_RELEASE_REVIEW_MODE must be one of: {valid_values}")
+        raise ValueError(f"{source} must be one of: {valid_values}")
     return review_mode
 
 
-def load_runtime_config(environment: dict[str, str]) -> RuntimeConfig:
+def load_review_mode_override(environment: dict[str, str]) -> str | None:
+    if "CODEX_RELEASE_REVIEW_MODE" not in environment:
+        return None
+    return validate_review_mode(
+        environment["CODEX_RELEASE_REVIEW_MODE"],
+        "CODEX_RELEASE_REVIEW_MODE",
+    )
+
+
+def load_review_mode(environment: dict[str, str]) -> str:
+    return load_review_mode_override(environment) or DEFAULT_REVIEW_MODE
+
+
+def load_runtime_config(
+    environment: dict[str, str],
+    review_mode: str | None = None,
+) -> RuntimeConfig:
+    effective_review_mode = (
+        load_review_mode(environment)
+        if review_mode is None
+        else validate_review_mode(review_mode, "effective release review mode")
+    )
     return RuntimeConfig(
         timeout_seconds=load_timeout_seconds(environment),
         codex_command=load_codex_command(environment),
         review_model=load_review_model(environment),
         reasoning_effort=load_reasoning_effort(environment),
-        review_mode=load_review_mode(environment),
+        review_mode=effective_review_mode,
     )
 
 
@@ -303,7 +362,280 @@ def read_candidate_file(repository: Path, candidate_oid: str, path: str) -> str 
     try:
         return completed.stdout.decode("utf-8")
     except UnicodeDecodeError as error:
-        raise RuntimeError(f"candidate review policy is not UTF-8: {path}") from error
+        raise RuntimeError(f"candidate file is not UTF-8: {path}") from error
+
+
+def parse_project_review_mode(document: str) -> str:
+    try:
+        payload = tomllib.loads(document)
+    except tomllib.TOMLDecodeError as error:
+        raise ValueError(f"invalid {PROJECT_CONFIG_PATH}: {error}") from error
+    expected_fields = {"version", "mode"}
+    if set(payload) != expected_fields:
+        missing_fields = sorted(expected_fields - set(payload))
+        unknown_fields = sorted(set(payload) - expected_fields)
+        details = []
+        if missing_fields:
+            details.append(f"missing fields: {', '.join(missing_fields)}")
+        if unknown_fields:
+            details.append(f"unknown fields: {', '.join(unknown_fields)}")
+        raise ValueError(f"invalid {PROJECT_CONFIG_PATH}: {'; '.join(details)}")
+    if type(payload["version"]) is not int or payload["version"] != 1:
+        raise ValueError(f"{PROJECT_CONFIG_PATH} version must be integer 1")
+    if not isinstance(payload["mode"], str):
+        raise ValueError(f"{PROJECT_CONFIG_PATH} mode must be a string")
+    if payload["mode"] != payload["mode"].strip():
+        raise ValueError(f"{PROJECT_CONFIG_PATH} mode must not contain surrounding whitespace")
+    return validate_review_mode(payload["mode"], f"{PROJECT_CONFIG_PATH} mode")
+
+
+def load_candidate_project_review_mode(
+    repository: Path,
+    candidate_oid: str,
+) -> str | None:
+    document = read_candidate_file(repository, candidate_oid, PROJECT_CONFIG_PATH)
+    if document is None:
+        return None
+    return parse_project_review_mode(document)
+
+
+def attach_project_review_modes(
+    repository: Path,
+    candidates: tuple[ReleaseCandidate, ...],
+) -> tuple[ReleaseCandidate, ...]:
+    return tuple(
+        ReleaseCandidate(
+            label=candidate.label,
+            base_oid=candidate.base_oid,
+            candidate_oid=candidate.candidate_oid,
+            project_review_mode=load_candidate_project_review_mode(
+                repository,
+                candidate.candidate_oid,
+            ),
+        )
+        for candidate in candidates
+    )
+
+
+def select_effective_review_mode(
+    review_mode_override: str | None,
+    candidates: tuple[ReleaseCandidate, ...],
+) -> tuple[str, str]:
+    if review_mode_override is not None:
+        return review_mode_override, "environment"
+    candidate_modes = tuple(
+        candidate.project_review_mode or DEFAULT_REVIEW_MODE for candidate in candidates
+    )
+    if not candidate_modes:
+        return DEFAULT_REVIEW_MODE, "built-in"
+    effective_mode = max(candidate_modes, key=REVIEW_MODE_RANK.__getitem__)
+    source = "project" if any(
+        candidate.project_review_mode is not None for candidate in candidates
+    ) else "built-in"
+    return effective_mode, source
+
+
+def is_normalized_repository_path(path: object) -> bool:
+    if not isinstance(path, str) or not path.strip():
+        return False
+    parsed_path = PurePosixPath(path)
+    return not (
+        path.startswith("/")
+        or "\\" in path
+        or ".." in parsed_path.parts
+        or str(parsed_path) != path
+        or path == "."
+    )
+
+
+def validate_ledger_path(path: object, tracking_id: str) -> str:
+    if not isinstance(path, str) or not path.strip():
+        raise ValueError(f"{FINDING_LEDGER_PATH} {tracking_id} path must be non-empty")
+    if not is_normalized_repository_path(path):
+        raise ValueError(
+            f"{FINDING_LEDGER_PATH} {tracking_id} path must be a normalized "
+            "repository-relative POSIX path"
+        )
+    return path
+
+
+def require_non_empty_string(value: object, field: str, tracking_id: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(
+            f"{FINDING_LEDGER_PATH} {tracking_id} {field} must be a non-empty string"
+        )
+    return value
+
+
+def parse_tracked_finding(status: str, payload: object) -> TrackedFinding:
+    if not isinstance(payload, dict):
+        raise ValueError(f"{FINDING_LEDGER_PATH} {status} finding must be a TOML table")
+    allowed_fields = COMMON_LEDGER_FIELDS | (ALLOW_LEDGER_FIELDS if status == "ALLOW" else set())
+    required_fields = REQUIRED_COMMON_LEDGER_FIELDS | (
+        ALLOW_LEDGER_FIELDS if status == "ALLOW" else set()
+    )
+    payload_fields = set(payload)
+    if not required_fields <= payload_fields or not payload_fields <= allowed_fields:
+        missing_fields = sorted(required_fields - payload_fields)
+        unknown_fields = sorted(payload_fields - allowed_fields)
+        details = []
+        if missing_fields:
+            details.append(f"missing fields: {', '.join(missing_fields)}")
+        if unknown_fields:
+            details.append(f"unknown fields: {', '.join(unknown_fields)}")
+        raise ValueError(
+            f"invalid {FINDING_LEDGER_PATH} {status} finding: {'; '.join(details)}"
+        )
+
+    tracking_id = payload.get("id")
+    if not isinstance(tracking_id, str) or not TRACKING_ID_PATTERN.fullmatch(tracking_id):
+        raise ValueError(
+            f"{FINDING_LEDGER_PATH} finding id must match RG- followed by 12 lowercase hex digits"
+        )
+    priority = payload.get("priority")
+    if priority not in {"P0", "P1", "P2", "P3"}:
+        raise ValueError(f"{FINDING_LEDGER_PATH} {tracking_id} has invalid priority")
+    line = payload.get("line")
+    if line is not None and (type(line) is not int or line < 1):
+        raise ValueError(f"{FINDING_LEDGER_PATH} {tracking_id} line must be a positive integer")
+    first_seen_oid = payload.get("first_seen_oid")
+    if not isinstance(first_seen_oid, str) or not OID_PATTERN.fullmatch(first_seen_oid):
+        raise ValueError(f"{FINDING_LEDGER_PATH} {tracking_id} first_seen_oid is invalid")
+
+    approved_by = payload.get("approved_by")
+    if status == "ALLOW":
+        if approved_by not in {"agent", "user"}:
+            raise ValueError(
+                f"{FINDING_LEDGER_PATH} {tracking_id} approved_by must be agent or user"
+            )
+        if priority in {"P0", "P1"} and approved_by != "user":
+            raise ValueError(
+                f"{FINDING_LEDGER_PATH} {tracking_id} {priority} ALLOW requires approved_by=user"
+            )
+
+    return TrackedFinding(
+        status=status,
+        tracking_id=tracking_id,
+        priority=str(priority),
+        title=require_non_empty_string(payload.get("title"), "title", tracking_id),
+        path=validate_ledger_path(payload.get("path"), tracking_id),
+        line=line,
+        explanation=require_non_empty_string(
+            payload.get("explanation"), "explanation", tracking_id
+        ),
+        first_seen_oid=first_seen_oid.lower(),
+        reason=(
+            require_non_empty_string(payload.get("reason"), "reason", tracking_id)
+            if status == "ALLOW"
+            else None
+        ),
+        evidence=(
+            require_non_empty_string(payload.get("evidence"), "evidence", tracking_id)
+            if status == "ALLOW"
+            else None
+        ),
+        approved_by=str(approved_by) if approved_by is not None else None,
+    )
+
+
+def extract_ledger_blocks(document: str) -> dict[str, str]:
+    lines = document.splitlines()
+    blocks: dict[str, str] = {}
+    seen_sections: set[str] = set()
+    current_section: str | None = None
+    line_index = 0
+    while line_index < len(lines):
+        heading_match = LEDGER_SECTION_PATTERN.fullmatch(lines[line_index])
+        if heading_match is not None:
+            current_section = heading_match.group(1)
+            if current_section in seen_sections:
+                raise ValueError(
+                    f"{FINDING_LEDGER_PATH} contains duplicate ## {current_section} sections"
+                )
+            seen_sections.add(current_section)
+            line_index += 1
+            continue
+        if SECTION_HEADING_PATTERN.match(lines[line_index]):
+            current_section = None
+            line_index += 1
+            continue
+        if lines[line_index].strip() != LEDGER_FENCE:
+            line_index += 1
+            continue
+        if current_section is None:
+            raise ValueError(
+                f"{FINDING_LEDGER_PATH} contains a release-gate block outside TODO or ALLOW"
+            )
+        if current_section in blocks:
+            raise ValueError(
+                f"{FINDING_LEDGER_PATH} ## {current_section} contains multiple release-gate blocks"
+            )
+        block_lines: list[str] = []
+        line_index += 1
+        while line_index < len(lines) and lines[line_index].strip() != "```":
+            block_lines.append(lines[line_index])
+            line_index += 1
+        if line_index >= len(lines):
+            raise ValueError(
+                f"{FINDING_LEDGER_PATH} ## {current_section} has an unclosed release-gate block"
+            )
+        blocks[current_section] = "\n".join(block_lines)
+        line_index += 1
+
+    missing_sections = [section for section in ("TODO", "ALLOW") if section not in seen_sections]
+    missing_blocks = [section for section in ("TODO", "ALLOW") if section not in blocks]
+    if missing_sections or missing_blocks:
+        missing = sorted(set(missing_sections + missing_blocks))
+        raise ValueError(
+            f"{FINDING_LEDGER_PATH} must contain one toml release-gate block under: "
+            f"{', '.join(missing)}"
+        )
+    return blocks
+
+
+def parse_ledger_section(status: str, document: str) -> tuple[TrackedFinding, ...]:
+    try:
+        payload = tomllib.loads(document)
+    except tomllib.TOMLDecodeError as error:
+        raise ValueError(
+            f"invalid {FINDING_LEDGER_PATH} ## {status} TOML: {error}"
+        ) from error
+    if set(payload) - {"finding"}:
+        unknown_fields = ", ".join(sorted(set(payload) - {"finding"}))
+        raise ValueError(
+            f"invalid {FINDING_LEDGER_PATH} ## {status} top-level fields: {unknown_fields}"
+        )
+    findings = payload.get("finding", [])
+    if not isinstance(findings, list):
+        raise ValueError(
+            f"{FINDING_LEDGER_PATH} ## {status} must use [[finding]] tables"
+        )
+    return tuple(parse_tracked_finding(status, finding) for finding in findings)
+
+
+def parse_finding_ledger(document: str) -> FindingLedger:
+    blocks = extract_ledger_blocks(document)
+    todo_findings = parse_ledger_section("TODO", blocks["TODO"])
+    allowed_findings = parse_ledger_section("ALLOW", blocks["ALLOW"])
+    tracking_ids = [
+        finding.tracking_id for finding in (*todo_findings, *allowed_findings)
+    ]
+    if len(tracking_ids) != len(set(tracking_ids)):
+        raise ValueError(f"{FINDING_LEDGER_PATH} contains duplicate finding ids")
+    return FindingLedger(
+        todo_findings=todo_findings,
+        allowed_findings=allowed_findings,
+    )
+
+
+def load_candidate_finding_ledger(
+    repository: Path,
+    candidate_oid: str,
+) -> FindingLedger:
+    document = read_candidate_file(repository, candidate_oid, FINDING_LEDGER_PATH)
+    if document is None:
+        return FindingLedger()
+    return parse_finding_ledger(document)
 
 
 def extract_review_rules(document: str) -> str | None:
@@ -389,6 +721,7 @@ def build_review_candidate(
         changed_paths=changed_paths,
         rule_documents=tuple(documents.values()),
         rule_scopes=tuple(scopes),
+        finding_ledger=load_candidate_finding_ledger(repository, candidate_oid),
     )
 
 
@@ -530,7 +863,10 @@ def build_request(
         remote_name=remote_name,
         push_updates=push_updates,
     )
-    release_candidates = resolve_release_candidates(request)
+    release_candidates = attach_project_review_modes(
+        repository,
+        resolve_release_candidates(request),
+    )
     return ReviewRequest(
         event=request.event,
         repository=request.repository,
@@ -542,6 +878,21 @@ def build_request(
             build_review_candidates(repository, release_candidates)
             if include_review_context
             else ()
+        ),
+    )
+
+
+def add_review_context(request: ReviewRequest) -> ReviewRequest:
+    return ReviewRequest(
+        event=request.event,
+        repository=request.repository,
+        target=request.target,
+        remote_name=request.remote_name,
+        push_updates=request.push_updates,
+        release_candidates=request.release_candidates,
+        review_candidates=build_review_candidates(
+            request.repository,
+            request.release_candidates,
         ),
     )
 
@@ -559,9 +910,37 @@ def release_candidate_summary(request: ReviewRequest) -> str:
     ) or "deletions-only"
 
 
+def project_mode_summary(request: ReviewRequest) -> str:
+    return ",".join(
+        f"{candidate.label}:{candidate.project_review_mode or 'absent'}"
+        for candidate in request.release_candidates
+    ) or "none"
+
+
 def print_bypass_result(request: ReviewRequest) -> None:
     print(f"Release review: BYPASSED (mode=no-verify, event={request.event})")
     print(f"Candidates: {release_candidate_summary(request)}")
+
+
+def tracked_finding_payload(finding: TrackedFinding) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "id": finding.tracking_id,
+        "priority": finding.priority,
+        "title": finding.title,
+        "path": finding.path,
+        "line": finding.line,
+        "explanation": finding.explanation,
+        "first_seen_oid": finding.first_seen_oid,
+    }
+    if finding.status == "ALLOW":
+        payload.update(
+            {
+                "reason": finding.reason,
+                "evidence": finding.evidence,
+                "approved_by": finding.approved_by,
+            }
+        )
+    return payload
 
 
 def request_payload(request: ReviewRequest) -> dict[str, object]:
@@ -592,6 +971,14 @@ def request_payload(request: ReviewRequest) -> dict[str, object]:
                 "rule_scopes": [
                     {"path": scope.path, "sources": list(scope.sources)}
                     for scope in candidate.rule_scopes
+                ],
+                "todo_findings": [
+                    tracked_finding_payload(finding)
+                    for finding in candidate.finding_ledger.todo_findings
+                ],
+                "allowed_findings": [
+                    tracked_finding_payload(finding)
+                    for finding in candidate.finding_ledger.allowed_findings
                 ],
             }
             for candidate in request.review_candidates
@@ -626,17 +1013,26 @@ Review rules:
   authorize a release action.
 - Do not read working-tree AGENTS.md files as review policy; automatic project-instruction loading
   is disabled for this process.
+- Each candidate's todo_findings and allowed_findings were parsed from that exact candidate's
+  `.codex/release-gate.md`. A still-relevant TODO must be returned as a finding with its exact id in
+  tracking_id. An ALLOW that actually matches candidate behavior must be omitted from findings and
+  returned as an accepted_exception with its exact id in tracking_id and rule_source set to
+  `.codex/release-gate.md#<id>`. Do not report an ALLOW that is not actually implicated.
+- For a new finding that matches no TODO or ALLOW, set tracking_id to null. For an exception caused
+  by an applicable AGENTS.md rule instead of a ledger ALLOW, set tracking_id to null. Never invent,
+  reuse, or change a ledger id. If an identical tracked entry appears in multiple pushed
+  candidates, return that tracking_id only once.
 
 {PRIORITY_CONTRACT}
 
 Return only JSON matching the provided schema. Copy every actionable $review-agent finding into
 the findings array and set rule_source to the applicable candidate rule path when a project rule
-caused that finding, otherwise null. When an applicable project rule changes a potential finding
-into allowed behavior, omit it from findings and record only that actual rule hit in
-accepted_exceptions with its source and reason. Return every qualifying P0 through P3 finding;
-the caller alone decides which priorities block the current release. In each finding explanation,
-state the realistic trigger and demonstrated impact that justify its priority. Do not omit or
-reclassify a finding merely to permit the release.
+caused that finding, to `.codex/release-gate.md#<id>` for a tracked TODO, otherwise null. When an
+applicable project rule or tracked ALLOW changes a potential finding into allowed behavior, omit it
+from findings and record only that actual rule hit in accepted_exceptions with its source and
+reason. Return every qualifying P0 through P3 finding; the caller alone decides which priorities
+block the current release. In each explanation, state the realistic trigger and demonstrated impact
+that justify its priority. Do not omit or reclassify a finding merely to permit the release.
 """
 
 
@@ -776,16 +1172,321 @@ def parse_review_report(output_file: Path) -> ReviewReport:
         raise RuntimeError("review report has invalid residual_risks")
     if any(not isinstance(finding, dict) for finding in findings):
         raise RuntimeError("review report contains a non-object finding")
-    if any(
-        finding.get("priority") not in {"P0", "P1", "P2", "P3"}
-        for finding in findings
-    ):
-        raise RuntimeError("review report contains an invalid finding priority")
+    finding_fields = {
+        "tracking_id",
+        "priority",
+        "title",
+        "path",
+        "line",
+        "explanation",
+        "rule_source",
+    }
+    exception_fields = {"tracking_id", "rule_source", "path", "line", "explanation"}
+    finding_signatures: set[tuple[object, ...]] = set()
+    for finding in findings:
+        if set(finding) != finding_fields:
+            raise RuntimeError("review report finding has invalid fields")
+        if finding.get("priority") not in {"P0", "P1", "P2", "P3"}:
+            raise RuntimeError("review report contains an invalid finding priority")
+        validate_report_tracking_id(finding.get("tracking_id"))
+        validate_report_location(finding)
+        for field in ("title", "explanation"):
+            if not isinstance(finding.get(field), str) or not str(finding[field]).strip():
+                raise RuntimeError(f"review report finding has invalid {field}")
+        if finding.get("rule_source") is not None and not isinstance(
+            finding.get("rule_source"), str
+        ):
+            raise RuntimeError("review report finding has invalid rule_source")
+        signature = finding_signature(finding)
+        if signature in finding_signatures:
+            raise RuntimeError("review report contains a duplicate finding")
+        finding_signatures.add(signature)
+    for exception in accepted_exceptions:
+        if set(exception) != exception_fields:
+            raise RuntimeError("review report accepted exception has invalid fields")
+        validate_report_tracking_id(exception.get("tracking_id"))
+        validate_report_location(exception)
+        for field in ("rule_source", "explanation"):
+            if not isinstance(exception.get(field), str) or not str(exception[field]).strip():
+                raise RuntimeError(f"review report accepted exception has invalid {field}")
     return ReviewReport(
         summary=summary,
         findings=tuple(findings),
         accepted_exceptions=tuple(accepted_exceptions),
         residual_risks=tuple(residual_risks),
+    )
+
+
+def validate_report_tracking_id(tracking_id: object) -> None:
+    if tracking_id is not None and (
+        not isinstance(tracking_id, str) or not TRACKING_ID_PATTERN.fullmatch(tracking_id)
+    ):
+        raise RuntimeError("review report contains an invalid tracking_id")
+
+
+def validate_report_location(item: dict[str, object]) -> None:
+    path = item.get("path")
+    line = item.get("line")
+    if not is_normalized_repository_path(path):
+        raise RuntimeError("review report contains an invalid path")
+    if line is not None and (type(line) is not int or line < 1):
+        raise RuntimeError("review report contains an invalid line")
+
+
+def finding_signature(finding: dict[str, object]) -> tuple[object, ...]:
+    return (
+        finding.get("priority"),
+        finding.get("title"),
+        finding.get("path"),
+        finding.get("line"),
+        finding.get("explanation"),
+    )
+
+
+def tracked_finding_signature(finding: TrackedFinding) -> tuple[object, ...]:
+    return (
+        finding.priority,
+        finding.title,
+        finding.path,
+        finding.line,
+        finding.explanation,
+    )
+
+
+def tracked_finding_report(finding: TrackedFinding) -> dict[str, object]:
+    return {
+        "tracking_id": finding.tracking_id,
+        "priority": finding.priority,
+        "title": finding.title,
+        "path": finding.path,
+        "line": finding.line,
+        "explanation": finding.explanation,
+        "rule_source": f"{FINDING_LEDGER_PATH}#{finding.tracking_id}",
+    }
+
+
+def collect_tracked_findings(
+    request: ReviewRequest,
+) -> tuple[dict[str, TrackedFinding], dict[str, TrackedFinding]]:
+    todo_findings: dict[str, TrackedFinding] = {}
+    allowed_findings: dict[str, TrackedFinding] = {}
+    finding_signatures: dict[tuple[object, ...], str] = {}
+    for candidate in request.review_candidates:
+        for finding in candidate.finding_ledger.todo_findings:
+            existing = todo_findings.get(finding.tracking_id) or allowed_findings.get(
+                finding.tracking_id
+            )
+            if existing == finding:
+                continue
+            if existing is not None:
+                raise RuntimeError(
+                    f"conflicting tracking id across release candidates: {finding.tracking_id}"
+                )
+            signature = tracked_finding_signature(finding)
+            if signature in finding_signatures:
+                raise RuntimeError("duplicate tracked finding across release candidates")
+            todo_findings[finding.tracking_id] = finding
+            finding_signatures[signature] = finding.tracking_id
+        for finding in candidate.finding_ledger.allowed_findings:
+            existing = todo_findings.get(finding.tracking_id) or allowed_findings.get(
+                finding.tracking_id
+            )
+            if existing == finding:
+                continue
+            if existing is not None:
+                raise RuntimeError(
+                    f"conflicting tracking id across release candidates: {finding.tracking_id}"
+                )
+            signature = tracked_finding_signature(finding)
+            if signature in finding_signatures:
+                raise RuntimeError("duplicate tracked finding across release candidates")
+            allowed_findings[finding.tracking_id] = finding
+            finding_signatures[signature] = finding.tracking_id
+    return todo_findings, allowed_findings
+
+
+def find_first_seen_oid(request: ReviewRequest, finding: dict[str, object]) -> str:
+    if len(request.review_candidates) == 1:
+        return request.review_candidates[0].candidate_oid
+    path = finding.get("path")
+    matching_candidates = tuple(
+        candidate
+        for candidate in request.review_candidates
+        if path in candidate.changed_paths
+    )
+    if len(matching_candidates) != 1:
+        raise RuntimeError(
+            "cannot attribute a new finding to one release candidate for ledger synchronization"
+        )
+    return matching_candidates[0].candidate_oid
+
+
+def generate_tracking_id(finding: dict[str, object]) -> str:
+    normalized_finding = json.dumps(
+        {
+            "priority": finding.get("priority"),
+            "title": finding.get("title"),
+            "path": finding.get("path"),
+            "line": finding.get("line"),
+            "explanation": finding.get("explanation"),
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    digest = hashlib.sha256(normalized_finding.encode("utf-8")).hexdigest()[:12]
+    return f"RG-{digest}"
+
+
+def reconcile_new_finding(
+    finding: dict[str, object],
+    request: ReviewRequest,
+    todo_findings: dict[str, TrackedFinding],
+    allowed_findings: dict[str, TrackedFinding],
+    seen_tracking_ids: set[str],
+) -> dict[str, object]:
+    signature = finding_signature(finding)
+    tracked_signatures = {
+        tracked_finding_signature(tracked): tracked
+        for tracked in (*todo_findings.values(), *allowed_findings.values())
+    }
+    if signature in tracked_signatures:
+        tracked = tracked_signatures[signature]
+        raise RuntimeError(
+            f"reviewer omitted or conflicted with {tracked.status} tracking id "
+            f"{tracked.tracking_id}"
+        )
+    tracking_id = generate_tracking_id(finding)
+    if tracking_id in todo_findings or tracking_id in allowed_findings:
+        raise RuntimeError(f"generated tracking id collides with ledger: {tracking_id}")
+    if tracking_id in seen_tracking_ids:
+        raise RuntimeError(f"generated duplicate tracking id: {tracking_id}")
+    seen_tracking_ids.add(tracking_id)
+    return {
+        **finding,
+        "tracking_id": tracking_id,
+        "first_seen_oid": find_first_seen_oid(request, finding),
+    }
+
+
+def reconcile_tracked_todo(
+    finding: dict[str, object],
+    tracking_id: str,
+    todo_findings: dict[str, TrackedFinding],
+    allowed_findings: dict[str, TrackedFinding],
+    seen_tracking_ids: set[str],
+) -> dict[str, object]:
+    if tracking_id in seen_tracking_ids:
+        raise RuntimeError(f"review report contains duplicate tracking id: {tracking_id}")
+    seen_tracking_ids.add(tracking_id)
+    if tracking_id in allowed_findings:
+        raise RuntimeError(f"reviewer returned ALLOW {tracking_id} as a finding")
+    tracked_finding = todo_findings.get(tracking_id)
+    if tracked_finding is None:
+        raise RuntimeError(f"reviewer returned unknown TODO tracking id: {tracking_id}")
+    if finding_signature(finding) != tracked_finding_signature(tracked_finding):
+        raise RuntimeError(f"reviewer changed tracked TODO content: {tracking_id}")
+    expected_source = f"{FINDING_LEDGER_PATH}#{tracking_id}"
+    if finding.get("rule_source") != expected_source:
+        raise RuntimeError(f"reviewer returned invalid TODO rule_source: {tracking_id}")
+    return tracked_finding_report(tracked_finding)
+
+
+def reconcile_findings(
+    report: ReviewReport,
+    request: ReviewRequest,
+    todo_findings: dict[str, TrackedFinding],
+    allowed_findings: dict[str, TrackedFinding],
+    seen_tracking_ids: set[str],
+) -> tuple[list[dict[str, object]], list[dict[str, object]], set[str]]:
+    reconciled_findings: list[dict[str, object]] = []
+    new_findings: list[dict[str, object]] = []
+    returned_todo_ids: set[str] = set()
+    for finding in report.findings:
+        tracking_id = finding.get("tracking_id")
+        if tracking_id is None:
+            new_finding = reconcile_new_finding(
+                finding,
+                request,
+                todo_findings,
+                allowed_findings,
+                seen_tracking_ids,
+            )
+            reconciled_findings.append(new_finding)
+            new_findings.append(new_finding)
+            continue
+        tracked_finding = reconcile_tracked_todo(
+            finding,
+            str(tracking_id),
+            todo_findings,
+            allowed_findings,
+            seen_tracking_ids,
+        )
+        reconciled_findings.append(tracked_finding)
+        returned_todo_ids.add(str(tracking_id))
+    return reconciled_findings, new_findings, returned_todo_ids
+
+
+def reconcile_exception(
+    exception: dict[str, object],
+    todo_findings: dict[str, TrackedFinding],
+    allowed_findings: dict[str, TrackedFinding],
+    seen_tracking_ids: set[str],
+) -> dict[str, object]:
+    tracking_id = exception.get("tracking_id")
+    if tracking_id is None:
+        if str(exception.get("rule_source", "")).startswith(FINDING_LEDGER_PATH):
+            raise RuntimeError("ledger accepted exception is missing tracking_id")
+        return exception
+    tracking_id = str(tracking_id)
+    if tracking_id in seen_tracking_ids:
+        raise RuntimeError(f"review report contains duplicate tracking id: {tracking_id}")
+    seen_tracking_ids.add(tracking_id)
+    if tracking_id in todo_findings:
+        raise RuntimeError(f"reviewer returned TODO {tracking_id} as an accepted exception")
+    tracked_finding = allowed_findings.get(tracking_id)
+    if tracked_finding is None:
+        raise RuntimeError(f"reviewer returned unknown ALLOW tracking id: {tracking_id}")
+    expected_source = f"{FINDING_LEDGER_PATH}#{tracking_id}"
+    if (
+        exception.get("rule_source") != expected_source
+        or exception.get("path") != tracked_finding.path
+        or exception.get("line") != tracked_finding.line
+    ):
+        raise RuntimeError(f"reviewer returned mismatched ALLOW exception: {tracking_id}")
+    return exception
+
+
+def reconcile_review_report(report: ReviewReport, request: ReviewRequest) -> ReviewReport:
+    todo_findings, allowed_findings = collect_tracked_findings(request)
+    seen_tracking_ids: set[str] = set()
+    findings, new_findings, returned_todo_ids = reconcile_findings(
+        report,
+        request,
+        todo_findings,
+        allowed_findings,
+        seen_tracking_ids,
+    )
+    exceptions = tuple(
+        reconcile_exception(
+            exception,
+            todo_findings,
+            allowed_findings,
+            seen_tracking_ids,
+        )
+        for exception in report.accepted_exceptions
+    )
+    findings.extend(
+        tracked_finding_report(finding)
+        for tracking_id, finding in todo_findings.items()
+        if tracking_id not in returned_todo_ids
+    )
+    return ReviewReport(
+        summary=report.summary,
+        findings=tuple(findings),
+        accepted_exceptions=exceptions,
+        residual_risks=report.residual_risks,
+        new_findings=tuple(new_findings),
     )
 
 
@@ -798,9 +1499,10 @@ def evaluate_report(report: ReviewReport, review_mode: str) -> GateDecision:
         finding for finding in report.findings if finding["priority"] not in blocking_priorities
     )
     return GateDecision(
-        verdict="block" if blocking_findings else "pass",
+        verdict="block" if blocking_findings or report.new_findings else "pass",
         blocking_findings=blocking_findings,
         advisories=advisories,
+        ledger_sync_required=bool(report.new_findings),
     )
 
 
@@ -810,18 +1512,60 @@ def print_finding(finding: dict[str, object]) -> None:
     path = finding.get("path", "unknown")
     line = finding.get("line")
     location = f"{path}:{line}" if line is not None else str(path)
-    print(f"[{priority}] {title} — {location}")
+    tracking_id = finding.get("tracking_id")
+    tracking_suffix = f" [{tracking_id}]" if tracking_id is not None else ""
+    print(f"[{priority}] {title}{tracking_suffix} — {location}")
     rule_source = finding.get("rule_source")
     if rule_source is not None:
         print(f"Rule: {rule_source}")
     print(str(finding.get("explanation", "")))
 
 
+def toml_string(value: object) -> str:
+    return json.dumps(str(value), ensure_ascii=False)
+
+
+def format_todo_ledger_entry(finding: dict[str, object]) -> str:
+    lines = [
+        "[[finding]]",
+        f"id = {toml_string(finding['tracking_id'])}",
+        f"priority = {toml_string(finding['priority'])}",
+        f"title = {toml_string(finding['title'])}",
+        f"path = {toml_string(finding['path'])}",
+    ]
+    if finding.get("line") is not None:
+        lines.append(f"line = {finding['line']}")
+    lines.extend(
+        (
+            f"explanation = {toml_string(finding['explanation'])}",
+            f"first_seen_oid = {toml_string(finding['first_seen_oid'])}",
+        )
+    )
+    return "\n".join(lines)
+
+
+def print_ledger_sync_required(new_findings: tuple[dict[str, object], ...]) -> None:
+    if not new_findings:
+        return
+    print(f"Ledger sync required: {len(new_findings)} new finding(s)")
+    print(
+        f"Merge these entries into the {LEDGER_FENCE} block under "
+        f"## TODO in {FINDING_LEDGER_PATH}:"
+    )
+    print(LEDGER_FENCE)
+    for finding_index, finding in enumerate(new_findings):
+        if finding_index:
+            print()
+        print(format_todo_ledger_entry(finding))
+    print("```")
+
+
 def print_gate_result(report: ReviewReport, decision: GateDecision, review_mode: str) -> None:
     print(
         f"Release review: {decision.verdict.upper()} "
         f"(mode={review_mode}, blocking={len(decision.blocking_findings)}, "
-        f"advisories={len(decision.advisories)})"
+        f"advisories={len(decision.advisories)}, "
+        f"ledger_sync_required={'yes' if decision.ledger_sync_required else 'no'})"
     )
     print(report.summary)
     if decision.blocking_findings:
@@ -838,12 +1582,18 @@ def print_gate_result(report: ReviewReport, decision: GateDecision, review_mode:
             path = exception.get("path", "unknown")
             line = exception.get("line")
             location = f"{path}:{line}" if line is not None else str(path)
-            print(f"- {location} — {exception.get('rule_source', 'unknown rule')}")
+            tracking_id = exception.get("tracking_id")
+            tracking_suffix = f" [{tracking_id}]" if tracking_id is not None else ""
+            print(
+                f"- {location}{tracking_suffix} — "
+                f"{exception.get('rule_source', 'unknown rule')}"
+            )
             print(f"  {exception.get('explanation', '')}")
     if report.residual_risks:
         print("Residual risks:")
         for risk in report.residual_risks:
             print(f"- {risk}")
+    print_ledger_sync_required(report.new_findings)
 
 
 def execute_review(
@@ -879,26 +1629,33 @@ def main() -> int:
     started_at = time.monotonic()
     try:
         arguments = parse_arguments()
-        config = load_runtime_config(os.environ)
-        request = build_request(
-            arguments,
-            include_review_context=config.review_mode != "no-verify",
+        review_mode_override = load_review_mode_override(os.environ)
+        request = build_request(arguments, include_review_context=False)
+        effective_review_mode, review_mode_source = select_effective_review_mode(
+            review_mode_override,
+            request.release_candidates,
         )
+        config = load_runtime_config(os.environ, effective_review_mode)
         candidate_summary = release_candidate_summary(request)
         if config.review_mode == "no-verify":
             log(
                 "INFO",
                 f"starting event={request.event} repository={request.repository} "
-                f"mode=no-verify candidates={candidate_summary} review=skipped",
+                f"mode=no-verify mode_source={review_mode_source} "
+                f"project_modes={project_mode_summary(request)} "
+                f"candidates={candidate_summary} review=skipped",
             )
             print_bypass_result(request)
             elapsed_seconds = time.monotonic() - started_at
             log(
                 "INFO",
-                f"finished event={request.event} mode=no-verify verdict=bypassed "
+                f"finished event={request.event} mode=no-verify "
+                f"mode_source={review_mode_source} verdict=bypassed "
                 f"candidates={candidate_summary} elapsed_seconds={elapsed_seconds:.3f}",
             )
             return EXIT_PASS
+        request = add_review_context(request)
+        todo_findings, allowed_findings = collect_tracked_findings(request)
         executable = resolve_executable(config.codex_command)
         rule_sources = sorted(
             {
@@ -910,20 +1667,27 @@ def main() -> int:
         log(
             "INFO",
             f"starting event={request.event} repository={request.repository} "
-            f"mode={config.review_mode} model={config.review_model} "
+            f"mode={config.review_mode} mode_source={review_mode_source} "
+            f"project_modes={project_mode_summary(request)} model={config.review_model} "
             f"reasoning_effort={config.reasoning_effort} "
             f"timeout_seconds={config.timeout_seconds} candidates={candidate_summary} "
-            f"rule_sources={','.join(rule_sources) or 'none'}",
+            f"rule_sources={','.join(rule_sources) or 'none'} "
+            f"ledger_todo={len(todo_findings)} ledger_allow={len(allowed_findings)}",
         )
-        report = execute_review(executable, config, request)
+        report = reconcile_review_report(
+            execute_review(executable, config, request),
+            request,
+        )
         decision = evaluate_report(report, config.review_mode)
         print_gate_result(report, decision, config.review_mode)
         elapsed_seconds = time.monotonic() - started_at
         log(
             "INFO",
             f"finished event={request.event} mode={config.review_mode} "
+            f"mode_source={review_mode_source} "
             f"verdict={decision.verdict} blocking={len(decision.blocking_findings)} "
             f"advisories={len(decision.advisories)} "
+            f"ledger_sync_required={str(decision.ledger_sync_required).lower()} "
             f"elapsed_seconds={elapsed_seconds:.3f}",
         )
         return EXIT_PASS if decision.verdict == "pass" else EXIT_FINDINGS

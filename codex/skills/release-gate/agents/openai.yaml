@@ -1,4 +1,4 @@
 interface:
   display_name: "Release Gate"
-  short_description: "默认跳过 Codex 审查并记录确切发布候选"
-  default_prompt: "使用 $release-gate 默认以 no-verify 解析并记录确切候选；如当前发布任务明确选择审查档位则执行审查，并披露 verdict。"
+  short_description: "按项目模式审查并同步发布 finding 清单"
+  default_prompt: "使用 $release-gate 解析确切候选，应用候选提交中的项目模式与 TODO/ALLOW 清单；如需同步新 finding，则先更新独立清单提交并重新审查。"

@@ -50,6 +50,47 @@ class GitRepositoryTestCase(unittest.TestCase):
         return run_git(self.repository, "rev-parse", "HEAD")
 
 
+def ledger_document(todo: str = "", allow: str = "") -> str:
+    return f"""# Release Gate Findings
+
+## TODO
+
+```toml release-gate
+{todo}```
+
+## ALLOW
+
+```toml release-gate
+{allow}```
+"""
+
+
+def tracked_finding_toml(
+    tracking_id: str,
+    priority: str = "P2",
+    approved_by: str | None = None,
+) -> str:
+    fields = [
+        "[[finding]]",
+        f'id = "{tracking_id}"',
+        f'priority = "{priority}"',
+        'title = "Tracked issue"',
+        'path = "value.txt"',
+        "line = 1",
+        'explanation = "The candidate returns an incorrect value."',
+        f'first_seen_oid = "{"a" * 40}"',
+    ]
+    if approved_by is not None:
+        fields.extend(
+            (
+                'reason = "The project accepts this behavior."',
+                'evidence = "A regression test documents the intended result."',
+                f'approved_by = "{approved_by}"',
+            )
+        )
+    return "\n".join(fields) + "\n"
+
+
 class RuntimeConfigTests(unittest.TestCase):
     def test_loads_defaults(self) -> None:
         config = MODULE.load_runtime_config({})
@@ -99,6 +140,151 @@ class RuntimeConfigTests(unittest.TestCase):
             with self.subTest(review_mode=review_mode):
                 with self.assertRaisesRegex(ValueError, "REVIEW_MODE must be one of"):
                     MODULE.load_runtime_config({"CODEX_RELEASE_REVIEW_MODE": review_mode})
+
+
+class ProjectReviewConfigTests(GitRepositoryTestCase):
+    def test_accepts_each_project_mode(self) -> None:
+        for review_mode in ("no-verify", "fast", "balanced", "strict"):
+            with self.subTest(review_mode=review_mode):
+                self.assertEqual(
+                    MODULE.parse_project_review_mode(
+                        f'version = 1\nmode = "{review_mode}"\n'
+                    ),
+                    review_mode,
+                )
+
+    def test_rejects_invalid_project_configurations(self) -> None:
+        invalid_documents = (
+            'mode = "fast"\n',
+            "version = 1\n",
+            'version = 1\nmode = "fast"\nextra = true\n',
+            'version = true\nmode = "fast"\n',
+            'version = 2\nmode = "fast"\n',
+            "version = 1\nmode = 2\n",
+            'version = 1\nmode = "urgent"\n',
+            'version = 1\nmode = " fast "\n',
+            "not valid TOML = [",
+        )
+
+        for document in invalid_documents:
+            with self.subTest(document=document):
+                with self.assertRaises(ValueError):
+                    MODULE.parse_project_review_mode(document)
+
+    def test_reads_project_mode_from_candidate_not_worktree(self) -> None:
+        self.write_file(
+            ".codex/release-gate.toml",
+            'version = 1\nmode = "fast"\n',
+        )
+        candidate_oid = self.commit_all("candidate config")
+        self.write_file(
+            ".codex/release-gate.toml",
+            'version = 1\nmode = "strict"\n',
+        )
+
+        review_mode = MODULE.load_candidate_project_review_mode(
+            self.repository,
+            candidate_oid,
+        )
+
+        self.assertEqual(review_mode, "fast")
+
+    def test_uses_strictest_candidate_mode_unless_environment_overrides(self) -> None:
+        candidates = (
+            MODULE.ReleaseCandidate("one", None, "a" * 40, "fast"),
+            MODULE.ReleaseCandidate("two", None, "b" * 40, "strict"),
+            MODULE.ReleaseCandidate("three", None, "c" * 40, None),
+        )
+
+        self.assertEqual(
+            MODULE.select_effective_review_mode(None, candidates),
+            ("strict", "project"),
+        )
+        self.assertEqual(
+            MODULE.select_effective_review_mode("no-verify", candidates),
+            ("no-verify", "environment"),
+        )
+
+
+class FindingLedgerTests(GitRepositoryTestCase):
+    def test_parses_todo_and_authorized_allow(self) -> None:
+        ledger = MODULE.parse_finding_ledger(
+            ledger_document(
+                todo=tracked_finding_toml("RG-111111111111", priority="P2"),
+                allow=tracked_finding_toml(
+                    "RG-222222222222",
+                    priority="P3",
+                    approved_by="agent",
+                ),
+            )
+        )
+
+        self.assertEqual(ledger.todo_findings[0].tracking_id, "RG-111111111111")
+        self.assertEqual(ledger.allowed_findings[0].approved_by, "agent")
+
+    def test_rejects_agent_approval_for_p0_or_p1(self) -> None:
+        for priority in ("P0", "P1"):
+            with self.subTest(priority=priority):
+                with self.assertRaisesRegex(ValueError, "requires approved_by=user"):
+                    MODULE.parse_finding_ledger(
+                        ledger_document(
+                            allow=tracked_finding_toml(
+                                "RG-333333333333",
+                                priority=priority,
+                                approved_by="agent",
+                            )
+                        )
+                    )
+
+    def test_rejects_duplicate_ids_and_unknown_fields(self) -> None:
+        duplicate = tracked_finding_toml("RG-444444444444")
+        with self.assertRaisesRegex(ValueError, "duplicate finding ids"):
+            MODULE.parse_finding_ledger(
+                ledger_document(
+                    todo=duplicate,
+                    allow=tracked_finding_toml(
+                        "RG-444444444444",
+                        priority="P3",
+                        approved_by="agent",
+                    ),
+                )
+            )
+
+        invalid = tracked_finding_toml("RG-555555555555") + 'unexpected = "value"\n'
+        with self.assertRaisesRegex(ValueError, "unknown fields"):
+            MODULE.parse_finding_ledger(ledger_document(todo=invalid))
+
+    def test_requires_both_fixed_sections_and_blocks(self) -> None:
+        with self.assertRaisesRegex(ValueError, "must contain one"):
+            MODULE.parse_finding_ledger(
+                "## TODO\n\n```toml release-gate\n```\n"
+            )
+
+    def test_reads_ledger_from_candidate_not_worktree(self) -> None:
+        self.write_file("value.txt", "base\n")
+        base_oid = self.commit_all("base")
+        self.write_file(
+            ".codex/release-gate.md",
+            ledger_document(todo=tracked_finding_toml("RG-666666666666")),
+        )
+        self.write_file("value.txt", "candidate\n")
+        candidate_oid = self.commit_all("candidate ledger")
+        self.write_file(
+            ".codex/release-gate.md",
+            ledger_document(todo=tracked_finding_toml("RG-777777777777")),
+        )
+
+        candidate = MODULE.build_review_candidate(
+            self.repository,
+            "test",
+            base_oid,
+            candidate_oid,
+        )
+
+        self.assertEqual(
+            candidate.finding_ledger.todo_findings[0].tracking_id,
+            "RG-666666666666",
+        )
 
 
 class PushUpdateTests(unittest.TestCase):
@@ -325,7 +511,17 @@ class ReviewReportTests(unittest.TestCase):
         output_file = self.write_report(
             {
                 "summary": "Invalid priority.",
-                "findings": [{"priority": "P4", "rule_source": None}],
+                "findings": [
+                    {
+                        "tracking_id": None,
+                        "priority": "P4",
+                        "title": "Invalid",
+                        "path": "value.txt",
+                        "line": 1,
+                        "explanation": "Invalid priority.",
+                        "rule_source": None,
+                    }
+                ],
                 "accepted_exceptions": [],
                 "residual_risks": [],
             }
@@ -341,6 +537,7 @@ class ReviewReportTests(unittest.TestCase):
                 "findings": [],
                 "accepted_exceptions": [
                     {
+                        "tracking_id": None,
                         "rule_source": "AGENTS.md",
                         "path": "service.py",
                         "line": 12,
@@ -415,6 +612,233 @@ class ReviewReportTests(unittest.TestCase):
         self.assertIn("Advisories (non-blocking in balanced mode)", rendered)
         self.assertIn("Accepted exceptions:", rendered)
         self.assertIn("Residual risks:", rendered)
+
+
+class LedgerReconciliationTests(unittest.TestCase):
+    def tracked_finding(
+        self,
+        status: str,
+        tracking_id: str,
+        priority: str = "P2",
+    ) -> object:
+        return MODULE.TrackedFinding(
+            status=status,
+            tracking_id=tracking_id,
+            priority=priority,
+            title="Tracked issue",
+            path="value.txt",
+            line=1,
+            explanation="The candidate returns an incorrect value.",
+            first_seen_oid="a" * 40,
+            reason="The behavior is intentional." if status == "ALLOW" else None,
+            evidence="A test documents it." if status == "ALLOW" else None,
+            approved_by="agent" if status == "ALLOW" else None,
+        )
+
+    def request_with_ledger(self, ledger: object) -> object:
+        candidate = MODULE.ReviewCandidate(
+            label="change-request",
+            base_oid="a" * 40,
+            candidate_oid="b" * 40,
+            changed_paths=("value.txt",),
+            rule_documents=(),
+            rule_scopes=(),
+            finding_ledger=ledger,
+        )
+        return MODULE.ReviewRequest(
+            event="change-request",
+            repository=Path.cwd(),
+            target=f"{'a' * 40}..{'b' * 40}",
+            remote_name=None,
+            push_updates=(),
+            review_candidates=(candidate,),
+        )
+
+    def empty_report(self) -> object:
+        return MODULE.ReviewReport(
+            summary="No new findings.",
+            findings=(),
+            accepted_exceptions=(),
+            residual_risks=(),
+        )
+
+    def test_merges_registered_todo_and_applies_mode_threshold(self) -> None:
+        tracking_id = "RG-111111111111"
+        request = self.request_with_ledger(
+            MODULE.FindingLedger(
+                todo_findings=(self.tracked_finding("TODO", tracking_id, "P2"),)
+            )
+        )
+
+        report = MODULE.reconcile_review_report(self.empty_report(), request)
+        decision = MODULE.evaluate_report(report, "fast")
+
+        self.assertEqual(report.findings[0]["tracking_id"], tracking_id)
+        self.assertEqual(decision.verdict, "pass")
+        self.assertEqual(len(decision.advisories), 1)
+        self.assertFalse(decision.ledger_sync_required)
+
+    def test_discloses_only_a_matching_allow(self) -> None:
+        tracking_id = "RG-222222222222"
+        allowed_finding = self.tracked_finding("ALLOW", tracking_id, "P3")
+        request = self.request_with_ledger(
+            MODULE.FindingLedger(allowed_findings=(allowed_finding,))
+        )
+        report = MODULE.ReviewReport(
+            summary="Allowed behavior matched.",
+            findings=(),
+            accepted_exceptions=(
+                {
+                    "tracking_id": tracking_id,
+                    "rule_source": f".codex/release-gate.md#{tracking_id}",
+                    "path": "value.txt",
+                    "line": 1,
+                    "explanation": "The tracked project exception applies.",
+                },
+            ),
+            residual_risks=(),
+        )
+
+        reconciled = MODULE.reconcile_review_report(report, request)
+
+        self.assertEqual(reconciled.findings, ())
+        self.assertEqual(
+            reconciled.accepted_exceptions[0]["tracking_id"],
+            tracking_id,
+        )
+
+    def test_new_advisory_requires_sync_and_prints_canonical_todo(self) -> None:
+        request = self.request_with_ledger(MODULE.FindingLedger())
+        report = MODULE.ReviewReport(
+            summary="One new finding.",
+            findings=(
+                {
+                    "tracking_id": None,
+                    "priority": "P3",
+                    "title": "New issue",
+                    "path": "value.txt",
+                    "line": 1,
+                    "explanation": "The changed fallback returns stale data.",
+                    "rule_source": None,
+                },
+            ),
+            accepted_exceptions=(),
+            residual_risks=(),
+        )
+
+        reconciled = MODULE.reconcile_review_report(report, request)
+        decision = MODULE.evaluate_report(reconciled, "fast")
+        output = StringIO()
+        with redirect_stdout(output):
+            MODULE.print_gate_result(reconciled, decision, "fast")
+
+        self.assertEqual(decision.verdict, "block")
+        self.assertEqual(len(decision.advisories), 1)
+        self.assertTrue(decision.ledger_sync_required)
+        self.assertRegex(reconciled.new_findings[0]["tracking_id"], r"^RG-[0-9a-f]{12}$")
+        self.assertIn("Ledger sync required:", output.getvalue())
+        self.assertIn("[[finding]]", output.getvalue())
+        self.assertIn(f'first_seen_oid = "{"b" * 40}"', output.getvalue())
+
+    def test_rejects_unknown_or_conflicting_tracking_ids(self) -> None:
+        todo_id = "RG-333333333333"
+        allow_id = "RG-444444444444"
+        request = self.request_with_ledger(
+            MODULE.FindingLedger(
+                todo_findings=(self.tracked_finding("TODO", todo_id),),
+                allowed_findings=(self.tracked_finding("ALLOW", allow_id),),
+            )
+        )
+        base_finding = {
+            "priority": "P2",
+            "title": "Tracked issue",
+            "path": "value.txt",
+            "line": 1,
+            "explanation": "The candidate returns an incorrect value.",
+            "rule_source": None,
+        }
+        invalid_reports = (
+            MODULE.ReviewReport(
+                "Unknown",
+                ({**base_finding, "tracking_id": "RG-999999999999"},),
+                (),
+                (),
+            ),
+            MODULE.ReviewReport(
+                "ALLOW returned as finding",
+                ({**base_finding, "tracking_id": allow_id},),
+                (),
+                (),
+            ),
+            MODULE.ReviewReport(
+                "TODO returned as exception",
+                (),
+                (
+                    {
+                        "tracking_id": todo_id,
+                        "rule_source": f".codex/release-gate.md#{todo_id}",
+                        "path": "value.txt",
+                        "line": 1,
+                        "explanation": "Invalid state transition.",
+                    },
+                ),
+                (),
+            ),
+        )
+
+        for report in invalid_reports:
+            with self.subTest(summary=report.summary):
+                with self.assertRaises(RuntimeError):
+                    MODULE.reconcile_review_report(report, request)
+
+    def test_removed_entries_do_not_reappear(self) -> None:
+        request = self.request_with_ledger(MODULE.FindingLedger())
+
+        report = MODULE.reconcile_review_report(self.empty_report(), request)
+
+        self.assertEqual(report.findings, ())
+        self.assertEqual(report.accepted_exceptions, ())
+
+    def test_rejects_duplicate_tracked_finding_with_different_ids(self) -> None:
+        request = self.request_with_ledger(
+            MODULE.FindingLedger(
+                todo_findings=(
+                    self.tracked_finding("TODO", "RG-555555555555"),
+                ),
+                allowed_findings=(
+                    self.tracked_finding("ALLOW", "RG-666666666666"),
+                ),
+            )
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "duplicate tracked finding"):
+            MODULE.reconcile_review_report(self.empty_report(), request)
+
+    def test_deduplicates_identical_ledger_entry_across_push_candidates(self) -> None:
+        tracking_id = "RG-777777777777"
+        request = self.request_with_ledger(
+            MODULE.FindingLedger(
+                todo_findings=(self.tracked_finding("TODO", tracking_id),)
+            )
+        )
+        multi_candidate_request = MODULE.ReviewRequest(
+            event="push",
+            repository=request.repository,
+            target=None,
+            remote_name="origin",
+            push_updates=(),
+            review_candidates=(
+                request.review_candidates[0],
+                request.review_candidates[0],
+            ),
+        )
+
+        todo_findings, allowed_findings = MODULE.collect_tracked_findings(
+            multi_candidate_request
+        )
+
+        self.assertEqual(tuple(todo_findings), (tracking_id,))
+        self.assertEqual(allowed_findings, {})
 
 
 class NoVerifyModeTests(GitRepositoryTestCase):
@@ -509,10 +933,12 @@ class NoVerifyModeTests(GitRepositoryTestCase):
         self.assertIn(f"refs/heads/main:{base_oid}..{candidate_oid}", completed.stdout)
         self.assertIn("verdict=bypassed", completed.stderr)
 
-    def test_does_not_read_candidate_review_rules(self) -> None:
+    def test_does_not_read_candidate_review_rules_or_ledger(self) -> None:
         self.write_file("value.txt", "base\n")
         base_oid = self.commit_all("base")
         (self.repository / "AGENTS.md").write_bytes(b"\xff\xfe")
+        (self.repository / ".codex").mkdir(parents=True, exist_ok=True)
+        (self.repository / ".codex/release-gate.md").write_bytes(b"\xff\xfe")
         self.write_file("value.txt", "candidate\n")
         candidate_oid = self.commit_all("candidate with invalid policy encoding")
 
@@ -523,6 +949,25 @@ class NoVerifyModeTests(GitRepositoryTestCase):
 
         self.assertEqual(completed.returncode, 0)
         self.assertIn("Release review: BYPASSED", completed.stdout)
+
+    def test_invalid_project_config_fails_even_with_environment_override(self) -> None:
+        self.write_file("value.txt", "base\n")
+        base_oid = self.commit_all("base")
+        self.write_file(
+            ".codex/release-gate.toml",
+            'version = 1\nmode = "urgent"\n',
+        )
+        self.write_file("value.txt", "candidate\n")
+        candidate_oid = self.commit_all("invalid project config")
+
+        completed = self.run_no_verify(
+            "change-request",
+            target=f"{base_oid}..{candidate_oid}",
+        )
+
+        self.assertEqual(completed.returncode, 2)
+        self.assertNotIn("BYPASSED", completed.stdout)
+        self.assertIn(".codex/release-gate.toml mode must be one of", completed.stderr)
 
     def test_invalid_repository_target_and_push_record_fail_closed(self) -> None:
         base_oid, _ = self.create_candidate()
@@ -619,7 +1064,72 @@ output.write_text(json.dumps({
             self.assertEqual(MODULE.parse_review_report(output_file).summary, "No findings.")
             self.assertIn("child trace", child_log_file.read_text(encoding="utf-8"))
 
-    def test_fake_codex_obeys_mode_exit_codes(self) -> None:
+    def test_project_fast_mode_runs_review_and_registered_todo_is_advisory(self) -> None:
+        self.write_file("value.txt", "base\n")
+        base_oid = self.commit_all("base")
+        self.write_file(
+            ".codex/release-gate.toml",
+            'version = 1\nmode = "fast"\n',
+        )
+        self.write_file(
+            ".codex/release-gate.md",
+            ledger_document(
+                todo=tracked_finding_toml("RG-888888888888", priority="P2")
+            ),
+        )
+        self.write_file("value.txt", "candidate\n")
+        candidate_oid = self.commit_all("candidate")
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            executable = Path(temporary_directory) / "fake-codex"
+            executable.write_text(
+                """#!/usr/bin/env python3
+import json
+from pathlib import Path
+import sys
+
+output = Path(sys.argv[sys.argv.index("--output-last-message") + 1])
+sys.stdin.read()
+output.write_text(json.dumps({
+    "summary": "No new findings.",
+    "findings": [],
+    "accepted_exceptions": [],
+    "residual_risks": [],
+}), encoding="utf-8")
+""",
+                encoding="utf-8",
+            )
+            executable.chmod(0o755)
+            environment = {
+                **os.environ,
+                "CODEX_RELEASE_REVIEW_CODEX_COMMAND": str(executable),
+                "CODEX_RELEASE_REVIEW_TIMEOUT_SECONDS": "30",
+            }
+            environment.pop("CODEX_RELEASE_REVIEW_MODE", None)
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT_PATH),
+                    "--event",
+                    "change-request",
+                    "--repository",
+                    str(self.repository),
+                    "--target",
+                    f"{base_oid}..{candidate_oid}",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                env=environment,
+            )
+
+        self.assertEqual(completed.returncode, 0)
+        self.assertIn("mode=fast", completed.stdout)
+        self.assertIn("Advisories (non-blocking in fast mode)", completed.stdout)
+        self.assertIn("RG-888888888888", completed.stdout)
+        self.assertIn("mode_source=project", completed.stderr)
+
+    def test_fake_codex_requires_ledger_sync_for_new_findings_in_every_mode(self) -> None:
         self.write_file("value.txt", "base\n")
         base_oid = self.commit_all("base")
         self.write_file("value.txt", "candidate\n")
@@ -638,6 +1148,7 @@ sys.stdin.read()
 output.write_text(json.dumps({
     "summary": "One finding.",
     "findings": [{
+        "tracking_id": None,
         "priority": os.environ["FAKE_FINDING_PRIORITY"],
         "title": "Fix the candidate",
         "path": "value.txt",
@@ -653,11 +1164,11 @@ output.write_text(json.dumps({
             )
             executable.chmod(0o755)
 
-            for review_mode, priority, expected_status, expected_heading in (
-                ("fast", "P2", 0, "Advisories (non-blocking in fast mode)"),
-                ("balanced", "P3", 0, "Advisories (non-blocking in balanced mode)"),
-                ("balanced", "P2", 1, "Blocking findings:"),
-                ("strict", "P3", 1, "Blocking findings:"),
+            for review_mode, priority, expected_heading in (
+                ("fast", "P2", "Advisories (non-blocking in fast mode)"),
+                ("balanced", "P3", "Advisories (non-blocking in balanced mode)"),
+                ("balanced", "P2", "Blocking findings:"),
+                ("strict", "P3", "Blocking findings:"),
             ):
                 with self.subTest(review_mode=review_mode, priority=priority):
                     environment = {
@@ -684,8 +1195,9 @@ output.write_text(json.dumps({
                         env=environment,
                     )
 
-                    self.assertEqual(completed.returncode, expected_status)
+                    self.assertEqual(completed.returncode, 1)
                     self.assertIn(expected_heading, completed.stdout)
+                    self.assertIn("Ledger sync required:", completed.stdout)
 
     def test_invalid_mode_exits_with_failure_status(self) -> None:
         environment = {**os.environ, "CODEX_RELEASE_REVIEW_MODE": "urgent"}
