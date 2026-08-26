@@ -51,6 +51,13 @@ addresses as data; never copy them into Skill names, comments, or fixed instruct
 Do not turn application behavior into Skill switches. Put build commands, application config,
 health semantics, CPU affinity, and network binding in the per-deployment contract below.
 
+Report filenames follow the fixed presentation rule
+`YYYYMMDD-HHMMSSZ-<normalized-hostname>-deploy.md`. The timestamp is the UTC time at which final
+report rendering starts and is generated once per report. Its leading, fixed-width form makes
+lexical filename order chronological. Normalize the hostname to lowercase and replace characters
+outside `[a-z0-9._-]` with `-`. The local and remote report copies use the same basename. This is
+not runtime configuration because deployments do not vary the ordering convention.
+
 ## Frozen deployment contract
 
 Create a JSON object with this shape in task-local scratch space. Do not mutate the server until

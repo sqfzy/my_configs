@@ -7,7 +7,7 @@ description: Analyze a Git branch's committed changes, apply the repository's ow
 
 ## Goal
 
-Create an auditable GitHub pull request or GitLab merge request from already committed work, using an English Conventional Commits title and a Chinese body. Treat the repository's template as the primary document contract, derive claims from evidence, require validation and an independent release review to pass before remote writes, and update an existing open change request instead of creating a duplicate.
+Create an auditable GitHub pull request or GitLab merge request from already committed work, using an English Conventional Commits title and a Chinese body. Treat the repository's template as the primary document contract, derive claims from evidence, require validation before remote writes and an independent release review before provider mutation, and update an existing open change request instead of creating a duplicate.
 
 Do not stage, commit, amend, rebase, merge, reset, checkout another branch, or force-push.
 
@@ -42,7 +42,7 @@ Keep these policies fixed:
 - Write titles in English Conventional Commits format and bodies in Chinese; preserve commands, paths, identifiers, and quoted source text as-is.
 - Analyze committed changes only and require a completely clean worktree.
 - Stop when validation fails, times out, cannot start, or cannot be discovered reliably.
-- Use `$release-gate` for a fresh read-only review immediately before creating or updating a change request. Never reuse the push review verdict.
+- Use `$release-gate` immediately before creating or updating a change request. Propagate the current release task's explicitly selected review mode to push and change-request gates; otherwise use the default `no-verify`. Never reuse a push verdict or bypass as a substitute for the change-request gate.
 - Create new change requests ready for review. Preserve Draft/Ready state when updating an existing request.
 - Include full active non-loopback IP addresses when `include_ip_addresses` is `true`.
 
@@ -203,9 +203,9 @@ For `submission_mode=dry-run`, do not push and do not call GitHub or GitLab read
 
 For `submission_mode=ready`, continue only after preflight, template resolution, evidence collection, and validation pass:
 
-1. Check the remote head. Push only the current `HEAD` with a normal fast-forward push; set upstream when the remote branch does not exist.
+1. Check the remote head. Push only the current `HEAD` with a normal fast-forward push; set upstream when the remote branch does not exist. If the user explicitly requests `--no-verify` for this push, follow `$release-gate`'s single-use push-bypass contract.
 2. Stop on non-fast-forward rejection. Never rewrite commits or force-push.
-3. Invoke `$release-gate` with `event=change-request` and the exact `merge_base..HEAD` range. This must start a new ephemeral read-only reviewer even though the push had its own review. Stop on findings, timeout, execution failure, or an invalid verdict.
+3. Invoke `$release-gate` with `event=change-request`, the current task's review-mode environment, and the exact `merge_base..HEAD` range, then follow its verdict or explicit bypass contract without substituting an earlier push result.
 4. Reconfirm that `HEAD` and the remote source branch still equal the reviewed commit. Rerun the gate if either changed.
 5. Find open change requests whose source and target exactly match. Stop on more than one exact match.
 6. Update the one exact match without changing its Draft/Ready state, or create a new ready-for-review request when none exists.
@@ -225,6 +225,6 @@ Do not wait for newly triggered CI. Report CI as pending unless a status for the
 
 ### 10. Report the outcome
 
-Return provider and repository, `base <- head`, analyzed range/count, selected template, tests and total duration, release-review target/verdict/duration, push state, created/updated/rendered state, PR/MR URL and number, CI state, and remaining unknown facts.
+Return provider and repository, `base <- head`, analyzed range/count, selected template, tests and total duration, release-review mode/target/verdict/bypass/advisories/duration, push state distinguishing task-mode bypass from native Git `--no-verify`, created/updated/rendered state, PR/MR URL and number, CI state, and remaining unknown facts.
 
 If push succeeds but creation or update fails, state the partial result and corrective next step. Never claim atomic rollback of a successful push.

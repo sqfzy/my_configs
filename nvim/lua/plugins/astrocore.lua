@@ -67,7 +67,8 @@ return {
         number = true, -- sets vim.opt.number
         spell = false, -- sets vim.opt.spell
         signcolumn = "yes", -- sets vim.opt.signcolumn to yes
-        wrap = false, -- sets vim.opt.wrap
+        wrap = true, -- Long lines wrap visually without changing file contents.
+        linebreak = true, -- Prefer wrapping at word boundaries when possible.
         cmdheight = 0,
         mouse = "a",
         cursorline = false,

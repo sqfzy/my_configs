@@ -83,15 +83,11 @@ not defensible.
 ## Pass the independent release review
 
 Before any remote mutation, invoke `$release-gate` separately for every repository in the frozen
-deployment contract. Use `event=deploy` and review the exact range from the commit currently
-deployed to the frozen target commit. For a new deployment with no current commit, compare the
-frozen target with the fetched remote default branch's merge base.
-
-Require a fresh ephemeral read-only reviewer for this deployment even when the same commit passed
-a push or PR/MR review. Stop on every actionable finding, timeout, execution failure, invalid
-verdict, ambiguous range, or unavailable object. Record the repository, exact range, verdict, and
-elapsed time in the deployment evidence. If the frozen target or deployment contract changes,
-rerun the review before continuing.
+deployment contract with `event=deploy`, the current release task's explicitly selected review
+mode, or default `no-verify`, and the exact current-to-frozen range. Follow the
+skill's target-selection, verdict, bypass, advisory, failure, and rerun contracts. Record the
+repository, mode, exact range, verdict or bypass, advisories, and elapsed time in the deployment
+evidence.
 
 ## Establish monitoring before application mutation
 
@@ -225,8 +221,14 @@ python3 <skill-root>/scripts/render_report.py \
   --outputs <scratch>/final-outputs.json \
   --alertd-delivery <scratch>/alertd-delivery.json \
   --status <succeeded|failed|rolled_back> \
-  --output <local-report>.md
+  --output <local-report-dir>/<YYYYMMDD-HHMMSSZ>-<hostname>-deploy.md
 ```
+
+Generate the UTC timestamp once when final report rendering starts. Put it at the beginning of the
+filename using `YYYYMMDD-HHMMSSZ` so ordinary lexical filename sorting is chronological. Normalize
+the hostname to lowercase ASCII letters, digits, dots, underscores, and hyphens, replacing other
+characters with `-`. Use this exact basename for both the local and server report copies; do not
+append the date or timestamp after the hostname.
 
 Also export the versioned, redacted context consumed optionally by `$test-report`:
 
@@ -271,11 +273,11 @@ while declared, failed, unready, or otherwise anomalous SHM remains in key detai
 aggregate of persistent filesystem capacity in the machine section, not individual devices,
 filesystem types, or mount paths.
 
-Copy the completed report to the configured server report directory through strict SSH. Upload to
-a temporary name, set controlled ownership/mode, and atomically rename it. Preserve failed and
-rolled-back reports as audit evidence. Upload the redacted deployment evidence through the same
-atomic path when it was produced. Return the terminal summary, local Markdown file, and evidence
-file.
+Copy the completed report to the configured server report directory through strict SSH, preserving
+the date-prefixed basename. Upload to a temporary name, set controlled ownership/mode, and
+atomically rename it. Preserve failed and rolled-back reports as audit evidence. Upload the
+redacted deployment evidence through the same atomic path when it was produced. Return the
+terminal summary, local Markdown file, and evidence file.
 
 Do not estimate disk growth. Do not claim database rollback, DPDK/raw-socket attribution, CPU
 pinning, or network ownership without evidence.

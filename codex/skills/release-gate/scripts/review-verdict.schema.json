@@ -2,12 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": ["verdict", "summary", "findings", "residual_risks"],
+  "required": ["summary", "findings", "accepted_exceptions", "residual_risks"],
   "properties": {
-    "verdict": {
-      "type": "string",
-      "enum": ["pass", "block"]
-    },
     "summary": {
       "type": "string"
     },
@@ -16,13 +12,40 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["priority", "title", "path", "line", "explanation"],
+        "required": ["priority", "title", "path", "line", "explanation", "rule_source"],
         "properties": {
           "priority": {
             "type": "string",
+            "description": "Severity assigned under the fixed, mode-independent Release Gate priority contract.",
             "enum": ["P0", "P1", "P2", "P3"]
           },
           "title": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "line": {
+            "type": ["integer", "null"],
+            "minimum": 1
+          },
+          "explanation": {
+            "type": "string"
+          },
+          "rule_source": {
+            "type": ["string", "null"]
+          }
+        }
+      }
+    },
+    "accepted_exceptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["rule_source", "path", "line", "explanation"],
+        "properties": {
+          "rule_source": {
             "type": "string"
           },
           "path": {
