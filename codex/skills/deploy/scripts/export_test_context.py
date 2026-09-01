@@ -14,7 +14,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-
 LOG = logging.getLogger("deploy.export_test_context")
 SENSITIVE_NAME = re.compile(
     r"(?i)(password|passwd|secret|token|api[_-]?key|private[_-]?key|credential|authorization)"
@@ -101,6 +100,25 @@ def sanitize_key_config(values: Any) -> list[dict[str, Any]]:
     return result
 
 
+def configuration_context(contract: dict[str, Any]) -> list[dict[str, Any]]:
+    if contract.get("schema_version") != 4:
+        return sanitize_key_config(contract.get("key_config", []))
+    result = []
+    for item in contract.get("configurations", []):
+        if not isinstance(item, dict):
+            continue
+        result.append(
+            {
+                "name": str(item.get("package_path", "")),
+                "source": redact_text(
+                    str(item.get("source_path") or item.get("capture", "generated"))
+                ),
+                "value": "<stored in deployment bundle>",
+            }
+        )
+    return result
+
+
 def file_sha256(path: Path | None) -> str | None:
     if path is None or not path.expanduser().is_file():
         return None
@@ -112,8 +130,8 @@ def file_sha256(path: Path | None) -> str | None:
 
 
 def validate_inputs(contract: dict[str, Any], before: dict[str, Any]) -> None:
-    if contract.get("schema_version") not in {1, 2, 3}:
-        raise ValueError("deployment contract schema_version must be 1, 2, or 3")
+    if contract.get("schema_version") not in {1, 2, 3, 4}:
+        raise ValueError("deployment contract schema_version must be 1, 2, 3, or 4")
     if before.get("schema_version") != 1:
         raise ValueError("host snapshot schema_version must be 1")
     if not isinstance(contract.get("repositories"), list) or not contract["repositories"]:
@@ -210,7 +228,7 @@ def build_evidence(
             "artifacts": artifacts(contract),
         },
         "environment": environment(current),
-        "key_config": sanitize_key_config(contract.get("key_config", [])),
+        "key_config": configuration_context(contract),
         "runtime": {
             "health": health_summary(gate),
             "program_outputs": outputs_summary(outputs),

@@ -1,29 +1,21 @@
 #!/usr/bin/env python3
-"""Render a redacted deployment report from frozen contract and snapshots."""
+"""Render a complete trusted deployment report from contract and snapshots."""
 
 from __future__ import annotations
 
 import argparse
 import datetime as dt
+import html
 import json
 import logging
 import os
 import re
+import shlex
 import sys
 from pathlib import Path
 from typing import Any
 
 LOG = logging.getLogger("deploy.render_report")
-SENSITIVE_NAME = re.compile(
-    r"(?i)(password|passwd|secret|token|api[_-]?key|private[_-]?key|credential|authorization)"
-)
-SENSITIVE_ARGUMENT = re.compile(
-    r"(?i)(--?(?:password|passwd|secret|token|api[_-]?key|private[_-]?key|credential|authorization)(?:=|\s+))([^\s,;]+)"
-)
-SENSITIVE_ASSIGNMENT = re.compile(
-    r"(?i)(\b(?:password|passwd|secret|token|api[_-]?key|private[_-]?key|credential|authorization)=)([^\s,;]+)"
-)
-URI_USERINFO = re.compile(r"([a-z][a-z0-9+.-]*://)[^/@\s]+@", re.IGNORECASE)
 PLACEHOLDER = re.compile(r"\{\{([a-z_]+)}}")
 VIRTUAL_FILESYSTEMS = {
     "autofs",
@@ -73,6 +65,15 @@ OUTPUT_CATEGORY_LABELS = {
     "other": "其他",
 }
 OUTPUT_CATEGORY_ORDER = tuple(OUTPUT_CATEGORY_LABELS)
+CONFIGURATION_KINDS = {
+    "application_config",
+    "environment",
+    "credential",
+    "systemd",
+    "script",
+    "runtime",
+}
+CONFIGURATION_CAPTURES = {"file", "generated"}
 REPRESENTATIVE_CATEGORY_ORDER = (
     "hugepage",
     "dpdk",
@@ -119,18 +120,19 @@ def load_json(path: Path | None, required: bool = True) -> dict[str, Any]:
 
 def validate_contract(contract: dict[str, Any]) -> None:
     schema_version = contract.get("schema_version")
-    if schema_version not in {1, 2, 3}:
-        raise ValueError("contract schema_version must be 1, 2, or 3")
+    if schema_version not in {1, 2, 3, 4}:
+        raise ValueError("contract schema_version must be 1, 2, 3, or 4")
     if schema_version in {1, 2} and contract.get("mode") not in {"interactive", "auto"}:
         raise ValueError("historical contract mode must be interactive or auto")
-    if schema_version == 3 and "mode" in contract:
-        raise ValueError("contract schema_version 3 must not contain mode")
+    if schema_version in {3, 4} and "mode" in contract:
+        raise ValueError("contract schema_version 3 or 4 must not contain mode")
     required_objects = ["target", "deployment", "health"]
     for name in required_objects:
         if not isinstance(contract.get(name), dict):
             raise ValueError(f"contract {name} must be an object")
-    required_lists = ["repositories", "changes", "key_config", "reproduce", "rollback", "irreversible_changes"]
-    if schema_version in {2, 3}:
+    required_lists = ["repositories", "changes", "reproduce", "rollback", "irreversible_changes"]
+    required_lists.append("configurations" if schema_version == 4 else "key_config")
+    if schema_version in {2, 3, 4}:
         required_lists.append("program_outputs")
     for name in required_lists:
         if not isinstance(contract.get(name), list):
@@ -138,7 +140,7 @@ def validate_contract(contract: dict[str, Any]) -> None:
     if not contract["repositories"]:
         raise ValueError("contract needs at least one repository")
     legacy_auto = schema_version in {1, 2} and contract.get("mode") == "auto"
-    if (schema_version == 3 or legacy_auto) and contract["irreversible_changes"]:
+    if (schema_version in {3, 4} or legacy_auto) and contract["irreversible_changes"]:
         raise ValueError("automatic contract cannot contain irreversible changes")
     for repository in contract["repositories"]:
         commit = str(repository.get("commit", ""))
@@ -161,15 +163,99 @@ def validate_contract(contract: dict[str, Any]) -> None:
         }
         if units - covered:
             raise ValueError(f"program_outputs does not cover units: {', '.join(sorted(units - covered))}")
+    if schema_version == 4:
+        validate_configurations(contract)
 
 
-def redact_scalar(name: str, value: Any) -> str:
-    if SENSITIVE_NAME.search(name):
-        return "<redacted>"
-    text = str(value)
-    text = URI_USERINFO.sub(r"\1<redacted>@", text)
-    text = SENSITIVE_ARGUMENT.sub(lambda match: f"{match.group(1)}<redacted>", text)
-    return SENSITIVE_ASSIGNMENT.sub(lambda match: f"{match.group(1)}<redacted>", text)
+def validate_configurations(contract: dict[str, Any]) -> None:
+    units = {str(unit) for unit in contract["deployment"].get("service_units", [])}
+    units.add("alertd.service")
+    package_paths: set[str] = set()
+    systemd_units: set[str] = set()
+    for index, configuration in enumerate(contract["configurations"]):
+        validate_configuration(index, configuration, units, package_paths)
+        if configuration["kind"] == "systemd":
+            systemd_units.add(str(configuration["service"]))
+    missing = sorted(units - systemd_units)
+    if missing:
+        raise ValueError(
+            f"configurations does not include systemd files for: {', '.join(missing)}"
+        )
+
+
+def validate_configuration(
+    index: int,
+    configuration: Any,
+    units: set[str],
+    package_paths: set[str],
+) -> None:
+    if not isinstance(configuration, dict):
+        raise ValueError(f"configurations[{index}] must be an object")
+    service = str(configuration.get("service", ""))
+    if service not in units and service != "deployment":
+        raise ValueError(f"configurations[{index}] has an unknown service")
+    if configuration.get("kind") not in CONFIGURATION_KINDS:
+        raise ValueError(f"configurations[{index}] has an invalid kind")
+    if configuration.get("capture") not in CONFIGURATION_CAPTURES:
+        raise ValueError(f"configurations[{index}] has an invalid capture")
+    if not str(configuration.get("purpose", "")).strip():
+        raise ValueError(f"configurations[{index}] needs a purpose")
+    if not isinstance(configuration.get("required"), bool):
+        raise ValueError(f"configurations[{index}] required must be boolean")
+    package_path = validate_package_path(index, configuration, package_paths)
+    validate_configuration_source(index, configuration, package_path)
+
+
+def validate_package_path(
+    index: int, configuration: dict[str, Any], package_paths: set[str]
+) -> str:
+    package_path = str(configuration.get("package_path", ""))
+    path = Path(package_path)
+    if (
+        not package_path
+        or path.is_absolute()
+        or any(part in {"", ".", ".."} for part in path.parts)
+        or any(ord(character) < 32 for character in package_path)
+    ):
+        raise ValueError(f"configurations[{index}] package_path must be a safe relative path")
+    expected_root = {
+        "systemd": "systemd",
+        "script": "scripts",
+    }.get(str(configuration["kind"]), "config")
+    if path.parts[0] != expected_root:
+        raise ValueError(f"configurations[{index}] package_path must start with {expected_root}/")
+    if package_path in package_paths:
+        raise ValueError(f"duplicate configuration package_path: {package_path}")
+    package_paths.add(package_path)
+    return package_path
+
+
+def validate_configuration_source(
+    index: int, configuration: dict[str, Any], package_path: str
+) -> None:
+    capture = configuration["capture"]
+    source_path = configuration.get("source_path")
+    content = configuration.get("content")
+    if configuration["kind"] == "systemd" and capture != "file":
+        raise ValueError(f"configurations[{index}] systemd entry must capture a file")
+    if capture == "file":
+        if (
+            not isinstance(source_path, str)
+            or not source_path.startswith("/")
+            or any(ord(character) < 32 for character in source_path)
+        ):
+            raise ValueError(f"configurations[{index}] file capture needs an absolute source_path")
+        if content is not None:
+            raise ValueError(f"configurations[{index}] file capture must not contain content")
+        return
+    if source_path is not None or not isinstance(content, dict):
+        raise ValueError(f"configurations[{index}] generated capture needs object content only")
+    if not package_path.endswith(".json"):
+        raise ValueError(f"configurations[{index}] generated capture must use a .json file")
+    try:
+        json.dumps(content, ensure_ascii=False)
+    except (TypeError, ValueError) as error:
+        raise ValueError(f"configurations[{index}] content must be JSON-serializable") from error
 
 
 def markdown(value: Any) -> str:
@@ -285,38 +371,60 @@ def render_network(snapshot: dict[str, Any]) -> str:
     result += "\n\n### AWS ENI\n\n"
     result += table(["设备序号", "ENI", "MAC", "内核接口", "私网 IP", "公网 IP", "子网"], eni_rows)
     result += "\n\n" + table(["目的", "网关", "网卡", "Metric"], route_rows)
-    service_rows: list[list[Any]] = []
+    attributions_by_interface: dict[str, list[tuple[str, str, str]]] = {}
+    unattributed_services: list[str] = []
     for service in snapshot.get("services", []):
         attributions = service.get("network_interfaces", [])
         if not attributions:
-            service_rows.append([service["unit"], "unknown", "unknown", "无可验证的内核 socket 或显式绑定"])
+            unattributed_services.append(service["unit"])
         for attribution in attributions:
-            service_rows.append(
-                [service["unit"], attribution["interface"], attribution["evidence"], attribution["basis"]]
+            attributions_by_interface.setdefault(
+                str(attribution["interface"]), []
+            ).append(
+                (
+                    str(service["unit"]),
+                    str(attribution["evidence"]),
+                    str(attribution["basis"]),
+                )
             )
+    interface_names = [str(link.get("ifname", "unknown")) for link in network.get("links", [])]
+    interface_names.extend(
+        sorted(set(attributions_by_interface) - set(interface_names))
+    )
+    service_rows: list[list[Any]] = []
+    for interface in interface_names:
+        attributions = sorted(attributions_by_interface.get(interface, []))
+        service_rows.append(
+            [
+                interface,
+                "<br>".join(unit for unit, _, _ in attributions) or "—",
+                "<br>".join(evidence for _, evidence, _ in attributions) or "—",
+                "<br>".join(f"{unit}: {basis}" for unit, _, basis in attributions) or "—",
+            ]
+        )
+    if unattributed_services:
+        service_rows.append(
+            [
+                "unknown",
+                "<br>".join(sorted(unattributed_services)),
+                "unknown",
+                "无可验证的内核 socket、显式绑定或启动参数证据",
+            ]
+        )
     result += "\n\n### 业务服务网卡归属\n\n"
-    result += table(["服务", "网卡", "证据", "依据"], service_rows)
+    result += table(["网卡", "服务", "证据", "依据"], service_rows)
     return result
 
 
 def render_cpu(snapshot: dict[str, Any]) -> str:
     topology = snapshot.get("cpu", {}).get("topology", [])
     services = snapshot.get("services", [])
-    all_cpus = [row.get("cpu") for row in topology if row.get("cpu") is not None]
     rows: list[list[Any]] = []
     covered_units: set[str] = set()
     for cpu in topology:
         cpu_id = cpu.get("cpu")
-        eligible: list[str] = []
         observed: list[str] = []
         for service in services:
-            allowed = service.get("configured_cpu_affinity") or service.get("effective_allowed_cpus")
-            if not allowed and service.get("pids"):
-                allowed = all_cpus
-            if cpu_id in allowed:
-                evidence = "configured" if service.get("configured_cpu_affinity") else "observed-effective"
-                eligible.append(f"{service['unit']} ({evidence})")
-                covered_units.add(service["unit"])
             if cpu_id in service.get("observed_cpus", []):
                 observed.append(service["unit"])
                 covered_units.add(service["unit"])
@@ -326,7 +434,6 @@ def render_cpu(snapshot: dict[str, Any]) -> str:
                 cpu.get("socket", "—"),
                 cpu.get("core", "—"),
                 cpu.get("node", "—"),
-                "<br>".join(eligible) or "—",
                 "<br>".join(observed) or "—",
             ]
         )
@@ -334,8 +441,8 @@ def render_cpu(snapshot: dict[str, Any]) -> str:
         f"{service['unit']} ({service.get('active_state', 'unknown')}/{service.get('sub_state', 'unknown')})"
         for service in services if service["unit"] not in covered_units
     ]
-    rows.append(["未运行/不适用", "—", "—", "—", "<br>".join(inactive) or "—", "—"])
-    return table(["CPU", "Socket", "Core", "NUMA", "允许/配置服务", "采样实际服务"], rows)
+    rows.append(["未运行/不适用", "—", "—", "—", "<br>".join(inactive) or "—"])
+    return table(["CPU", "Socket", "Core", "NUMA", "服务"], rows)
 
 
 def flatten_filesystems(filesystems: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -425,7 +532,7 @@ def render_repositories(contract: dict[str, Any]) -> str:
         rows.append(
             [
                 repository.get("role", "application"),
-                redact_scalar("url", repository.get("url", "")),
+                repository.get("url", ""),
                 repository.get("target", ""),
                 repository.get("commit", ""),
                 repository.get("builder_image_digest", "—"),
@@ -435,17 +542,60 @@ def render_repositories(contract: dict[str, Any]) -> str:
     return table(["角色", "仓库", "Target", "Commit", "构建镜像", "制品 SHA-256"], rows)
 
 
-def render_key_config(contract: dict[str, Any]) -> str:
+def render_key_config(
+    contract: dict[str, Any],
+    delivery_evidence: dict[str, Any],
+    configuration_entries: list[dict[str, Any]] | None = None,
+) -> str:
+    if contract.get("schema_version") == 4:
+        return render_configuration_index(configuration_entries or [])
     rows = [
-        [item.get("name", ""), item.get("source", ""), redact_scalar(str(item.get("name", "")), item.get("value", ""))]
+        [
+            item.get("name", ""),
+            item.get("source", ""),
+            render_key_config_value(item.get("value", "")),
+        ]
         for item in contract.get("key_config", [])
     ]
+    rows.extend(render_alertd_key_config(delivery_evidence))
     return table(["配置", "来源", "最终生效值"], rows)
 
 
+def render_configuration_index(entries: list[dict[str, Any]]) -> str:
+    if not entries:
+        return "配置资料包索引未提供。"
+    rows = []
+    for entry in entries:
+        package_path = str(entry.get("package_path", ""))
+        file_reference = (
+            f"[{package_path}](<{package_path}>)"
+            if entry.get("status") == "captured"
+            else f"{package_path}（未采集）"
+        )
+        rows.append(
+            [
+                entry.get("service", "unknown"),
+                entry.get("kind", "unknown"),
+                entry.get("purpose", "unknown"),
+                file_reference,
+                entry.get("source_path") or entry.get("source_description", "generated"),
+                entry.get("sha256") or "unavailable",
+            ]
+        )
+    return table(["服务", "类型", "用途", "资料包文件", "服务器来源", "SHA-256"], rows)
+
+
+def render_key_config_value(value: Any) -> str:
+    text = str(value)
+    if "\n" not in text:
+        return text
+    return f"<pre>{html.escape(text)}</pre>"
+
+
 def validate_alertd_delivery(evidence: dict[str, Any]) -> None:
-    if evidence.get("schema_version") != 1:
-        raise ValueError("alertd delivery evidence schema_version must be 1")
+    schema_version = evidence.get("schema_version")
+    if schema_version not in {1, 2}:
+        raise ValueError("alertd delivery evidence schema_version must be 1 or 2")
     if evidence.get("provider") != "dingtalk":
         raise ValueError("alertd delivery evidence provider must be dingtalk")
     if evidence.get("endpoint") != "https://oapi.dingtalk.com/robot/send":
@@ -457,6 +607,12 @@ def validate_alertd_delivery(evidence: dict[str, Any]) -> None:
     secret_present = evidence.get("signing_secret_present")
     if secret_present is not None and not isinstance(secret_present, bool):
         raise ValueError("alertd delivery signing_secret_present must be boolean or null")
+    if schema_version == 2:
+        signing_secret = evidence.get("signing_secret")
+        if signing_secret is not None and not isinstance(signing_secret, str):
+            raise ValueError("alertd delivery signing_secret must be a string or null")
+        if secret_present is not None and secret_present != bool(signing_secret):
+            raise ValueError("alertd delivery signing secret value does not match presence")
     verified = evidence.get("verified")
     if not isinstance(verified, bool) or verified != (evidence["status"] == "verified"):
         raise ValueError("alertd delivery verified flag does not match status")
@@ -467,35 +623,30 @@ def validate_alertd_delivery(evidence: dict[str, Any]) -> None:
             raise ValueError("verified alertd delivery evidence has an invalid webhook URL")
 
 
-def render_alertd_delivery(evidence: dict[str, Any]) -> str:
+def render_alertd_key_config(evidence: dict[str, Any]) -> list[list[Any]]:
     if not evidence:
-        return "未记录（历史简报或投递证据未提供）。"
+        return [
+            ["Alertd Webhook URL", "Alertd 运行时环境", "无法确认（投递证据未提供）"],
+            ["Alertd Signing Secret", "Alertd 运行时环境", "无法确认（投递证据未提供）"],
+        ]
     validate_alertd_delivery(evidence)
     verified = bool(evidence.get("verified"))
     webhook_url = evidence.get("webhook_url") if verified else "无法确认"
-    secret_status = {
-        True: "已配置（值未记录）",
-        False: "缺失或为空",
-        None: "无法确认",
-    }[evidence.get("signing_secret_present")]
-    warnings = evidence.get("warnings", [])
-    rows = [
-        ["平台", "钉钉机器人"],
-        ["静态 Endpoint", evidence.get("endpoint", "unknown")],
-        ["完整 Webhook URL", webhook_url],
-        ["Token 环境变量", evidence.get("token_env", "unknown")],
-        ["Signing Secret 环境变量", evidence.get("secret_env", "unknown")],
-        ["EnvironmentFile", ", ".join(str(value) for value in evidence["environment_files"]) or "unknown"],
-        ["Signing Secret", secret_status],
-        ["Alertd Commit", evidence.get("alertd_commit", "unknown")],
-        ["采集状态", "已确认" if verified else "无法确认"],
-        ["采集时间", evidence.get("checked_at", "unknown")],
+    signing_secret = evidence.get("signing_secret")
+    if evidence.get("schema_version") == 1:
+        signing_secret = "无法确认（历史 evidence 未记录原值）"
+    elif not signing_secret:
+        signing_secret = "无法确认（缺失或为空）"
+    environment_files = ", ".join(
+        str(value) for value in evidence["environment_files"]
+    ) or "unknown"
+    return [
+        ["Alertd Webhook URL", f"进程环境 {evidence.get('token_env', 'unknown')}", webhook_url],
+        ["Alertd Signing Secret", f"进程环境 {evidence.get('secret_env', 'unknown')}", signing_secret],
+        ["Alertd EnvironmentFile", "systemd EnvironmentFiles", environment_files],
+        ["Alertd Commit", "运行中 release", evidence.get("alertd_commit", "unknown")],
+        ["Alertd 投递采集状态", evidence.get("checked_at", "unknown"), "已确认" if verified else "无法确认"],
     ]
-    result = table(["字段", "值"], rows)
-    result += "\n\n> `timestamp` 与 `sign` 由 alertd 每次发送时动态生成，不属于静态 webhook URL。"
-    if warnings:
-        result += "\n\n" + "\n".join(f"- {markdown(value)}" for value in warnings)
-    return result
 
 
 def render_program_outputs(contract: dict[str, Any], output_result: dict[str, Any]) -> str:
@@ -509,7 +660,9 @@ def render_program_outputs(contract: dict[str, Any], output_result: dict[str, An
         summarized_entries: list[dict[str, Any]] = []
         gate_summary = "产出门禁结果未提供。"
     else:
-        declared = output_result.get("declared", [])
+        declared = restore_declared_output_values(
+            contract.get("program_outputs", []), output_result.get("declared", [])
+        )
         discovered = output_result.get("discovered", [])
         key_entries = [*declared, *(entry for entry in discovered if is_key_output(entry))]
         summarized_entries = [entry for entry in discovered if not is_key_output(entry)]
@@ -530,6 +683,20 @@ def render_program_outputs(contract: dict[str, Any], output_result: dict[str, An
     return "\n\n".join(sections)
 
 
+def restore_declared_output_values(
+    configured: list[dict[str, Any]], checked: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    fields = ("path", "locator", "source", "rotation", "retention")
+    restored = []
+    for index, checked_output in enumerate(checked):
+        value = dict(checked_output)
+        if index < len(configured):
+            for field in fields:
+                value[field] = configured[index].get(field)
+        restored.append(value)
+    return restored
+
+
 def is_key_output(entry: dict[str, Any]) -> bool:
     status = str(entry.get("status", "unknown"))
     return bool(
@@ -543,7 +710,15 @@ def is_key_output(entry: dict[str, Any]) -> bool:
 def render_key_output_table(entries: list[dict[str, Any]]) -> str:
     rows = [render_key_output_row(entry) for entry in entries]
     return table(
-        ["服务", "类型 / Sink", "路径 / 查询入口", "来源 / 证据", "必需 / 状态", "大小 / 轮转 / 保留"],
+        [
+            "服务",
+            "类型 / Sink",
+            "路径 / 入口",
+            "查询命令",
+            "来源 / 证据",
+            "必需 / 状态",
+            "大小 / 轮转 / 保留",
+        ],
         rows,
     )
 
@@ -560,8 +735,9 @@ def render_key_output_row(entry: dict[str, Any]) -> list[Any]:
     return [
         entry.get("service", "unknown"),
         f"{entry.get('kind', 'other')} / {entry.get('sink', 'other')}",
-        redact_scalar("output_location", output_location(entry, matches)),
-        f"{redact_scalar('source', entry.get('source', 'unknown'))}<br>{entry.get('evidence', 'unknown')}",
+        output_location(entry, matches),
+        output_query_command(entry, matches),
+        f"{entry.get('source', 'unknown')}<br>{entry.get('evidence', 'unknown')}",
         f"{'是' if entry.get('required') else '否'}<br>{status}",
         render_output_policy(entry, matches, match_count),
     ]
@@ -573,6 +749,32 @@ def output_location(entry: dict[str, Any], matches: list[dict[str, Any]]) -> str
         return str(configured)
     observed = [str(match.get("path")) for match in matches if match.get("path")]
     return observed[0] if observed else "unknown"
+
+
+def output_query_command(entry: dict[str, Any], matches: list[dict[str, Any]]) -> str:
+    locator = str(entry.get("locator") or "").strip()
+    if entry.get("kind") != "log":
+        return locator or "—"
+
+    path = str(entry.get("path") or "").strip()
+    if not path and not locator:
+        path = next(
+            (str(match["path"]) for match in matches if match.get("path")),
+            "",
+        )
+    if path:
+        return f"lnav {shlex.quote(path)}"
+    if locator:
+        return locator if locator_invokes_lnav(locator) else f"{locator} | lnav"
+    return "—"
+
+
+def locator_invokes_lnav(locator: str) -> bool:
+    try:
+        tokens = shlex.split(locator, posix=True)
+    except ValueError:
+        return False
+    return any(Path(token).name == "lnav" for token in tokens)
 
 
 def output_match_count(entry: dict[str, Any], matches: list[dict[str, Any]]) -> int:
@@ -594,8 +796,8 @@ def render_output_policy(
     size = human_bytes(output_size(matches))
     if match_count > 1:
         size = f"{match_count} 个匹配 / {size}"
-    rotation = redact_scalar("rotation", entry.get("rotation", "unknown"))
-    retention = redact_scalar("retention", entry.get("retention", "unknown"))
+    rotation = entry.get("rotation", "unknown")
+    retention = entry.get("retention", "unknown")
     return f"{size}<br>轮转：{rotation}<br>保留：{retention}"
 
 
@@ -683,7 +885,7 @@ def normalize_output_path(path: str, category: str) -> str:
         return "/dev/hugepages/*"
     if category == "dpdk":
         return "/run/dpdk/*"
-    return redact_scalar("output_location", path)
+    return path
 
 
 def unique_representative_paths(candidates: list[tuple[int, str]]) -> list[str]:
@@ -706,8 +908,15 @@ def format_mtime(value: Any) -> str:
 def render_deployment(
     status: str, contract: dict[str, Any], gate: dict[str, Any], output_result: dict[str, Any]
 ) -> str:
+    bundle_rollback = "[scripts/rollback.sh](<scripts/rollback.sh>)"
     rows = [
-        [change.get("action", ""), change.get("path", ""), redact_scalar("rollback", change.get("rollback", ""))]
+        [
+            change.get("action", ""),
+            change.get("path", ""),
+            bundle_rollback
+            if contract.get("schema_version") == 4
+            else change.get("rollback", ""),
+        ]
         for change in contract.get("changes", [])
     ]
     result = f"**最终状态：{status_label(status)}**\n\n"
@@ -764,7 +973,10 @@ def render_gate_issues(title: str, issues: list[Any]) -> str:
 def render_steps(steps: list[Any]) -> str:
     if not steps:
         return "未提供。"
-    return "\n\n".join(f"{index}. `{markdown(redact_scalar('command', step))}`" for index, step in enumerate(steps, 1))
+    return "\n\n".join(
+        f"{index}. <pre><code>{html.escape(str(step))}</code></pre>"
+        for index, step in enumerate(steps, 1)
+    )
 
 
 def table(headers: list[str], rows: list[list[Any]]) -> str:
@@ -791,11 +1003,17 @@ def build_report(
     template: str,
     output_result: dict[str, Any] | None = None,
     delivery_evidence: dict[str, Any] | None = None,
+    configuration_entries: list[dict[str, Any]] | None = None,
 ) -> str:
     output_result = output_result or {}
     delivery_evidence = delivery_evidence or {}
     current = after or before
     title = f"{current.get('machine', {}).get('hostname', 'unknown')} · {status_label(status)}"
+    reproduce = render_steps(contract.get("reproduce", []))
+    rollback = render_steps(contract.get("rollback", []))
+    if contract.get("schema_version") == 4:
+        reproduce = "参见 [scripts/reproduce.sh](<scripts/reproduce.sh>)。"
+        rollback = "参见 [scripts/rollback.sh](<scripts/rollback.sh>)。"
     values = {
         "title": markdown(title),
         "summary": render_summary(status, contract, before, gate),
@@ -804,12 +1022,13 @@ def build_report(
         "cpu_topology": render_cpu(current),
         "capacity": render_capacity(before, after),
         "repositories": render_repositories(contract),
-        "key_config": render_key_config(contract),
-        "alertd_delivery": render_alertd_delivery(delivery_evidence),
+        "configuration": render_key_config(
+            contract, delivery_evidence, configuration_entries
+        ),
         "program_outputs": render_program_outputs(contract, output_result),
         "deployment": render_deployment(status, contract, gate, output_result),
-        "reproduce": render_steps(contract.get("reproduce", [])),
-        "rollback": render_steps(contract.get("rollback", [])),
+        "reproduce": reproduce,
+        "rollback": rollback,
     }
     return render_template(template, values).rstrip() + "\n"
 
@@ -818,8 +1037,19 @@ def write_report(text: str, output: Path) -> None:
     output = output.expanduser().resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary = output.with_name(f".{output.name}.tmp")
-    temporary.write_text(text, encoding="utf-8")
-    os.replace(temporary, output)
+    descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            stream.write(text)
+        os.chmod(temporary, 0o600)
+        os.replace(temporary, output)
+        os.chmod(output, 0o600)
+    except BaseException:
+        try:
+            temporary.unlink()
+        except FileNotFoundError:
+            pass
+        raise
     LOG.info("report written path=%s bytes=%d", output, output.stat().st_size)
 
 

@@ -85,11 +85,14 @@ if [ -r "$environment_path" ]; then
     ' "$environment_path" 2>/dev/null | base64 -w0 || true
 fi
 printf '\n'
-section secret_present
-if [ -r "$environment_path" ] && awk -v RS='\0' -v name="$secret_name" '
-    index($0, name "=") == 1 && length($0) > length(name) + 1 {{ found=1 }}
-    END {{ exit(found ? 0 : 1) }}
-' "$environment_path" 2>/dev/null; then printf 'yes\n'; else printf 'no\n'; fi
+section secret
+if [ -r "$environment_path" ]; then
+    awk -v RS='\0' -v name="$secret_name" '
+        index($0, name "=") == 1 {{ sub(/^[^=]*=/, ""); printf "%s", $0; found=1 }}
+        END {{ if (!found) exit 1 }}
+    ' "$environment_path" 2>/dev/null | base64 -w0 || true
+fi
+printf '\n'
 '''
 
 
@@ -207,13 +210,14 @@ def infer_alertd_commit(snapshot: dict[str, Any]) -> str:
 
 def evidence_base(snapshot: dict[str, Any]) -> dict[str, Any]:
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "provider": "dingtalk",
         "endpoint": WEBHOOK_ENDPOINT,
         "webhook_url": None,
         "token_env": "unknown",
         "secret_env": "unknown",
         "environment_files": [],
+        "signing_secret": None,
         "signing_secret_present": None,
         "alertd_commit": infer_alertd_commit(snapshot),
         "checked_at": dt.datetime.now(dt.timezone.utc).isoformat(),
@@ -239,12 +243,13 @@ def collect_credentials(
     main_pid: int,
     token_env: str,
     secret_env: str,
-) -> tuple[str, bool, float]:
+) -> tuple[str, str, float]:
     sections, duration = run_remote(
         snapshot, known_hosts, credentials_script(main_pid, token_env, secret_env)
     )
     token = decode_base64(sections.get("token", ""))
-    return token, sections.get("secret_present") == "yes", duration
+    secret = decode_base64(sections.get("secret", ""))
+    return token, secret, duration
 
 
 def unit_problem(properties: dict[str, str]) -> str | None:
@@ -273,7 +278,7 @@ def inspect_available_delivery(
         return evidence
     token_env, secret_env = parse_delivery_config(config)
     evidence["token_env"], evidence["secret_env"] = token_env, secret_env
-    token, secret_present, credentials_duration = collect_credentials(
+    token, secret, credentials_duration = collect_credentials(
         snapshot,
         known_hosts,
         integer_or_zero(properties["MainPID"]),
@@ -283,12 +288,13 @@ def inspect_available_delivery(
     evidence["probe_duration_seconds"] = round(
         metadata_duration + credentials_duration, 3
     )
-    evidence["signing_secret_present"] = secret_present
+    evidence["signing_secret"] = secret or None
+    evidence["signing_secret_present"] = bool(secret)
     if not token:
         evidence["warnings"].append(f"environment {token_env} is missing or empty")
         return evidence
     evidence.update(webhook_url=build_webhook_url(token), status="verified", verified=True)
-    if not secret_present:
+    if not secret:
         evidence["warnings"].append(f"environment {secret_env} is missing or empty")
     return evidence
 

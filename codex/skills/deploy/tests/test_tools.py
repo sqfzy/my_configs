@@ -3,12 +3,14 @@
 
 from __future__ import annotations
 
+import argparse
 import base64
 import copy
 import importlib.util
 import json
 import subprocess
 import sys
+import tarfile
 import tempfile
 import time
 import unittest
@@ -36,6 +38,8 @@ check_outputs = load_script("check_outputs")
 inspect_alertd_delivery = load_script("inspect_alertd_delivery")
 export_test_context = load_script("export_test_context")
 render_report = load_script("render_report")
+build_report_bundle = load_script("build_report_bundle")
+publish_report_bundle = load_script("publish_report_bundle")
 
 
 def fixture_snapshot() -> dict[str, Any]:
@@ -235,6 +239,61 @@ def fixture_contract_v3() -> dict[str, Any]:
     return contract
 
 
+def fixture_contract_v4(known_hosts: str = "/tmp/known_hosts") -> dict[str, Any]:
+    contract = copy.deepcopy(fixture_contract_v3())
+    contract["schema_version"] = 4
+    contract["target"]["known_hosts"] = known_hosts
+    contract.pop("key_config")
+    contract["configurations"] = [
+        {
+            "service": "alpha.service",
+            "kind": "systemd",
+            "purpose": "业务服务定义",
+            "capture": "file",
+            "source_path": "/etc/systemd/system/alpha.service",
+            "package_path": "systemd/alpha.service",
+            "content": None,
+            "required": True,
+        },
+        {
+            "service": "alertd.service",
+            "kind": "systemd",
+            "purpose": "告警服务定义",
+            "capture": "file",
+            "source_path": "/etc/systemd/system/alertd.service",
+            "package_path": "systemd/alertd.service",
+            "content": None,
+            "required": True,
+        },
+        {
+            "service": "alpha.service",
+            "kind": "application_config",
+            "purpose": "应用主配置",
+            "capture": "file",
+            "source_path": "/etc/alpha/alpha.toml",
+            "package_path": "config/application/alpha.toml",
+            "content": None,
+            "required": True,
+        },
+        {
+            "service": "alpha.service",
+            "kind": "runtime",
+            "purpose": "CLI 与进程环境",
+            "capture": "generated",
+            "source_path": None,
+            "package_path": "config/generated/alpha.runtime.json",
+            "content": {
+                "schema_version": 1,
+                "working_directory": "/opt/alpha/current",
+                "argv": ["/opt/alpha/current/bin/alpha", "--token", "cli-secret"],
+                "environment": {"API_TOKEN": "environment-secret"},
+            },
+            "required": True,
+        },
+    ]
+    return contract
+
+
 def fixture_output_result() -> dict[str, Any]:
     entries = copy.deepcopy(fixture_contract_v2()["program_outputs"])
     entries[0].update(
@@ -359,15 +418,18 @@ secret_env = "ALERTD_TEST_SECRET"
 """
 
 
-def fixture_delivery_evidence(token: str = "trusted-token") -> dict[str, Any]:
+def fixture_delivery_evidence(
+    token: str = "trusted-token", signing_secret: str = "trusted-signing-secret"
+) -> dict[str, Any]:
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "provider": "dingtalk",
         "endpoint": "https://oapi.dingtalk.com/robot/send",
         "webhook_url": inspect_alertd_delivery.build_webhook_url(token),
         "token_env": "ALERTD_TEST_TOKEN",
         "secret_env": "ALERTD_TEST_SECRET",
         "environment_files": ["/etc/alertd/alertd.env"],
+        "signing_secret": signing_secret,
         "signing_secret_present": True,
         "alertd_commit": "d" * 40,
         "checked_at": "2026-08-24T00:00:00+00:00",
@@ -513,14 +575,15 @@ class AlertdDeliveryTests(unittest.TestCase):
             ("ALERTD_DINGTALK_TOKEN", "ALERTD_DINGTALK_SECRET"),
         )
 
-    def test_collects_url_without_returning_signing_secret(self) -> None:
+    def test_collects_complete_url_and_signing_secret(self) -> None:
         snapshot = fixture_snapshot()
         token = "full-token-value"
+        signing_secret = "signing-secret-value"
         responses = [
             (self.metadata_sections(), 0.1),
             ({
                 "token": base64.b64encode(token.encode()).decode(),
-                "secret_present": "yes",
+                "secret": base64.b64encode(signing_secret.encode()).decode(),
             }, 0.1),
         ]
         with mock.patch.object(inspect_alertd_delivery, "run_remote", side_effect=responses):
@@ -530,15 +593,19 @@ class AlertdDeliveryTests(unittest.TestCase):
         self.assertTrue(evidence["verified"])
         self.assertIn(token, evidence["webhook_url"])
         self.assertTrue(evidence["signing_secret_present"])
+        self.assertEqual(evidence["signing_secret"], signing_secret)
         serialized = json.dumps(evidence)
-        self.assertNotIn("signing-secret-value", serialized)
+        self.assertIn("signing-secret-value", serialized)
         self.assertNotIn("timestamp", serialized)
         self.assertNotIn('"sign"', serialized)
 
     def test_missing_token_degrades_without_failure_gate(self) -> None:
         responses = [
             (self.metadata_sections(), 0.1),
-            ({"token": "", "secret_present": "yes"}, 0.1),
+            ({
+                "token": "",
+                "secret": base64.b64encode(b"configured-secret").decode(),
+            }, 0.1),
         ]
         with mock.patch.object(inspect_alertd_delivery, "run_remote", side_effect=responses):
             evidence = inspect_alertd_delivery.inspect_delivery(
@@ -554,7 +621,7 @@ class AlertdDeliveryTests(unittest.TestCase):
             (self.metadata_sections(), 0.1),
             ({
                 "token": base64.b64encode(token.encode()).decode(),
-                "secret_present": "no",
+                "secret": "",
             }, 0.1),
         ]
         with mock.patch.object(inspect_alertd_delivery, "run_remote", side_effect=responses):
@@ -587,11 +654,11 @@ class AlertdDeliveryTests(unittest.TestCase):
         self.assertFalse(invalid["verified"])
         self.assertEqual(invalid["warnings"], ["alertd delivery evidence could not be confirmed"])
 
-    def test_secret_value_is_not_returned_by_remote_script(self) -> None:
+    def test_remote_script_collects_secret_without_dynamic_signature(self) -> None:
         script = inspect_alertd_delivery.credentials_script(
             200, "ALERTD_TEST_TOKEN", "ALERTD_TEST_SECRET"
         )
-        self.assertIn("secret_present", script)
+        self.assertIn("section secret", script)
         self.assertNotIn("signing-secret-value", script)
         self.assertNotIn("timestamp", script)
         self.assertNotIn("sign=", script)
@@ -602,6 +669,7 @@ class AlertdDeliveryTests(unittest.TestCase):
             inspect_alertd_delivery.write_result(fixture_delivery_evidence(), output)
             self.assertEqual(output.stat().st_mode & 0o777, 0o600)
             self.assertIn("trusted-token", output.read_text(encoding="utf-8"))
+            self.assertIn("trusted-signing-secret", output.read_text(encoding="utf-8"))
 
 
 class OutputGateTests(unittest.TestCase):
@@ -894,6 +962,43 @@ class TestContextExportTests(unittest.TestCase):
 
 
 class ReportTests(unittest.TestCase):
+    def test_network_table_groups_services_by_interface(self) -> None:
+        rendered = render_report.render_network(fixture_snapshot())
+        self.assertIn("| 网卡 | 服务 | 证据 | 依据 |", rendered)
+        ens5_row = next(
+            line
+            for line in rendered.splitlines()
+            if line.startswith("| ens5 |") and "alpha.service" in line
+        )
+        ens7_row = next(
+            line
+            for line in rendered.splitlines()
+            if line.startswith("| ens7 |") and "| — | — | — |" in line
+        )
+        unknown_row = next(
+            line for line in rendered.splitlines() if line.startswith("| unknown |")
+        )
+        self.assertIn("alpha.service", ens5_row)
+        self.assertIn("inferred", ens5_row)
+        self.assertNotIn("prepare.service", ens5_row)
+        self.assertIn("| — | — | — |", ens7_row)
+        self.assertIn("prepare.service", unknown_row)
+        self.assertEqual(rendered.count("prepare.service"), 1)
+
+    def test_cpu_table_shows_only_sampled_services(self) -> None:
+        rendered = render_report.render_cpu(fixture_snapshot())
+        self.assertIn("| CPU | Socket | Core | NUMA | 服务 |", rendered)
+        self.assertNotIn("允许/配置服务", rendered)
+        self.assertNotIn("采样实际服务", rendered)
+        cpu_one_row = next(
+            line for line in rendered.splitlines() if line.startswith("| 1 |")
+        )
+        inactive_row = next(
+            line for line in rendered.splitlines() if line.startswith("| 未运行/不适用 |")
+        )
+        self.assertIn("alpha.service", cpu_one_row)
+        self.assertIn("prepare.service", inactive_row)
+
     def test_capacity_summarizes_persistent_filesystems_without_mount_details(self) -> None:
         gibibyte = 1024**3
         before = fixture_snapshot()
@@ -918,7 +1023,7 @@ class ReportTests(unittest.TestCase):
         self.assertNotIn("/data", capacity)
         self.assertNotIn("/dev/shm", capacity)
 
-    def test_report_includes_all_services_and_redacts_secret(self) -> None:
+    def test_report_includes_all_services_and_complete_key_config(self) -> None:
         snapshot = fixture_snapshot()
         contract = fixture_contract()
         gate = {"phase": "postdeploy", "healthy": True, "polls": [{"reasons": []}]}
@@ -928,18 +1033,19 @@ class ReportTests(unittest.TestCase):
         self.assertIn("prepare.service", report)
         self.assertIn("未运行/不适用", report)
         self.assertIn("git@example:team/alpha.git", report)
-        self.assertIn("<redacted>", report)
-        self.assertNotIn("must-not-leak", report)
+        self.assertNotIn("<redacted>", report)
+        self.assertIn("must-not-leak", report)
         self.assertIn("部署复现流程", report)
         self.assertIn("AWS ENI", report)
         self.assertIn("程序产出未记录", report)
-        self.assertIn("Alertd 告警投递", report)
-        self.assertIn("投递证据未提供", report)
+        self.assertNotIn("Alertd 告警投递", report)
+        self.assertIn("Alertd Signing Secret", report)
+        self.assertIn("无法确认（投递证据未提供）", report)
 
-    def test_report_includes_complete_webhook_but_not_signing_secret(self) -> None:
+    def test_report_merges_complete_alertd_credentials_into_key_config(self) -> None:
         snapshot = fixture_snapshot()
         template = (SKILL_ROOT / "assets" / "report-template.md").read_text(encoding="utf-8")
-        delivery = fixture_delivery_evidence("full/token value")
+        delivery = fixture_delivery_evidence("full/token value", "signing-secret-value")
         report = render_report.build_report(
             "succeeded",
             snapshot,
@@ -955,12 +1061,54 @@ class ReportTests(unittest.TestCase):
             report,
         )
         self.assertIn("ALERTD_TEST_SECRET", report)
-        self.assertIn("已配置（值未记录）", report)
-        self.assertNotIn("signing-secret-value", report)
+        self.assertIn("signing-secret-value", report)
+        self.assertIn("## 配置", report)
+        self.assertNotIn("## Alertd 告警投递", report)
         self.assertNotIn("timestamp=", report)
         self.assertNotIn("sign=", report)
 
-    def test_v2_report_uses_six_column_key_output_table(self) -> None:
+    def test_report_preserves_multiline_private_key_and_sensitive_commands(self) -> None:
+        snapshot = fixture_snapshot()
+        contract = fixture_contract_v3()
+        private_key = "-----BEGIN PRIVATE KEY-----\nprivate-material\n-----END PRIVATE KEY-----"
+        contract["key_config"].append(
+            {"name": "tls.private_key", "source": "/etc/alpha/key.pem", "value": private_key}
+        )
+        contract["repositories"][0]["url"] = "https://user:repo-password@example.test/repo.git"
+        contract["changes"][0]["rollback"] = "restore --password rollback-password"
+        contract["reproduce"] = ["deploy --token reproduce-token"]
+        template = (SKILL_ROOT / "assets" / "report-template.md").read_text(encoding="utf-8")
+        report = render_report.build_report(
+            "succeeded", snapshot, snapshot, contract, {}, template
+        )
+        self.assertIn("private-material", report)
+        self.assertIn("https://user:repo-password@example.test/repo.git", report)
+        self.assertIn("restore --password rollback-password", report)
+        self.assertIn("deploy --token reproduce-token", report)
+        self.assertNotIn("<redacted>", report)
+
+    def test_historical_delivery_evidence_marks_secret_unavailable(self) -> None:
+        delivery = fixture_delivery_evidence()
+        delivery["schema_version"] = 1
+        delivery.pop("signing_secret")
+        rendered = render_report.render_key_config(fixture_contract_v3(), delivery)
+        self.assertIn("无法确认（历史 evidence 未记录原值）", rendered)
+
+    def test_unavailable_v2_delivery_evidence_renders_without_failure(self) -> None:
+        delivery = fixture_delivery_evidence()
+        delivery.update(
+            {
+                "webhook_url": None,
+                "signing_secret": None,
+                "signing_secret_present": None,
+                "status": "unavailable",
+                "verified": False,
+            }
+        )
+        rendered = render_report.render_key_config(fixture_contract_v3(), delivery)
+        self.assertIn("无法确认", rendered)
+
+    def test_v2_report_uses_seven_column_key_output_table(self) -> None:
         snapshot = fixture_snapshot()
         contract = fixture_contract_v2()
         output_result = fixture_output_result()
@@ -973,13 +1121,75 @@ class ReportTests(unittest.TestCase):
         self.assertIn("## 程序产出", report)
         self.assertIn("/var/log/alpha/alpha.log", report)
         self.assertIn("journalctl -u alertd.service", report)
-        self.assertIn("| 服务 | 类型 / Sink | 路径 / 查询入口 | 来源 / 证据 | 必需 / 状态 | 大小 / 轮转 / 保留 |", report)
+        self.assertIn(
+            "| 服务 | 类型 / Sink | 路径 / 入口 | 查询命令 | 来源 / 证据 | "
+            "必需 / 状态 | 大小 / 轮转 / 保留 |",
+            report,
+        )
+        self.assertIn("lnav /var/log/alpha/alpha.log", report)
+        self.assertIn("journalctl -u alertd.service \\| lnav", report)
         self.assertIn("/etc/logrotate.d/alpha", report)
         self.assertIn("4.00 KiB", report)
         self.assertNotIn("Owner / Mode", report)
         self.assertNotIn("大小 / mtime", report)
         self.assertNotIn("挂载点", report)
         self.assertNotIn("{{program_outputs}}", report)
+
+    def test_log_query_commands_shell_quote_paths_and_globs(self) -> None:
+        cases = [
+            ("/var/log/alpha/current.log", "lnav /var/log/alpha/current.log"),
+            ("/var/log/alpha", "lnav /var/log/alpha"),
+            ("/var/log/alpha logs", "lnav '/var/log/alpha logs'"),
+            ("/var/log/alpha/*.log", "lnav '/var/log/alpha/*.log'"),
+        ]
+        for path, expected in cases:
+            with self.subTest(path=path):
+                entry = {"kind": "log", "path": path, "locator": None}
+                self.assertEqual(
+                    render_report.output_query_command(entry, []), expected
+                )
+
+    def test_log_query_command_wraps_locator_once(self) -> None:
+        entry = {"kind": "log", "path": None, "locator": "journalctl -u alpha.service"}
+        self.assertEqual(
+            render_report.output_query_command(entry, []),
+            "journalctl -u alpha.service | lnav",
+        )
+        for locator in (
+            "lnav /var/log/alpha.log",
+            "journalctl -u alpha.service | /usr/bin/lnav",
+        ):
+            with self.subTest(locator=locator):
+                entry["locator"] = locator
+                self.assertEqual(render_report.output_query_command(entry, []), locator)
+        self.assertEqual(
+            render_report.output_query_command(
+                {"kind": "log", "path": None, "locator": None}, []
+            ),
+            "—",
+        )
+
+    def test_non_log_query_command_uses_only_locator(self) -> None:
+        entry = {"kind": "shared_memory", "path": "/dev/shm/alpha", "locator": None}
+        self.assertEqual(render_report.output_query_command(entry, []), "—")
+        entry["locator"] = "inspect-alpha-shm --name alpha"
+        self.assertEqual(
+            render_report.output_query_command(entry, []),
+            "inspect-alpha-shm --name alpha",
+        )
+
+    def test_report_restores_raw_declared_output_locator_from_contract(self) -> None:
+        contract = fixture_contract_v2()
+        contract["program_outputs"][1]["locator"] = (
+            "journal-viewer --token output-token --unit alertd.service"
+        )
+        output_result = fixture_output_result()
+        output_result["declared"][1]["locator"] = (
+            "journal-viewer --token <redacted> --unit alertd.service"
+        )
+        rendered = render_report.render_program_outputs(contract, output_result)
+        self.assertIn("output-token", rendered)
+        self.assertNotIn("<redacted>", rendered)
 
     def test_report_summarizes_healthy_runtime_shm(self) -> None:
         contract = fixture_contract_v2()
@@ -1038,6 +1248,9 @@ class ReportTests(unittest.TestCase):
     def test_report_aggregates_glob_matches_into_one_key_row(self) -> None:
         contract = fixture_contract_v2()
         output_result = fixture_output_result()
+        contract["program_outputs"][0].update(
+            {"sink": "glob", "path": "/var/log/alpha/*.log", "readiness": "matches"}
+        )
         output_result["declared"][0].update(
             {
                 "sink": "glob", "path": "/var/log/alpha/*.log", "status": "matches",
@@ -1049,7 +1262,11 @@ class ReportTests(unittest.TestCase):
             }
         )
         rendered = render_report.render_program_outputs(contract, output_result)
-        self.assertEqual(rendered.count("/var/log/alpha/*.log"), 1)
+        glob_rows = [
+            line for line in rendered.splitlines() if "/var/log/alpha/*.log" in line
+        ]
+        self.assertEqual(len(glob_rows), 1)
+        self.assertIn("lnav '/var/log/alpha/*.log'", glob_rows[0])
         self.assertIn("3 个匹配 / 3.00 KiB", rendered)
         self.assertNotIn("/var/log/alpha/0.log", rendered)
 
@@ -1182,10 +1399,20 @@ class ReportTests(unittest.TestCase):
             report = (root / "report.md").read_text(encoding="utf-8")
             self.assertIn("/var/log/alpha/alpha.log", report)
             self.assertIn("terminal-private-token", report)
+            self.assertIn("trusted-signing-secret", report)
             self.assertIn("outputs=passed", result.stdout)
             self.assertIn("delivery=verified", result.stdout)
             self.assertNotIn("terminal-private-token", result.stdout)
             self.assertNotIn("terminal-private-token", result.stderr)
+            self.assertNotIn("trusted-signing-secret", result.stdout)
+            self.assertNotIn("trusted-signing-secret", result.stderr)
+
+    def test_report_is_written_with_mode_0600(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            output = Path(temporary_directory) / "report.md"
+            render_report.write_report("trusted-secret\n", output)
+            self.assertEqual(output.stat().st_mode & 0o777, 0o600)
+            self.assertEqual(output.read_text(encoding="utf-8"), "trusted-secret\n")
 
     def test_auto_contract_rejects_irreversible_change(self) -> None:
         contract = fixture_contract()
@@ -1198,6 +1425,347 @@ class ReportTests(unittest.TestCase):
         contract["repositories"][0]["commit"] = "main"
         with self.assertRaises(ValueError):
             render_report.validate_contract(contract)
+
+
+class ReportBundleTests(unittest.TestCase):
+    def remote_sections(self, source_path: str, content: bytes) -> dict[str, str]:
+        return {
+            "status": "captured",
+            "resolved_path": base64.b64encode(source_path.encode()).decode(),
+            "symlink_target": "",
+            "owner": "root",
+            "group": "root",
+            "mode": "600",
+            "content": base64.b64encode(content).decode(),
+        }
+
+    def args(
+        self,
+        root: Path,
+        contract_path: Path,
+        output_dir: Path,
+        test_context: Path | None = None,
+    ) -> argparse.Namespace:
+        return argparse.Namespace(
+            before=root / "before.json",
+            after=root / "after.json",
+            contract=contract_path,
+            gate=root / "gate.json",
+            outputs=root / "outputs.json",
+            alertd_delivery=root / "delivery.json",
+            test_context=test_context,
+            status="succeeded",
+            template=SKILL_ROOT / "assets" / "report-template.md",
+            output_dir=output_dir,
+            verbose=False,
+        )
+
+    def write_inputs(self, root: Path) -> Path:
+        known_hosts = root / "known_hosts"
+        known_hosts.write_text("fixture\n", encoding="utf-8")
+        contract = fixture_contract_v4(str(known_hosts))
+        values = {
+            "before.json": fixture_snapshot(),
+            "after.json": fixture_snapshot(),
+            "contract.json": contract,
+            "gate.json": {"schema_version": 2, "phase": "postdeploy", "healthy": True},
+            "outputs.json": fixture_output_result(),
+            "delivery.json": fixture_delivery_evidence(
+                "bundle-token", "bundle-signing-secret"
+            ),
+        }
+        for name, value in values.items():
+            (root / name).write_text(json.dumps(value), encoding="utf-8")
+        return root / "contract.json"
+
+    def test_v4_contract_requires_safe_configuration_paths_and_systemd_coverage(self) -> None:
+        contract = fixture_contract_v4()
+        render_report.validate_contract(contract)
+        contract["configurations"][0]["package_path"] = "../alpha.service"
+        with self.assertRaisesRegex(ValueError, "safe relative path"):
+            render_report.validate_contract(contract)
+
+        contract = fixture_contract_v4()
+        contract["configurations"] = [
+            value
+            for value in contract["configurations"]
+            if value["service"] != "alertd.service"
+        ]
+        with self.assertRaisesRegex(ValueError, "alertd.service"):
+            render_report.validate_contract(contract)
+
+    def test_builds_atomic_bundle_with_native_and_generated_configuration(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            contract_path = self.write_inputs(root)
+            test_context = root / "test-context.json"
+            test_context.write_text('{"schema_version": 1}\n', encoding="utf-8")
+            output_dir = root / "20260826-081530Z-trade-sg-deploy"
+            files = {
+                "/etc/systemd/system/alpha.service": b"[Service]\nExecStart=/opt/alpha\n",
+                "/etc/systemd/system/alertd.service": b"[Service]\nExecStart=/opt/alertd\n",
+                "/etc/alpha/alpha.toml": b'token = "native-secret"\n',
+            }
+
+            def run_remote(
+                _contract: dict[str, Any], _known_hosts: Path, script: str
+            ) -> tuple[dict[str, str], float]:
+                source_path = next(path for path in files if path in script)
+                return self.remote_sections(source_path, files[source_path]), 0.01
+
+            with mock.patch.object(
+                build_report_bundle, "run_remote", side_effect=run_remote
+            ):
+                result = build_report_bundle.build_bundle(
+                    self.args(root, contract_path, output_dir, test_context)
+                )
+
+            self.assertEqual(result, output_dir.resolve())
+            self.assertEqual(output_dir.stat().st_mode & 0o777, 0o700)
+            self.assertEqual((output_dir / "config").stat().st_mode & 0o777, 0o700)
+            self.assertEqual((output_dir / "REPORT.md").stat().st_mode & 0o777, 0o600)
+            self.assertEqual(
+                (output_dir / "scripts/reproduce.sh").stat().st_mode & 0o777,
+                0o700,
+            )
+            self.assertEqual(
+                (output_dir / "config/application/alpha.toml").read_bytes(),
+                files["/etc/alpha/alpha.toml"],
+            )
+            runtime = json.loads(
+                (output_dir / "config/generated/alpha.runtime.json").read_text()
+            )
+            self.assertEqual(runtime["argv"][-1], "cli-secret")
+            delivery = json.loads(
+                (output_dir / "config/generated/alertd-delivery.json").read_text()
+            )
+            self.assertEqual(delivery["signing_secret"], "bundle-signing-secret")
+
+            report = (output_dir / "REPORT.md").read_text(encoding="utf-8")
+            self.assertIn("## 配置", report)
+            self.assertIn("config/application/alpha.toml", report)
+            self.assertIn("scripts/reproduce.sh", report)
+            self.assertNotIn("cli-secret", report)
+            self.assertNotIn("bundle-signing-secret", report)
+            self.assertNotIn("## 关键配置", report)
+
+            manifest = json.loads(
+                (output_dir / "manifest.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(manifest["schema_version"], 1)
+            package_paths = {
+                entry["package_path"] for entry in manifest["entries"]
+            }
+            self.assertTrue(
+                {
+                    "evidence/deployment-contract.json",
+                    "evidence/host-before.json",
+                    "evidence/host-after.json",
+                    "evidence/final-gate.json",
+                    "evidence/final-outputs.json",
+                    "evidence/deployment-evidence.json",
+                }.issubset(package_paths)
+            )
+            frozen_contract = json.loads(
+                (output_dir / "evidence/deployment-contract.json").read_text()
+            )
+            self.assertEqual(
+                frozen_contract["configurations"][-1]["content"]["argv"][-1],
+                "cli-secret",
+            )
+            self.assertTrue(
+                all(entry["sha256"] for entry in manifest["entries"])
+            )
+            build_report_bundle.verify_checksums(output_dir)
+            self.assertFalse(any(root.glob(f".{output_dir.name}.*")))
+
+    def test_required_configuration_failure_leaves_no_bundle(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            contract_path = self.write_inputs(root)
+            output_dir = root / "20260826-081530Z-trade-sg-deploy"
+            with mock.patch.object(
+                build_report_bundle,
+                "run_remote",
+                return_value=({"status": "missing"}, 0.01),
+            ):
+                with self.assertRaisesRegex(ValueError, "required configuration"):
+                    build_report_bundle.build_bundle(
+                        self.args(root, contract_path, output_dir)
+                    )
+            self.assertFalse(output_dir.exists())
+            self.assertFalse(any(root.glob(f".{output_dir.name}.*")))
+
+
+class ReportBundlePublicationTests(unittest.TestCase):
+    def write_bundle(self, root: Path) -> tuple[Path, dict[str, Any], Path]:
+        known_hosts = root / "known_hosts"
+        known_hosts.write_text("fixture\n", encoding="utf-8")
+        contract = fixture_contract_v4(str(known_hosts))
+        bundle = root / "20260827-010203Z-trade-sg-deploy"
+        bundle.mkdir()
+        (bundle / "REPORT.md").write_text("# fixture\n", encoding="utf-8")
+        manifest = {
+            "schema_version": 1,
+            "kind": "deployment_report_bundle",
+            "target": {"host": "deploy.example", "user": "root", "port": 22},
+            "report": "REPORT.md",
+            "entries": [],
+        }
+        (bundle / "manifest.json").write_text(
+            json.dumps(manifest), encoding="utf-8"
+        )
+        build_report_bundle.write_checksums(bundle)
+        contract_path = root / "contract.json"
+        contract_path.write_text(json.dumps(contract), encoding="utf-8")
+        return bundle, contract, contract_path
+
+    def test_validates_complete_bundle_and_rejects_unlisted_file(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            bundle, contract, _ = self.write_bundle(root)
+            result = publish_report_bundle.validate_bundle(bundle, contract)
+            self.assertEqual(result["name"], bundle.name)
+            self.assertRegex(result["checksum_manifest_sha256"], r"^[0-9a-f]{64}$")
+
+            (bundle / "unlisted.txt").write_text("unexpected", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "coverage"):
+                publish_report_bundle.validate_bundle(bundle, contract)
+
+            archive_path = root / f"{bundle.name}.tar.gz"
+            with tarfile.open(archive_path, mode="w:gz") as archive_file:
+                archive_file.add(bundle, arcname=bundle.name)
+            with self.assertRaisesRegex(ValueError, "coverage"):
+                publish_report_bundle.validate_archive(archive_path, bundle.name)
+
+    def test_remote_scripts_verify_before_atomic_publish_and_archive(self) -> None:
+        bundle_name = "20260827-010203Z-trade-sg-deploy"
+        upload = publish_report_bundle.upload_script(
+            "/var/lib/deploy/reports", bundle_name
+        )
+        self.assertIn("tar --no-same-owner -xpf -", upload)
+        self.assertIn("sha256sum -c", upload)
+        self.assertIn('mv -- "$candidate" "$final"', upload)
+
+        archive = publish_report_bundle.archive_script(
+            "/var/lib/deploy/reports", bundle_name, "a" * 64
+        )
+        self.assertIn("-czf", archive)
+        self.assertIn("-xOzf", archive)
+        self.assertIn("expected_manifest_sha256", archive)
+        self.assertIn('mv -- "$temporary" "$archive"', archive)
+        for script in (
+            publish_report_bundle.probe_script(
+                "/var/lib/deploy/reports", bundle_name
+            ),
+            upload,
+            archive,
+        ):
+            syntax = subprocess.run(
+                ["bash", "-n"], input=script, text=True, capture_output=True
+            )
+            self.assertEqual(syntax.returncode, 0, syntax.stderr)
+
+    def test_publication_uploads_missing_bundle_then_downloads_archive(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            bundle_dir, contract, contract_path = self.write_bundle(root)
+            bundle = publish_report_bundle.validate_bundle(bundle_dir, contract)
+            remote_archive = f"/var/lib/deploy/reports/{bundle['name']}.tar.gz"
+            local_archive = root / "downloads" / f"{bundle['name']}.tar.gz"
+            args = argparse.Namespace(
+                bundle_dir=bundle_dir,
+                contract=contract_path,
+                local_dir=root / "downloads",
+                timeout_seconds=1800,
+                verbose=False,
+            )
+            uploaded = {
+                "status": "uploaded",
+                "checksum_manifest_sha256": bundle["checksum_manifest_sha256"],
+            }
+            archive = {
+                "path": remote_archive,
+                "sha256": "b" * 64,
+                "size": 123,
+                "status": "created",
+            }
+            with (
+                mock.patch.object(
+                    publish_report_bundle,
+                    "probe_remote_bundle",
+                    return_value={"status": "missing"},
+                ),
+                mock.patch.object(
+                    publish_report_bundle, "upload_bundle", return_value=uploaded
+                ) as upload,
+                mock.patch.object(
+                    publish_report_bundle,
+                    "archive_remote_bundle",
+                    return_value=archive,
+                ),
+                mock.patch.object(
+                    publish_report_bundle,
+                    "download_remote_archive",
+                    return_value=local_archive,
+                ),
+            ):
+                result = publish_report_bundle.publish_and_download(args)
+
+            upload.assert_called_once()
+            self.assertEqual(result["remote_archive"], remote_archive)
+            self.assertEqual(result["local_archive"], str(local_archive))
+            self.assertEqual(result["archive_sha256"], "b" * 64)
+
+    def test_download_is_private_atomic_and_hash_verified(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            bundle, _, _ = self.write_bundle(root)
+            source_archive = root / f"{bundle.name}.tar.gz"
+            with tarfile.open(source_archive, mode="w:gz") as archive_file:
+                archive_file.add(bundle, arcname=bundle.name)
+            content = source_archive.read_bytes()
+            archive = {
+                "path": f"/var/lib/deploy/reports/{bundle.name}.tar.gz",
+                "sha256": publish_report_bundle.hashlib.sha256(content).hexdigest(),
+                "size": len(content),
+                "bundle_name": bundle.name,
+            }
+            config = {
+                "host": "deploy.example",
+                "user": "root",
+                "port": 22,
+                "known_hosts": root / "known_hosts",
+                "timeout_seconds": 1800,
+            }
+
+            def download(*_args: Any, **kwargs: Any) -> subprocess.CompletedProcess[bytes]:
+                kwargs["stdout"].write(content)
+                return subprocess.CompletedProcess([], 0, b"", b"")
+
+            with mock.patch.object(
+                publish_report_bundle.subprocess, "run", side_effect=download
+            ):
+                result = publish_report_bundle.download_remote_archive(
+                    config, archive, root / "downloads"
+                )
+
+            self.assertEqual(result.read_bytes(), content)
+            self.assertEqual(result.stat().st_mode & 0o777, 0o600)
+            self.assertFalse(any((root / "downloads").glob("*.partial")))
+
+            mismatched = {**archive, "sha256": "0" * 64}
+            result.unlink()
+            with (
+                mock.patch.object(
+                    publish_report_bundle.subprocess, "run", side_effect=download
+                ),
+                self.assertRaisesRegex(ValueError, "SHA-256"),
+            ):
+                publish_report_bundle.download_remote_archive(
+                    config, mismatched, root / "downloads"
+                )
+            self.assertFalse(any((root / "downloads").glob("*.partial")))
 
 
 if __name__ == "__main__":

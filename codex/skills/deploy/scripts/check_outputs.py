@@ -64,8 +64,8 @@ def validate_inputs(
     snapshot: dict[str, Any], contract: dict[str, Any], known_hosts_path: Path
 ) -> tuple[Path, list[dict[str, Any]], list[str], list[str]]:
     schema_version = contract.get("schema_version")
-    if schema_version not in {2, 3}:
-        raise ValueError("output checks require contract schema_version 2 or 3")
+    if schema_version not in {2, 3, 4}:
+        raise ValueError("output checks require contract schema_version 2, 3, or 4")
     target = snapshot.get("target", {})
     if not target.get("host") or not target.get("user"):
         raise ValueError("snapshot target is incomplete")

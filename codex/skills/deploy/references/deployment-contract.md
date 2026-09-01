@@ -5,13 +5,14 @@
 - [Supported scope](#supported-scope)
 - [Runtime configuration](#runtime-configuration)
 - [Frozen deployment contract](#frozen-deployment-contract)
+- [Deployment report bundle](#deployment-report-bundle)
 - [Program output contract](#program-output-contract)
 - [Business service inventory](#business-service-inventory)
 - [Hard gates](#hard-gates)
 - [Atomic deployment and rollback](#atomic-deployment-and-rollback)
 - [Alertd contract](#alertd-contract)
 - [Test-context evidence](#test-context-evidence)
-- [Evidence and redaction](#evidence-and-redaction)
+- [Evidence and report content](#evidence-and-report-content)
 
 ## Supported scope
 
@@ -39,8 +40,9 @@ addresses as data; never copy them into Skill names, comments, or fixed instruct
 | `health.observe_for` | duration | `5m` | 5–30 minutes | user request; may only increase | release risk tolerance |
 | `cpu.sample_for` | duration | `10s` | 5–60 seconds | user request | observation accuracy/runtime |
 | `release.keep` | integer | `2` | 2–10 | user request | rollback retention |
-| `report.local_dir` | path | task output directory, otherwise CWD | writable directory | user request | artifact location |
-| `report.remote_dir` | path | `/var/lib/deploy/reports` | absolute path | user request | server audit location |
+| `report.local_dir` | path | task output directory, otherwise CWD | writable directory | user request | downloaded archive location |
+| `report.remote_dir` | path | `/var/lib/deploy/reports` | safe absolute non-root path | user request | expanded bundle and archive audit location |
+| `report.transfer_timeout` | duration | `30m` | 5–120 minutes | user request / publisher CLI | bundle size and network speed vary |
 | `alertd.repo` | Git URL | `git@github.com:sqfzy/alertd.git` | SSH Git URL | Skill/user config | monitoring source varies by environment |
 | `alertd.target` | string | `main` | branch or tag | Skill/user config | monitoring release selection |
 | `alertd.config_path` | path | `/etc/alertd/alertd.toml` | absolute path | Skill/user config | installation layout |
@@ -51,12 +53,13 @@ addresses as data; never copy them into Skill names, comments, or fixed instruct
 Do not turn application behavior into Skill switches. Put build commands, application config,
 health semantics, CPU affinity, and network binding in the per-deployment contract below.
 
-Report filenames follow the fixed presentation rule
-`YYYYMMDD-HHMMSSZ-<normalized-hostname>-deploy.md`. The timestamp is the UTC time at which final
-report rendering starts and is generated once per report. Its leading, fixed-width form makes
-lexical filename order chronological. Normalize the hostname to lowercase and replace characters
-outside `[a-z0-9._-]` with `-`. The local and remote report copies use the same basename. This is
-not runtime configuration because deployments do not vary the ordering convention.
+Report bundle folders follow the fixed presentation rule
+`YYYYMMDD-HHMMSSZ-<normalized-hostname>-deploy`. The timestamp is the UTC time at which final bundle
+creation starts and is generated once per bundle. Its leading, fixed-width form makes lexical
+folder order chronological. Normalize the hostname to lowercase and replace characters outside
+`[a-z0-9._-]` with `-`. The expanded folder uses this basename on the server; the server and local
+archives append `.tar.gz`. This is not runtime configuration because deployments do not vary the
+ordering or portable archive convention.
 
 ## Frozen deployment contract
 
@@ -66,7 +69,7 @@ not add a default confirmation checkpoint.
 
 ```json
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "target": {
     "host": "deploy.example",
     "user": "root",
@@ -105,8 +108,52 @@ not add a default confirmation checkpoint.
     "alertd_state_dir": "/var/lib/alertd",
     "required_units": ["example.service"]
   },
-  "key_config": [
-    {"name": "config.key", "source": "/path/config", "value": "effective value"}
+  "configurations": [
+    {
+      "service": "example.service",
+      "kind": "systemd",
+      "purpose": "business service definition",
+      "capture": "file",
+      "source_path": "/etc/systemd/system/example.service",
+      "package_path": "systemd/example.service",
+      "content": null,
+      "required": true
+    },
+    {
+      "service": "alertd.service",
+      "kind": "systemd",
+      "purpose": "monitoring service definition",
+      "capture": "file",
+      "source_path": "/etc/systemd/system/alertd.service",
+      "package_path": "systemd/alertd.service",
+      "content": null,
+      "required": true
+    },
+    {
+      "service": "example.service",
+      "kind": "application_config",
+      "purpose": "application configuration",
+      "capture": "file",
+      "source_path": "/etc/example/example.toml",
+      "package_path": "config/application/example.toml",
+      "content": null,
+      "required": true
+    },
+    {
+      "service": "example.service",
+      "kind": "runtime",
+      "purpose": "effective CLI and environment",
+      "capture": "generated",
+      "source_path": null,
+      "package_path": "config/generated/example.runtime.json",
+      "content": {
+        "schema_version": 1,
+        "working_directory": "/opt/example/current",
+        "argv": ["/opt/example/current/bin/example", "--config", "/etc/example/example.toml"],
+        "environment": {"LOG_LEVEL": "info"}
+      },
+      "required": true
+    }
   ],
   "program_outputs": [
     {
@@ -138,7 +185,7 @@ not add a default confirmation checkpoint.
   ],
   "cpu_affinity": {},
   "network_binding": {},
-  "reproduce": ["ordered, concrete command without secret values"],
+  "reproduce": ["ordered, concrete command with every value needed to reproduce deployment"],
   "rollback": ["ordered, concrete rollback command"],
   "irreversible_changes": []
 }
@@ -153,9 +200,112 @@ zero unresolved assumptions. Ask only when the target host, Git target, change s
 path has multiple materially reasonable interpretations. A user-requested pause is a one-time
 checkpoint, not a mode.
 
-Emit schema version 3 without a `mode` field for every new deployment. Accept schema versions 1 and
-2 only when rendering historical reports; neither is valid input for a new deployment. The output
-checker accepts v2 only to preserve its historical full-unit-coverage behavior.
+Treat every operationally necessary effective setting as configuration. Preserve native config,
+EnvironmentFile, credential, certificate, private-key, systemd, and script files byte-for-byte.
+Represent non-file settings as generated JSON with complete raw values. Use `无法确认` plus a
+concrete reason when an optional value cannot be collected; do not fabricate it or replace a known
+value with a presence-only marker. A required configuration that cannot be captured prevents bundle
+publication.
+
+Emit schema version 4 without a `mode` field for every new deployment. Accept schema versions 1–3
+only when rendering historical single-file reports; none is valid input for a new deployment. The
+output checker accepts v2–v4 and preserves v2's historical full-unit-coverage behavior.
+
+## Deployment report bundle
+
+`configurations` is the complete, explicit capture plan. Do not discover report files by scanning
+the host. Start with every deployed unit plus `alertd.service`, then follow only effective systemd
+properties, application config references, and frozen deployment requirements.
+
+| Field | Type | Valid values | Meaning |
+|---|---|---|---|
+| `service` | string | deployed unit, `alertd.service`, or `deployment` | owning service or bundle-wide role |
+| `kind` | enum | `application_config`, `environment`, `credential`, `systemd`, `script`, `runtime` | artifact role |
+| `purpose` | string | non-empty description | why deployment or reproduction needs the file |
+| `capture` | enum | `file`, `generated` | copy server bytes or materialize JSON |
+| `source_path` | absolute path or null | absolute for `file`, null for `generated` | effective server source |
+| `package_path` | relative path | rooted at `config/`, `systemd/`, or `scripts/` according to kind | stable bundle location |
+| `content` | object or null | JSON object for `generated`, null for `file` | exact non-file configuration |
+| `required` | boolean | required | whether missing capture blocks bundle publication |
+
+Every unit in `deployment.service_units` and `alertd.service` must have a `systemd` file entry.
+Enumerate each drop-in and referenced script as its own entry. A file capture preserves resolved
+bytes and records the original path, resolved path, symlink target, owner, group, mode, size, and
+SHA-256. The bundle never contains live symlinks back to the server.
+
+Generated CLI configuration uses JSON and stores arguments as an array rather than a shell string:
+
+```json
+{
+  "schema_version": 1,
+  "working_directory": "/opt/example/current",
+  "user": "example",
+  "group": "example",
+  "argv": ["/opt/example/current/bin/example", "--token", "complete value"],
+  "environment": {"API_TOKEN": "complete value"}
+}
+```
+
+Preserve native formats for existing files. Do not convert TOML, JSON, INI, YAML, env files,
+systemd units, certificates, private keys, or scripts merely to make formats uniform.
+
+The canonical bundle layout is:
+
+```text
+<timestamp>-<hostname>-deploy/
+├── REPORT.md
+├── manifest.json
+├── checksums.sha256
+├── config/
+│   ├── application/
+│   ├── environment/
+│   ├── credentials/
+│   └── generated/
+├── systemd/
+├── scripts/
+│   ├── application/
+│   ├── reproduce.sh
+│   └── rollback.sh
+└── evidence/
+    ├── deployment-contract.json
+    ├── host-before.json
+    ├── host-after.json
+    ├── final-gate.json
+    ├── final-outputs.json
+    └── deployment-evidence.json
+```
+
+Omit unavailable optional evidence and empty optional subdirectories. The first five evidence
+files preserve the exact frozen deployment inputs and results; `deployment-evidence.json` is the
+separately redacted, optional `$test-report` handoff. `manifest.json` uses schema v1 with
+`kind=deployment_report_bundle`, deployment status and target, `report=REPORT.md`, and one entry per
+captured or generated artifact. `checksums.sha256` covers every file except itself. Build under a
+sibling temporary directory, verify the manifest coverage and every checksum, then atomically
+rename the complete folder. Use mode `0700` for directories and scripts, and `0600` for other
+files.
+
+`REPORT.md` changes the old `关键配置` section to `配置`. It lists service, type, purpose, relative
+bundle file, server source, and SHA-256; it never repeats configuration content. Reproduction and
+rollback sections link to `scripts/reproduce.sh` and `scripts/rollback.sh`.
+
+For an SSH deployment, build the expanded bundle only in task-local scratch space, then publish it
+to `deployment.report_remote_dir` through strict host-key verification. Upload to a sibling
+temporary directory, reject symlinks, verify full `checksums.sha256` coverage, enforce the bundle
+permissions, and atomically rename the folder. On the server, create
+`<bundle-name>.tar.gz` beside the expanded folder and verify that its embedded checksum manifest
+matches the published folder. Keep the server archive at `0600`.
+
+Download the server-created archive to `report.local_dir` over strict SSH. Write a uniquely named
+`.partial` file at `0600`, verify the server-reported byte size and SHA-256, and atomically rename it
+to `<bundle-name>.tar.gz`. Before publication, stream-verify every regular file against the embedded
+checksum manifest and reject links, special files, unsafe paths, duplicates, missing entries, and
+unlisted files. Never overwrite a different existing remote folder/archive or local archive; an
+identical verified artifact may be reused to make retries idempotent. The server keeps the expanded
+folder and compressed archive for audit, while the local final delivery is the compressed archive
+containing the folder root. Compression/download failures do not roll back the application because
+they occur after health adjudication; report the delivery failure, retain the remote evidence, and
+retry. Remove task-local expanded/raw artifacts only after all three retained artifacts are
+verified.
 
 ## Program output contract
 
@@ -176,8 +326,8 @@ runtime evidence; never scan an entire filesystem to discover outputs.
 | `evidence` | enum | required | `configured`, `observed`, `inferred` | collection method | confidence differs by evidence |
 | `required` | boolean | `true` when explicitly configured; `false` when only observed | boolean | declaration origin | release policy differs by output |
 | `readiness` | enum | derived from sink | `exists`, `matches`, `writable_parent`, `active_sink` | output lifecycle | readiness semantics differ by output |
-| `rotation` | string | `unknown` | redacted policy or `unknown` | proven configuration | rotation policy varies operationally |
-| `retention` | string | `unknown` | redacted policy or `unknown` | proven configuration | retention policy varies operationally |
+| `rotation` | string | `unknown` | complete policy or `unknown` | proven configuration | rotation policy varies operationally |
+| `retention` | string | `unknown` | complete policy or `unknown` | proven configuration | retention policy varies operationally |
 
 Resolve environment variables, systemd specifiers, and relative paths before freezing. Reject an
 unresolved path; obtain a concrete value before mutation. Apply
@@ -198,10 +348,10 @@ these readiness rules:
 - Do not scan `/dev/shm`, read SHM contents, or attempt System V SHM attribution.
 
 After the observation window, a failed required readiness check fails the output gate and invokes
-the frozen application rollback. A missing optional or runtime-observed output is a warning. In v3,
-a deployment unit without a declaration is also a warning; v2 retains the historical full-unit
-coverage requirement. Never delete an output during rollback; retain failed-release outputs in the
-final report as audit evidence.
+the frozen application rollback. A missing optional or runtime-observed output is a warning. In v3
+and v4, a deployment unit without a declaration is also a warning; v2 retains the historical
+full-unit coverage requirement. Never delete an output during rollback; retain failed-release
+outputs in the final report as audit evidence.
 
 ## Business service inventory
 
@@ -291,16 +441,20 @@ severity, and counts against that baseline; unchanged warnings are inherited, wh
 issues fail. Preserve any explicit user override as failed evidence with its accepted risk and
 unavailable guarantee.
 
-Collect delivery evidence separately from the deployment contract and health gates. The evidence
-schema version 1 contains provider, static endpoint, complete webhook URL, token/secret environment
-variable names, EnvironmentFile paths, signing-secret presence, Alertd commit, collection time,
-status, and warnings. Store this temporary JSON with mode `0600`; remove it after producing both
-report copies. A collection failure is a report warning and never independently triggers rollback.
+Collect delivery evidence separately from the deployment contract and health gates. New evidence
+uses schema version 2 and contains provider, static endpoint, complete webhook URL, token/secret
+environment variable names, EnvironmentFile paths, complete signing secret, signing-secret
+presence, Alertd commit, collection time, status, and warnings. Accept schema v1 only to render
+historical reports, where the missing signing-secret value is explicitly `无法确认`. Store this
+temporary JSON with mode `0600`; remove it after the remote folder, remote archive, and local
+archive are verified. A collection failure is a report warning and never independently triggers
+rollback.
 
 For the current DingTalk delivery implementation, the static webhook URL is
-`https://oapi.dingtalk.com/robot/send?access_token=<URL-encoded token>`. The signing secret never
-leaves the server. Dynamic `timestamp` and `sign` values are generated for each delivery and are
-not evidence fields.
+`https://oapi.dingtalk.com/robot/send?access_token=<URL-encoded token>`. Store delivery evidence,
+including the complete signing secret, in `config/generated/alertd-delivery.json` and reference it
+from the report configuration index. Dynamic `timestamp` and `sign` values are generated for each
+delivery and are not static configuration or evidence fields.
 
 ## Test-context evidence
 
@@ -336,7 +490,7 @@ Use schema version 1:
   },
   "key_config": [],
   "runtime": {"health": {}, "program_outputs": {}},
-  "source": {"contract_schema_version": 3, "before_captured_at": null, "after_captured_at": null, "sha256": {}},
+  "source": {"contract_schema_version": 4, "before_captured_at": null, "after_captured_at": null, "sha256": {}},
   "warnings": []
 }
 ```
@@ -346,13 +500,13 @@ full repository commits and artifact hashes. Reduce storage to aggregate size, u
 bytes. Preserve health failures, warnings, and program-output evidence because they help interpret
 later system tests.
 
-Apply the normal deployment redaction policy and additionally omit every field or scalar containing
-an Alertd webhook, `access_token`, or signing-secret material. Do not include the dedicated Alertd
+Apply strict redaction to this supplementary artifact and omit every field or scalar containing an
+Alertd webhook, `access_token`, or signing-secret material. Do not include the dedicated Alertd
 delivery evidence, `changes`, `reproduce`, `rollback`, or `irreversible_changes`. Hash each source
 JSON file so the consumer can identify the exact evidence inputs without copying their sensitive
 contents.
 
-## Evidence and redaction
+## Evidence and report content
 
 Label resource attribution as one of:
 
@@ -361,32 +515,51 @@ Label resource attribution as one of:
 - `inferred`: conclusion from unit arguments or routing; state the basis.
 - `unknown`: insufficient evidence, including unobservable DPDK/raw-socket ownership.
 
-For CPU reporting, record topology plus configured/effective allowed CPUs and sampled CPUs. An
-unbound service is eligible on each allowed CPU; do not claim it is pinned. For networking, map
-kernel sockets to cgroup PIDs and route remote peers to interfaces where possible.
+Keep topology, configured/effective allowed CPUs, and sampled CPUs in the snapshot. In the Markdown
+CPU table, show one row per logical CPU and only services sampled on that CPU; omit the
+allowed/configured-service presentation column and group units without a sampled CPU into the final
+`未运行/不适用` row. For networking, map kernel sockets to cgroup PIDs and route remote peers to
+interfaces where possible. Present the result as one row per interface listing its attributed
+services, evidence, and basis; group unattributed services into one `unknown` row.
 
-Redact values whose names or flags contain `password`, `passwd`, `secret`, `token`, `api_key`,
-`apikey`, `private_key`, `credential`, or `authorization`. Redact URI userinfo and sensitive command
-arguments. The sole exception is the Alertd `access_token` inside the dedicated delivery evidence
-and final trusted report. Never copy it into a snapshot, contract, health/output result, ordinary
-log, or terminal output. Never record EnvironmentFile contents, signing secrets, other tokens,
-private keys, or passwords.
+The final deployment bundle is a trusted handoff artifact and performs no content redaction inside
+captured or generated configuration files. Preserve complete passwords, tokens, API keys,
+credentials, authorization values, signing secrets, certificates, private keys, URI userinfo, and
+sensitive command arguments. `REPORT.md` references those files and does not duplicate their
+contents. Read only explicitly identified fields needed by deployed services and Alertd; never dump
+an entire process environment or unrelated secret store.
+
+Keep raw values out of host snapshots, health/output results, ordinary logs, terminal output, and
+supplementary test context. Store the remote expanded bundle directories and scripts with mode
+`0700`, its ordinary files with mode `0600`, and both remote/local `.tar.gz` archives with mode
+`0600`. Delete temporary raw evidence only after the server folder, server archive, and downloaded
+archive are verified.
 
 Inspect writable file descriptors only by their `/proc/<pid>/fd` metadata. Record regular files and
 ignore read-only descriptors, sockets, pipes, anonymous descriptors, and `/dev/null`; never read
 file contents. Read `/proc/<pid>/maps` only to associate named POSIX SHM paths with the owning
 service. Redact sensitive path or locator parameters before storing evidence.
 
-In the deployment brief, aggregate persistent filesystem capacity by normalized source and omit
+In `REPORT.md`, aggregate persistent filesystem capacity by normalized source and omit
 individual device, filesystem-type, and mount-path rows. Exclude virtual or memory-backed
 filesystems such as tmpfs, devtmpfs, proc, sysfs, cgroup, and overlay. Keep the detailed snapshot
 for capacity gates; the reduced table is a report-only presentation rule.
 
 Apply the same report-only reduction to program outputs without changing the contract or output
 result schema. Preserve the complete output-check JSON. The Markdown brief must render these items
-as six-column key details: every contract declaration, every required failure, every unready item,
+as seven-column key details with `服务`, `类型 / Sink`, `路径 / 入口`, `查询命令`, `来源 / 证据`,
+`必需 / 状态`, and `大小 / 轮转 / 保留`: every contract declaration, every required failure, every unready item,
 every configured-but-undeclared warning, and any other abnormal status. A normal mapped `(deleted)`
 POSIX SHM object is not abnormal by itself.
+
+Derive query commands only while rendering the report. For a `log` with a file, directory, or glob
+path, render `lnav <shell-quoted-path>` and keep a glob as one literal argument for lnav. When a log
+has only a logical locator, render `<locator> | lnav`; reuse a locator that already invokes lnav.
+For a non-log output, render its locator unchanged or `—` when none exists. Do not invent commands
+for SHM, dump, data, or other outputs. Commands have target-server-local semantics and are never
+executed by the Skill. lnav is an operator prerequisite: do not check, install, warn about, or gate
+deployment on its availability. Preserve complete locator parameters under the trusted-report
+policy and rely on Markdown table escaping for command separators.
 
 Group all remaining healthy optional runtime discoveries into one row per service. Report category
 counts for logs, data, dumps, archives, shared memory, hugepages, DPDK, and other outputs; include

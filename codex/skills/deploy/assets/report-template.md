@@ -1,4 +1,4 @@
-# 部署简报：{{title}}
+# 部署资料包报告：{{title}}
 
 {{summary}}
 
@@ -22,13 +22,9 @@
 
 {{repositories}}
 
-## 关键配置
+## 配置
 
-{{key_config}}
-
-## Alertd 告警投递
-
-{{alertd_delivery}}
+{{configuration}}
 
 ## 程序产出
 
@@ -53,4 +49,4 @@
 - `inferred`：根据启动参数或路由推断，已注明依据。
 - `unknown`：证据不足；不会把 DPDK/raw socket 等不可观测路径伪装成确定结果。
 
-> 按报告策略，Alertd 完整 webhook URL（含 access_token）会写入可信简报；signing secret、其他 token、密码和私钥仍不记录。外部状态和数据库不在应用级回滚保证范围内。
+> 本资料包是面向可信人员的完整部署交付物。配置原值保存在“配置”章节引用的资料包文件中，包括密码、token、signing secret、证书和私钥；不做脱敏、掩码、哈希、截断或省略。外部状态和数据库不在应用级回滚保证范围内。
